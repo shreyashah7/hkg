@@ -1,0 +1,208 @@
+<form method="POST" class="form-horizontal" name="addPacketForm" novalidate>
+    <div ng-if="dataRetrieved && !flag.showUpdatePage" ng-init="registerLocationChangeEvent(addPacketForm);
+            initAddPacketForm(addPacketForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Add Packet'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && flag.searchFieldNotAvailable === true">
+                <table class="table table-bordered">
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the search field'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate">
+                <h4>{{entity + 'Search Lot'| translate}}</h4>
+            </div>
+            <div ng-show="!flag.showAddPage">
+                <div ng-if="searchResetFlag">                    
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate" is-diamond ="true">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate && generalSearchTemplate.length > 0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch(addPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(addPacketForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="!flag.showAddPage">
+                <div id='masterDetail' ng-if="listFilled">
+                    <h4>{{entity + 'Searched Lots'| translate}}</h4>
+                    <div class="form-group">
+                        <div  class="col-md-12" ng-if="listFilled && issuedStock.data && issuedStock.data.length > 0">
+                            <div id="gridTable" ui-grid="issuedStock" ui-grid-selection  ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                        <div  class="col-md-12" ng-if="listFilled && issuedStock.data.length === 0">
+                            <br/>
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No matching results found'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="issuedStock.data && issuedStock.data.length > 0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-disabled="!selectedIssueStock || selectedIssueStock.length === 0" ng-click="addPacket()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.showAddPage" ng-init="hasEditPacketPermission(canAccess('packetEdit'))">
+                <div ng-if="fieldNotConfigured">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Mandatory fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div ng-if="fieldNotConfigured === false">
+                    <div ng-if="flag.customFieldGenerated && generaInvoiceTemplate && generaInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                        <!--<h4 ng-if="generaInvoiceTemplate">Invoice Detail</h4>-->
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                       ng-model="invoiceCustom" ng-if="generaInvoiceTemplate && invoiceCustom"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                        </dynamic-form>
+                    </div>
+
+                    <div ng-if="flag.customFieldGenerated && generaParcelTemplate && generaParcelTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>                        
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                       ng-model="parcelCustom" ng-if="generaParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                        </dynamic-form>
+                    </div>
+                    <div ng-if="flag.customFieldGenerated && generalLotTemplate && generalLotTemplate.length > 0" id="lotParent" title="Lot Details" accordion-collapse>
+                        <!--<h4 ng-if="generalLotTemplate">Lot Detail</h4>-->
+                        <!-----{{invoiceIdForConstraint}}-->
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                       ng-model="lotCustom" ng-if="generalLotTemplate && lotCustom"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                        </dynamic-form>
+                    </div>
+                    <div>
+                        <div class="panel-heading">
+                            <h4 ng-if="generalPacketTemplate">Packet Detail</h4>
+                            <div class="col-md-12">
+                                <div class="required col-md-6" style="padding-left: 0px;padding-right: 0px;">
+                                    <!--                                    <label for="sequenceNumber" class="col-md-4 control-label">{{lotIDWithSeqNumber}} - </label>
+                                                                        <div class="col-md-8" ng-class="{'has-error':(addPacketForm.sequenceNumber.$dirty || submitted) && addPacketForm.sequenceNumber.$invalid}">
+                                                                            <input type="text" class="form-control" id="sequenceNumber" ng-model="sequenceNumber" ng-disabled="!lotIDWithSeqNumber" required name="sequenceNumber" ng-blur="sequenceNumberExists(sequenceNumber, addPacketForm);
+                                                                                addPacketForm.sequenceNumber.$dirty = true" maxlength="2" ng-minlength="2" numbers-only="true" negativeallowed="false" >
+                                                                            <div class="error,help-block" ng-show="(addPacketForm.sequenceNumber.$dirty || submitted) && addPacketForm.sequenceNumber.$invalid">
+                                                                                <span class="help-block" ng-show="(addPacketForm.sequenceNumber.$error.required)">{{ entity + 'Sequence Number should not be empty' | translate}}</span>
+                                                                                <span class="help-block" ng-show="addPacketForm.sequenceNumber.$error.minlength">{{ entity + 'Sequence Number is invalid ' | translate}}</span>
+                                                                                <span class="help-block" ng-show="addPacketForm.sequenceNumber.$error.exists">{{sequenceNumber}}{{ entity + ' already exist ' | translate}}</span>
+                                                                            </div>
+                                                                        </div>-->
+                                </div>
+                                <div class="col-md-12">&nbsp;</div>                                
+                                <div ng-if="AddPacketCtrl.packetAddFlag && flag.customFieldGenerated">
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketTemplate" 
+                                                   ng-model="categoryCustom" ng-if="generalPacketTemplate"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-dynamic="true" edit-flag="false" is-diamond="true" before-label="lotIDWithSeqNumber" after-label="afterLabel">
+                                    </dynamic-form>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <a ng-click="onCancel(addPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button ng-if="flag.customFieldGenerated && generalPacketTemplate && generalPacketTemplate.length > 0 && !flag.editPacket" ng-disabled="stockCarat == 0 || stockPieces == 0 || (preRuleSatisfied)" class="btn btn-hkg" ng-click="createPacket(addPacketForm)">{{entity + 'Add Packet'| translate}}</button>
+                                <button ng-if="flag.customFieldGenerated && generalPacketTemplate && generalPacketTemplate.length > 0 && flag.editPacket" class="btn btn-hkg" ng-click="savePacket(addPacketForm)">{{entity + 'Save Packet'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Carat remaining is ' + stockCarat| translate}}
+                                    <br/>
+                                    {{entity + 'Number of pieces remaining is ' + stockPieces| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id='masterDetail' ng-if="gridOptions.data.length > 0">
+                        <br/><br/>
+                        <h4>{{entity + 'Created Packets'| translate}}</h4>
+                        <div class="form-group">
+                            <div  class="col-md-12" ng-if="tempListFilled">
+                                <div id="gridTable" ui-grid="gridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="generalPacketTemplate.length > 0">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <a ng-click="back(addPacketForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                                <!--<button  class="btn btn-hkg" ng-disabled="!gridOptions.data || gridOptions.data.length === 0" ng-click="saveAllPacket(addPacketForm)">{{entity + 'Save'| translate}}</button>-->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deleteDialog" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/addpacket" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Packet'| translate }}</h4>
+            </div >
+            <form  class="form-horizontal" name="deleteDialog" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete packet?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deletePacket()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

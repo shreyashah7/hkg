@@ -1,0 +1,165 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-if="addExceptionPage === false">
+            <div  ng-show="!searchRecords || searchRecords.length == 0">
+                <table class="table table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{ entity + "No matching results found" | translate }}
+                        </td>
+                    </tr>
+                </table>
+            </div> 
+
+
+            <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Fields'|translate}}</h4>
+            <div class="table-responsive">
+                <div ng-show="searchRecords && (searchRecords.length) > 0">
+                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords">
+                        <thead>
+                            <tr>
+                                <th>{{entity + 'Field Name'|translate}}</th>
+
+                                <th>{{entity + 'Feature'|translate}}</th>
+                                <th>{{entity + 'Action'|translate}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+
+                            <tr ng-repeat="field in searchRecords track by $index" dt-rows>
+                                <td class="wordRap">{{field.label}}</td>
+                                <td> {{field.feature}}</td>
+                                <td>
+                                    <a><span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="retrieveSubentityFieldFromSearch(field.id);"></span></a>
+                                    <a><span class="glyphicon glyphicon-asterisk" title="{{entity + 'Add Exception'|translate}}" ng-click="addExceptionPopup(field)"></span></a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div ng-if="addExceptionPage === true" >
+            <div class="col-md-5">
+                <h4>Add Exception - {{subEntityName}}</h4>
+            </div>
+            <div class="col-xs-12 form-group" ng-form="addSubEntityExceptionForm">
+                <form role="form" class="form-horizontal" novalidate name="addSubEntityExceptionForm" method="POST">
+                    <div ng-init="registerLocationChangeEvent(addSubEntityExceptionForm);
+                            initAddExceptionForm(addSubEntityExceptionForm)">
+                        <div class="form-group">
+                            <label for="forUser"  class="col-md-3 control-label">
+                                {{ entity + 'For User' | translate}}
+                            </label>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="col-md-12 hkg-nopadding" name="forUser" id="forUser" ui-select2="autoCompleteUsers" ng-model="subEntityValueException.forUsers"/>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                </div>
+                            </div>    
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="forValue"  class="col-md-3 control-label">
+                                {{ entity + 'For Value' | translate}}
+                            </label>
+                            <div class="col-md-6" ng-if="valueList !== undefined && valueList.length > 0 && flag.valueRetrieved">
+                                <div ng-class="{'has-error': addSubEntityExceptionForm.forValue.$invalid && (addSubEntityExceptionForm.forValue.$dirty || submitted)}"> 
+                                    <input type="text" class="col-md-12 hkg-nopadding" ng-required='true' required name="forValue" id="forValue" ui-select2="multiValues" ng-model="subEntityValueException.forValue"/>
+                                    <div class="error,help-block" ng-show="(addSubEntityExceptionForm.forValue.$dirty || submitted) && addSubEntityExceptionForm.forValue.$invalid">
+                                        <span class="help-block" ng-show="addSubEntityExceptionForm.forValue.$error.required">{{entity + 'Select values'| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>    
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dependentOnField"  class="col-md-3 control-label">
+                                {{ entity + 'Dependent On' | translate}}
+                            </label>
+                            <div class="col-md-7" ng-if="autoCompleteDependentOnFields !== undefined">
+                                <div>
+                                    <input type="text" class="col-md-5 hkg-nopadding"  name="dependentOnField" id="dependentOnField" ui-select2="autoCompleteDependentOnFields" ng-model="subEntityValueException.dependentOnField" />
+                                    <div ng-if="fieldValueList !== undefined && fieldValueList.length > 0" class="col-md-6" ng-class="{'has-error': addSubEntityExceptionForm.dependentOnFieldValues.$invalid && (addSubEntityExceptionForm.dependentOnFieldValues.$dirty || submitted)}">
+                                        <input type="text" style="position: relative;float: left;  width: 92%;min-height: 1px;padding-left: 0px;padding-right: 0px;" class="hkg-nopadding" name="dependentOnFieldValues" ng-required="subEntityValueException.dependentOnField !== true" id="dependentOnFieldValues" ui-select2="multiDependentValueList" ng-model="subEntityValueException.dependentOnFieldValues"/>
+                                        <div class="col-md-12 error,help-block" ng-show="(addSubEntityExceptionForm.dependentOnFieldValues.$dirty || submitted) && addSubEntityExceptionForm.dependentOnFieldValues.$invalid">
+                                            <span class="help-block" ng-show="addSubEntityExceptionForm.dependentOnFieldValues.$error.required">{{entity + 'Select Dependent On Values'| translate }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div ng-if="fieldValueList === undefined || fieldValueList.length === 0" class="col-md-6">
+                                        <span>No Values available</span>
+                                    </div>
+                                </div>
+                            </div> 
+                            <div class="col-md-1">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> 
+                                    <a href="" ng-click="addSubEntityExceptionForm.$setPristine();
+                                        cancelException()">
+                                        {{ entity + 'Cancel' | translate}}
+                                    </a>&nbsp;
+                                    <button class="btn btn-hkg">
+                                        <span ng-click="addException(addSubEntityExceptionForm)" ng-bind="entity + 'Add Exception' | translate" ng-if="!editExceptionFlag"></span>
+                                        <span ng-click="updateException(addSubEntityExceptionForm)" ng-bind="entity + 'Update Exception' | translate" ng-if="editExceptionFlag"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-12" id='subEntityDetail' ng-if="(exceptionList.length) > 0">
+                <div class="form-group">
+                    <div class="col-md-12" ng-if="exceptionList">
+                        <table class="table" cellspacing="0" width="100%" ag-data-table="exceptionList" >
+                            <thead>
+                                <tr>
+                                    <th class="col-md-1">{{entity + "Sr.No."|translate}}</th>
+                                    <th class="col-md-3">{{entity + "For User"|translate}}</th>
+                                    <th class="col-md-3">{{entity + "For Value"|translate}}</th>
+                                    <th class="col-md-3">{{entity + "Dependent On"|translate}}</th>
+                                    <th class="col-md-2">{{ entity + "Actions" | translate }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="exception in exceptionList" >
+                                    <td class="col-md-1">{{$index + 1}}</td>
+                                    <td class="col-md-3">{{(exception.userToBeDisplay !== null && exception.userToBeDisplay !== undefined)? exception.userToBeDisplay : 'N/A'}}</td>
+                                    <td class="col-md-3">{{(exception.valueToBeDisplay !== null && exception.valueToBeDisplay !== undefined)? exception.valueToBeDisplay : 'N/A' }}</td>
+                                    <td class="col-md-3">{{(exception.dependentOnFieldValuesToBeDisplay !== null && exception.dependentOnFieldValuesToBeDisplay !== undefined)? exception.dependentOnFieldValuesToBeDisplay: 'N/A'}}</td>
+                                    <td class="col-md-2">
+                                        <button ng-disabled="exception.isArchive === true"  ng-click="retrieveExceptionForUpdate(exception)" title="{{entity + 'Click to edit'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-edit btn btn-link"></button>&nbsp;&nbsp;
+                                        <a ng-if="exception.isArchive === false" ng-click="removeException(exception)" title="{{entity + 'Remove Exception'|translate}}" class="glyphicon glyphicon-remove "></a>
+                                        <a ng-if="exception.isArchive === true" ng-click="undoException(exception)" title="{{entity + 'Undo Exception'|translate}}" class="glyphicon glyphicon-repeat "></a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right"> 
+                            <a href="" ng-click="addSubEntityExceptionForm.$setPristine();
+                                cancelExceptionPage()">
+                                {{ entity + 'Cancel' | translate}}
+                            </a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="saveException(addSubEntityExceptionForm)">
+                                <span ng-bind="entity + 'Save Exception' | translate"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

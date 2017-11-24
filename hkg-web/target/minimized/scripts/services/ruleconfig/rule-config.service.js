@@ -1,0 +1,4 @@
+define(["hkg"],function(a){a.register.factory("RuleConfigService",["$resource","$rootScope",function(c,b){var d=c(b.apipath+"ruleconfig/:action",{action:"@actionName"},{retrieveruletypes:{method:"GET",isArray:true,params:{action:"retrieveruletypes"}},saveRule:{method:"POST",isArray:false,params:{action:"update"}},retrievePrerequisite:{method:"GET",params:{action:"retrieveprerequisite"}},retrieveRulesForTree:{method:"GET",params:{action:"retrieve"}},retrieveRulebyRulenumber:{method:"POST",params:{action:"retrieverulebyrulenumber"}},searchrules:{method:"GET",isArray:true,params:{action:"searchrules"}},retrieveAllRuleList:{method:"GET",isArray:false,params:{action:"retrieveAllRules"}},removeRule:{method:"POST",isArray:true,params:{action:"removeRule"}}});
+return d
+}])
+});

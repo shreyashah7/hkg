@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+  <persistence-unit name="com.argusoft.hkg_hkg-model_jar_1.0-SNAPSHOTPU" transaction-type="RESOURCE_LOCAL">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <class>com.argusoft.hkg.model.Testing</class>
+    <class>com.argusoft.hkg.model.HkFranchiseMinimumRequirement</class>
+    <class>com.argusoft.hkg.model.HkMasterEntity</class>
+    <class>com.argusoft.hkg.model.HkMasterValueEntity</class>
+    <class>com.argusoft.hkg.model.HkAssetIssueEntity</class>
+    <class>com.argusoft.hkg.model.HkAssetPurchaserEntity</class>
+    <class>com.argusoft.hkg.model.HkAssetEntity</class>
+    <class>com.argusoft.hkg.model.HkAssetDocumentEntity</class>
+    <class>com.argusoft.hkg.model.HkCategoryEntity</class>
+    <class>com.argusoft.hkg.model.HkTaskEntity</class>
+    <class>com.argusoft.hkg.model.HkTaskRecipientDtlEntity</class>
+    <class>com.argusoft.hkg.model.HkTaskRecipientEntity</class>
+    <class>com.argusoft.hkg.model.HkFeatureSectionRelationEntity</class>
+    <class>com.argusoft.hkg.model.HkValueEntity</class>
+    <class>com.argusoft.hkg.model.HkFieldEntity</class>
+    <class>com.argusoft.hkg.model.HkKeyEntity</class>
+    <class>com.argusoft.hkg.model.HkSectionEntity</class>
+    <class>com.argusoft.hkg.model.HkWorkflowApproverEntity</class>
+    <class>com.argusoft.hkg.model.HkWorkflowEntity</class>
+    <class>com.argusoft.hkg.model.HkLeaveApprovalEntity</class>
+    <class>com.argusoft.hkg.model.HkLeaveEntity</class>
+    <class>com.argusoft.hkg.model.HkFranchiseRequirementEntity</class>
+    <class>com.argusoft.hkg.model.HkUserWorkHistoryEntity</class>
+    <class>com.argusoft.hkg.model.HkUserTypeSequenceEntity</class>
+    <class>com.argusoft.hkg.model.HkEventEntity</class>
+    <class>com.argusoft.hkg.model.HkEventRegistrationEntity</class>
+    <class>com.argusoft.hkg.model.HkEventRecipientEntity</class>
+    <class>com.argusoft.hkg.model.HkEventRegistrationFieldEntity</class>
+    <class>com.argusoft.hkg.model.HkEventRegistrationFieldValueEntity</class>
+    <class>com.argusoft.hkg.model.HkShiftEntity</class>
+    <class>com.argusoft.hkg.model.HkShiftDtlEntity</class>
+    <class>com.argusoft.hkg.model.HkShiftDepartmentEntity</class>
+    <class>com.argusoft.hkg.model.HkShiftRuleEntity</class>
+    <class>com.argusoft.hkg.model.HkServiceEntity</class>
+    <class>com.argusoft.hkg.model.HkNotificationRecipientEntity</class>
+    <class>com.argusoft.hkg.model.HkNotificationEntity</class>
+    <class>com.argusoft.hkg.model.HkUserOperationEntity</class>
+    <class>com.argusoft.hkg.model.HkUserAttendanceEntity</class>
+    <class>com.argusoft.hkg.model.HkFeatureFieldPermissionEntity</class>
+    <class>com.argusoft.hkg.model.HkSubFormFieldEntity</class>
+    <class>com.argusoft.hkg.model.HkWorkAssignmentEntity</class>
+    <class>com.argusoft.hkg.model.HkGoalTemplateEntity</class>
+    <class>com.argusoft.hkg.model.HkGoalPermissionEntity</class>
+    <class>com.argusoft.hkg.model.HkNotificationConfigurationEntity</class>
+    <class>com.argusoft.hkg.model.HkNotificationConfigrationRecipientEntity</class>
+    <class>com.argusoft.hkg.model.HkPriceListEntity</class>
+    <class>com.argusoft.hkg.model.HkPriceListDetailEntity</class>
+    <class>com.argusoft.hkg.model.HkCaratRangeEntity</class>
+    <class>com.argusoft.hkg.nosql.model.HkFieldSequenceDocument</class>
+    <class>com.argusoft.hkg.nosql.model.HkWorkAllotmentDocument</class>
+    <class>com.argusoft.hkg.model.HkFranchiseSetupEntity</class>
+    <class>com.argusoft.reportbuilder.model.RbEmailReportStatusEntity</class>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/hkg"/>
+      <property name="javax.persistence.jdbc.password" value="argusadmin"/>
+      <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+      <property name="javax.persistence.jdbc.user" value="postgres"/>
+    </properties>
+  </persistence-unit>
+</persistence>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+ 
+    <fontFamily name="ChrysanthiUnicode">
+        <normal>ChrysanthiUnicode.ttf</normal>
+        <pdfEmbedded><![CDATA[true]]></pdfEmbedded>
+        <pdfEncoding>Identity-H</pdfEncoding>
+    </fontFamily>
+    
+</fontFamilies>

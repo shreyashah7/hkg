@@ -1,0 +1,334 @@
+<div>
+    <form method="POST" class="form-horizontal" name="addTaskForm" novalidate>
+        <div class="form-group"  ng-init="registerLocationChangeEvent(addTaskForm); initForm(addTaskForm)">
+            <label for="taskCategory"  class="col-md-3 control-label">
+                <span ng-if='!editFlag'>{{ entity + 'Task Category' | translate}}</span>
+                <span ng-if='editFlag'>{{ entity + 'Move To Category' | translate}}</span>
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': addTaskForm.taskCategory.$invalid}"> 
+                <select class="col-md-12 hkg-nopadding" ui-select2="{allowClear: true}" ng-model="task.taskCategory" id="selectTaskCategory" name="selectTaskCategory" data-placeholder="{{ entity + 'Select parent category or leave blank' | translate}}">
+                    <option value=""></option>
+                    <option ng-repeat="category in taskCategories" value="{{category.id}}" title="{{category.text}}">{{category.text.length > 41 ? category.text.substring(0, 41) + '...' : category.text}}</option>
+                </select>
+            </div>
+            <div class="col-md-2"> 
+                <a href="" ng-click="showAddCategoryPopup(addCategoryPopupForm)"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add Category"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+            </div>
+        </div>
+        <!--Task status for edit task-->
+        <div class="form-group" ng-if='editFlag'>
+            <label for="taskStatus"  class="col-md-3 control-label">
+                <span >{{ entity + 'Task Status' | translate}}</span>
+            </label>
+            <div class="col-md-6" > 
+                <!--<p class="form-control-static"><span name="taskStatus" ng-bind="task.status"></span></p>-->
+                <select class="form-control" ng-options="status.id as status.name for status in availableTaskStatus" ng-model="task.tempStatus" name="taskStatus"> 
+                </select>   
+            </div>
+        </div>
+        <div class="form-group required">
+            <label for="task"  class="col-md-3 control-label">
+                {{ entity + 'Task' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': addTaskForm.taskName.$invalid && (addTaskForm.taskName.$dirty || submitted)}"> 
+                <textarea ng-pattern="/^[^.]+$/" ng-model="task.taskName" id="task" name="taskName" class="form-control" required maxlength="500" rows="3" typeahead="task.label as task.label for task in taskSuggestions | filter:{label:$viewValue}">
+                </textarea>
+                <div id="messagecounter" style="text-align: right;">{{500 - task.taskName.length}} {{ entity + "characters left" | translate }}</div>
+                <div class="error,help-block" ng-show="(addTaskForm.taskName.$dirty || submitted) && addTaskForm.taskName.$invalid">
+                    <span class="help-block" ng-show="addTaskForm.taskName.$error.required">{{ entity + 'Task not entered' | translate}}</span>
+                    <span class="help-block" ng-show="addTaskForm.taskName.$error.pattern">{{ entity + 'Task name is invalid ' | translate}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group required" ng-if="checkDueDateFunct(task.dueDate)">
+            <label for="dueDate"  class="col-md-3 control-label">
+                {{ entity + 'Due Date' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': addTaskForm.dueDate.$invalid && (addTaskForm.dueDate.$dirty || submitted)}"> 
+                <div class="input-group">
+                    <input type="text" id="dueDate" name="dueDate" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="task.dueDate" is-open="datePicker.opened_due_date"  min="minDueDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" ng-click="setEditTaskMinDate()" ng-change="setEditTaskEndRepeatMinDate()"/>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" ng-click="open($event, 'opened_due_date');
+                            setEditTaskMinDate()">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </button>
+                    </span>
+                </div>
+                <div class="error,help-block" ng-show="(addTaskForm.dueDate.$dirty || submitted) && addTaskForm.dueDate.$invalid">
+                    <span class="help-block" ng-show="addTaskForm.dueDate.$error.required && !(addTaskForm.dueDate.$error.date || addTaskForm.dueDate.$error.min || addTaskForm.dueDate.$error.max)">
+                        {{ entity + "Due date not entered" | translate }}</span>
+                    <span class="help-block" ng-show="addTaskForm.dueDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                    <span class="help-block" ng-show="addTaskForm.dueDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                    <span class="help-block" ng-show="addTaskForm.dueDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group required">
+            <label for="assignTo"  class="col-md-3 control-label">
+                {{ entity + 'Assign To' | translate}}
+            </label>
+            <div class="col-md-6">
+                <div ng-class="{
+                        'has-error'
+                        : addTaskForm.recipients.$invalid && (addTaskForm.recipients.$dirty || submitted)}"> 
+                    <div class="input-group">
+                        <input type="text" class="col-md-12 hkg-nopadding" ng-required="true" required name="recipients" id="recipients" ui-select2="autoCompleteRecipient" ng-model="task.taskRecipients" ng-disabled="!(canAccess('tasksAssignToAll'))"/>
+                        <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                    </div>
+                    <div class="error,help-block" ng-show="(addTaskForm.recipients.$dirty || submitted) && addTaskForm.recipients.$invalid">
+                        <span class="help-block" ng-show="addTaskForm.recipients.$error.required">{{entity + 'Select recipients'| translate }}</span>
+                    </div>
+                </div>
+            </div>    
+            <div class="col-md-1">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="repeatTask" class="col-md-3 control-label">
+                {{ entity + 'Repeat Task' | translate}}?
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': addTaskForm.repeatTask.$invalid}" id="repeatTask"> 
+                <label class="radio-inline">
+                    <input type="radio" id="repeatTaskYes" name="repeatTask" ng-model="task.repeatTask" value="true">{{ entity + 'Yes' | translate}}
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" id="repeatTaskNo" name="repeatTask" ng-model="task.repeatTask" value="false">{{ entity + 'No' | translate}}
+                </label>
+            </div>
+        </div>
+        <div ng-if="task.repeatTask === 'true'">
+            <div class="form-group" >
+                <label for="repeatativeMode" class="col-md-3 control-label">
+                </label>
+                <div class="col-md-2" ng-class="{'has-error': addTaskForm.repeatTask.$invalid}" id="repeatTaskPeriod"> 
+                    <div class="radio">
+                        <label>
+                            <input type="radio" id="repeatTaskDaily" name="repeatativeMode" ng-model="task.repeatativeMode" value="D">{{ entity + 'Daily' | translate}}
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" id="repeatTaskWeekly" name="repeatativeMode" ng-model="task.repeatativeMode" value="W">{{ entity + 'Weekly' | translate}}
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" id="repeatTaskMonthly" name="repeatativeMode" ng-model="task.repeatativeMode" value="M">{{ entity + 'Monthly' | translate}}
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div><br/></div>
+                    <div class="col-md-10 " ng-if="task.repeatativeMode === 'W'">
+                        <span ng-repeat="day in weekList" >
+                            <div class="hkg-checkbox-button">
+                                <label>
+                                    <input type="checkbox" hidden="true" ng-model="day.isChecked" ng-true-value='true' ng-disabled="disableWeeklyChecbox[$index]" ng-change="getSelectedWeekCount()"><span>{{day.code}}</span>
+                                </label>
+                            </div>
+                        </span>
+                        <div class="error,help-block" ng-class="{'has-error': (noDaysSelected)}"ng-show="noDaysSelected">
+                            <span class="help-block" >{{ entity + 'Select the day to repeat the task' | translate}}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-8" ng-if="task.repeatativeMode === 'M'">
+                        <br/><br/>
+                        {{ entity + 'On Day' | translate}} 
+                        <select class="input-sm" ng-model="task.monthlyOnDay">
+                            <option ng-repeat="day in dayList" value="{{day}}">{{day}}</option>
+                        </select>
+                        {{ entity + 'Of Every Month' | translate}} 
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-md-3 control-label"></label>
+                <label for="endRepeat" class="col-md-2">
+                    {{ entity + 'End Repeat' | translate}}
+                </label>
+                <div class="col-md-6" ng-class="{'has-error': addTaskForm.endRepeat.$invalid}" id="endRepeat"> 
+                    <div class="form-group required">
+                        <div class="col-md-3 radio">
+                            <label>
+                                <input type="radio" name="endRepeat" ng-model="task.endRepeatMode" value="OD">{{ entity + 'On Date' | translate}} 
+                            </label>
+                        </div>
+                        <div class="col-md-6" ng-class="{'has-error': addTaskForm.endRepeatDate.$invalid && task.endRepeatMode === 'OD' && (addTaskForm.endRepeatDate.$dirty || submitted)}"> 
+                            <div class="input-group">
+                                <input type="text" id="endRepeatDate" name="endRepeatDate" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="task.endDate" is-open="datePicker.opened_end_repeat_date"  min="minEndRepeatDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="task.endRepeatMode === 'OD'" close-text="Close" ng-disabled="task.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()"/>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" ng-click="open($event, 'opened_end_repeat_date')" ng-disabled="task.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </button>
+                                </span>
+                            </div>
+                            <div class="error,help-block" ng-show="(addTaskForm.endRepeatDate.$dirty || submitted) && addTaskForm.endRepeatDate.$invalid && task.endRepeatMode === 'OD'">
+
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDate.$error.required && !(addTaskForm.endRepeatDate.$error.date || addTaskForm.endRepeatDate.$error.min || addTaskForm.endRepeatDate.$error.max)">
+                                    {{ entity + "End repeat date not entered" | translate }}</span>
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-md-3 radio">
+                            <label>
+                                <input type="radio" name="endRepeat" ng-model="task.endRepeatMode" value="AD">{{ entity + 'After' | translate}}
+                            </label>
+                        </div>
+                        <div class="col-md-4" ng-class="{'has-error': addTaskForm.endRepeatDays.$invalid && task.endRepeatMode === 'AD' && (addTaskForm.endRepeatDays.$dirty || submitted)}"> 
+                            <input type="text" class="form-control" name="endRepeatDays" ng-model="endRepeat.afterDaysUnits" min="1" ng-disabled="task.endRepeatMode !== 'AD'" ng-required="task.endRepeatMode === 'AD'" numbers-only/>
+                            <div class="error,help-block" ng-show="(addTaskForm.endRepeatDays.$dirty || submitted) && addTaskForm.endRepeatDays.$invalid && task.endRepeatMode === 'AD'">
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDays.$error.required">{{ entity + 'Days limit to end repeat not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addTaskForm.endRepeatDays.$error.min">{{ entity + "After days cannot be 0" | translate }}</span>  
+                            </div>
+
+                        </div>
+                        <div class="col-md-2"><p class="form-control-static">{{ entity + 'days' | translate}}</p></div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-md-3 radio">
+                            <label>
+                                <input type="radio" name="endRepeat" ng-model="task.endRepeatMode" value="AR">{{ entity + 'After' | translate}}
+                            </label>
+                        </div>
+                        <div class="col-md-4" ng-class="{'has-error': addTaskForm.endRepeatRepititions.$invalid && task.endRepeatMode === 'AR' && (addTaskForm.endRepeatRepititions.$dirty || submitted)}"> 
+                            <input type="text" class="form-control" name="endRepeatRepititions" min="1" ng-model="endRepeat.afterRepititionsUnits" ng-disabled="task.endRepeatMode !== 'AR'" ng-required="task.endRepeatMode === 'AR'" numbers-only/>
+                            <div class="error,help-block" ng-show="(addTaskForm.endRepeatRepititions.$dirty || submitted) && addTaskForm.endRepeatRepititions.$invalid && task.endRepeatMode === 'AR'">
+                                <span class="help-block" ng-show="addTaskForm.endRepeatRepititions.$error.required">{{ entity + 'Repititions limit to end repeat not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addTaskForm.endRepeatRepititions.$error.min">{{ entity + "Repititions cannot be 0" | translate }}</span>  
+                            </div>
+                        </div>
+                        <div class="col-md-2"><p class="form-control-static">{{ entity + 'repititions' | translate}}</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-if="!editFlag">
+            <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" 
+                           db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                           template="genralTaskTemplate" ng-model="addTaskData" ng-if="genralTaskTemplate" submit-flag-name="submitted" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1">
+
+            </dynamic-form></div>
+        <div ng-if="editFlag">
+            <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" 
+                           db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                           template="genralTaskTemplate" ng-model="addTaskData" ng-if="genralTaskTemplate" submit-flag-name="submitted" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1"
+                           >
+
+            </dynamic-form></div>
+
+        <br/>
+        <div class="col-md-12">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right"> 
+                    <a href="" ng-click="addTaskForm.$setPristine();cancelUpdatePage()">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="addTask(addTaskForm)">
+                        <span ng-bind="entity + 'Add Task' | translate" ng-if="!editFlag"></span>
+                        <span ng-bind="entity + 'Save Task' | translate" ng-if="editFlag"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+<!--addCategory pop-up-->
+<div class="modal fade" role="dialog" id="addCategoryPopup" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="" ng-click="hideAddCategoryPopup(addCategoryPopupForm)">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">
+                    {{ entity + 'Manage Task Category' | translate}}
+                </h4>
+            </div >
+            <form  class="form-horizontal" name="addCategoryPopupForm" role='form' novalidate>
+
+                <div class="modal-body">
+                    <div class="form-group required">
+                        <label for="categoryName"  class="col-md-4 control-label">
+                            {{ entity + 'Category Name' | translate}}
+                        </label>
+                        <div class="col-md-6" ng-class="{
+                                    'has-error'
+                                    : addCategoryPopupForm.categoryName.$invalid && (addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted)}"> 
+                            <input ng-pattern="/^[^.]+$/" type="text" ng-model="category.displayName"  name="categoryName" id="categoryName" typeahead="category.text as category.text for category in taskCategories | filter:{text:$viewValue}" class="form-control" maxlength="100" required ng-change="addCategoryPopupForm.categoryName.$setValidity('exists', true)">
+                            <div class="error,help-block" ng-show="(addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted) && addCategoryPopupForm.categoryName.$invalid">
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.required">{{ entity + 'Category not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.pattern">{{ entity + 'Category name is invalid ' | translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="!editFlag">
+                        <dynamic-form  input-css ="col-md-6" label-css="col-md-4 control-label" 
+                                       db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="categoryTemplate" ng-model="addCategoryData" ng-if="categoryTemplate" submit-flag-name="categoryForm.submitted" edit-flag="{{editFlag}}"
+                                       ></dynamic-form></div>
+                    <div ng-if="editFlag">
+                        <dynamic-form  input-css ="col-md-6" label-css="col-md-4 control-label" 
+                                       db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="categoryTemplate" ng-model="addCategoryData" ng-if="categoryTemplate" submit-flag-name="categoryForm.submitted" edit-flag="{{editFlag}}"
+                                       ></dynamic-form></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-6 pull-right">
+                            <a href="" ng-click="hideAddCategoryPopup(addCategoryPopupForm)">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="createTaskCategory(addCategoryPopupForm)">{{ entity + 'Save Category' | translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!--Remove task popup-->
+<div class="modal fade" id="deleteTaskPopup" role="dialog" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="removeTaskCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span ng-if="taskToSave.status === 'Cancelled'">{{ entity + "Cancel Task" | translate }}</span>
+                    <span ng-if="taskToSave.status === 'Remove'">{{ entity + "Delete Task" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div ng-if="taskToSave.status === 'Cancelled'">
+                        {{ entity + "Are you sure you want to cancel "|translate}}{{taskToSave.taskName}}?
+                    </div>
+                    <div ng-if="taskToSave.status === 'Remove'">
+                        {{ entity + "Are you sure you want to remove "|translate}}{{taskToSave.taskName}}?
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="removeTaskCancel()">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="cancelTask()" ng-if="taskToSave.status === 'Cancelled'">
+                            {{ entity + "Cancel Task" | translate }}
+                        </button>
+                        <button class="btn btn-hkg" ng-click="removeTask()" ng-if="taskToSave.status === 'Remove'">
+                            {{ entity + "Remove" | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

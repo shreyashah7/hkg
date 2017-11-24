@@ -1,0 +1,204 @@
+<form method="POST" class="form-horizontal" name="trackStockForm" novalidate>
+    <div class="row" ng-init="initializeData();
+            initTrackStockForm(trackStockForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Track Stock'| translate}}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="!flag.trackStockflag"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a target="_self" href="#/totalstock" class="pull-right">{{entity + 'Total Stock'| translate}}</a>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div ng-if="!flag.trackStockflag">
+                <div class="clearfix"></div>
+                <div ng-if="!generalSearchTemplate && flag.configSearchFlag === true">
+                    <p>{{entity + 'First configure the search field to search and add'| translate}}</p>
+                </div>
+                <div ng-if="generalSearchTemplate && searchResetFlag">
+                    <h4>{{entity + 'Search Lot/Packet'| translate}}</h4>
+                </div>
+                <div ng-if="generalSearchTemplate && searchResetFlag">
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate" is-diamond="true">
+                    </custom-search>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCancelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData()">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="selectOneParameter">
+                    <div class="col-xs-12">&nbsp;</div>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Please select at least one field to search'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div ng-if="(searchedDataFromDb.length === 0 && listFilled && flag.configSearchFlag === false)">
+                    <h4>{{entity + 'Searched Lots/Packets'| translate}}</h4>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'No matching results found'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="searchedDataFromDb && (searchedDataFromDb.length) > 0">
+                    <h4>{{entity + 'Searched Lots/Packets'| translate}}</h4>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <div id="gridTable"  ui-grid="gridOptions"  ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="(searchedDataFromDb.length) > 0 && flag.rowSelectedflag">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-click="trackStock()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.trackStockflag">
+                <div>
+                    <div ng-if="generaInvoiceTemplate && generaInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                       ng-model="invoiceCustom" ng-if="generaInvoiceTemplate && invoiceCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+                </div>
+                <div>
+                    <div ng-if="generaParcelTemplate && generaParcelTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                       ng-model="parcelCustom" ng-if="generaParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}"  view-only="true" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+                </div>
+                <div>
+                    <div ng-if="generalLotTemplate && generalLotTemplate.length > 0" id="lotParent" title="Lot Details" accordion-collapse>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                       ng-model="lotCustom" ng-if="generalLotTemplate && lotCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+                </div>
+                <div>
+                    <div ng-if="generalPacketTemplate && generalPacketTemplate.length > 0" id="packetParent" title="Packet Details" accordion-collapse>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketTemplate" 
+                                       ng-model="packetCustom" ng-if="generalPacketTemplate && packetCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+                </div>
+                <br/>
+                <div ng-if="stockTrackDetails.length > 0">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="panel-heading">
+                                <h4> {{ entity + 'Stock Track Details' | translate}}</h4>
+                            </div>
+                        </div>  
+                        <div class="col-md-3" style="padding-top: 15px">
+                            <button class="btn-link" ng-click="generateReportOfActivity('.pdf')"><span><img title="Pdf Download" src="images/pdf-icon.jpg" alt="pdf" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                            <button class="btn-link" ng-click="generateReportOfActivity('.xls')"><span><img title="Excel Download" src="images/excel-icon.jpg" alt="excel" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                            <a target="_blank" href="#/trackstockprint" style="color: black;">
+                                <span style="font-size: 15px"  class="glyphicon glyphicon-retweet" title="{{entity + 'Activity Designer'| translate}}"></span>
+                            </a>&nbsp;
+                        </div>  
+                    </div>
+                    <div class="table-responsive">
+                        <div ng-if="stockTrackDetails.length > 0">
+                            <table class="table table-striped table-responsive" ag-data-table="stockTrackDetails">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            {{ entity + 'Sr No' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Activity' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Service' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Assigned On' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Assigned To' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Status' | translate}}
+                                        </th>
+                                        <th>
+                                            {{ entity + 'Re-Reouted' | translate}}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="stockDetail in stockTrackDetails" dt-rows>
+                                        <td><span ng-bind="{{$index + 1}}"></span></td>
+                                        <td><span ng-bind="stockDetail.activityName"></span></td>
+                                        <td><span ng-bind="stockDetail.serviceName"></span></td>
+                                        <td><span ng-bind="formatDate(stockDetail.assignedOn)"></span></td>
+                                        <td><span ng-bind="stockDetail.assignedToName"></span></td>
+                                        <td>
+                                            <span ng-if="stockDetail.status === 'Completed'">{{stockDetail.status}}-<span ng-bind="formatDate(stockDetail.completedOn)"></span></span>
+                                            <span ng-if="stockDetail.status === 'Terminated'">{{stockDetail.status}}-<span ng-bind="formatDate(stockDetail.terminatedOn)"></span></span>
+                                            <span ng-if="stockDetail.status !== 'Terminated' && stockDetail.status !== 'Completed'">{{stockDetail.status}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stockDetail.isReRouted" class="glyphicon glyphicon-ok"></span>
+                                            <span ng-if="!stockDetail.isReRouted" class="glyphicon glyphicon-remove"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-if="stockTrackDetails.length === 0">
+                    <div class="col-lg-12 col-md-12 col-xs-12">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    <span ng-bind="entity + 'No Stock Available' | translate"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onBack(trackStockForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,646 @@
+/* 
+    Created on : 7 Feb, 2014, 12:09:18 PM
+    Author     : satyajit
+*/
+@font-face {
+    font-family: 'robotoregular';
+    src: url('../roboto-regular.eot');
+    src: url('../roboto-regular.eot?#iefix') format('embedded-opentype'),
+        /*url('../roboto-regular.woff2') format('woff2'),*/
+        url('../roboto-regular.woff') format('woff'),
+        url('../roboto-regular.ttf') format('truetype'),
+        url('../roboto-regular.svg#robotoregular') format('svg');
+
+
+
+}
+
+@font-face {
+    font-family: 'robotomedium';
+    src: url('../roboto-medium.eot');
+    src: url('../roboto-medium.eot?#iefix') format('embedded-opentype'),
+        url('../roboto-medium.woff2') format('woff2'),
+        url('../roboto-medium.woff') format('woff'),
+        url('../roboto-medium.ttf') format('truetype'),
+        url('../roboto-medium.svg#robotomedium') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+
+
+body {
+    //instade of giving papadding-top here I have given margin-top 
+    //to div contains ng-view directives for menu
+    height: 100%;
+    font-family: 'robotoregular';
+}
+
+.wordRap {
+    word-break:break-all;
+    word-wrap: break-word;
+    white-space: pre-wrap;  
+}
+.is-disabled {
+    opacity: .8;
+    pointer-events: none;
+}
+.hk-footer{
+    background-color: #f5f5f5;    
+    height: 60px;
+    margin-top: 20px;
+}
+.form-group.required .control-label:before {
+    content:"*";
+    margin-right: 2px;
+    color:red;
+}
+/*  
+        Added by Hardik
+        dropdown submenu for menu tab css Starts
+*/
+/*i have chnaged top and margin top propety to align sub menu proprly : Alpesh*/ 
+.sub-menu {
+    left: 100%;
+    position: absolute;
+    visibility: hidden;
+    top: inherit;  
+    margin-top: -20% ;
+    /*border: #000000 outset 2px;*/
+
+}
+
+nav .dropdown-menu li:hover .sub-menu {
+    visibility: visible;
+    position: absolute;
+}
+
+nav .dropdown:hover .dropdown-menu {
+    display: block;
+    /*border: #000000 outset 2px;*/
+}
+.dropdown-menu-width{
+    width: 298px;
+}
+nav .navbar .sub-menu:before {
+    border-bottom: 7px solid transparent;
+    border-left: none;
+    border-right: 7px solid rgba(0, 0, 0, 0.2);
+    border-top: 7px solid transparent;
+    left: -7px;
+    top: 10px;
+}
+nav .navbar .sub-menu:after {
+    border-top: 6px solid transparent;
+    border-left: none;
+    border-right: 6px solid #fff;
+    border-bottom: 6px solid transparent;
+    left: 10px;
+    top: 11px;
+    left: -6px;
+}
+/*// for menu caret >*/
+.caret_left {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 3px;
+    vertical-align: middle;
+    border-left: 5px solid;
+    border-bottom: 5px solid transparent;
+    border-top: 5px solid transparent;
+}
+/*--------------------------------------dropdown submenu for menu tab css Ended--------------*/
+
+/**
+@author djoshi
+use with fieldset and legend to show sectional titles with horizontal line besides
+ref 
+     ----------------
+     creategroup.html
+     ----------------
+     <fieldset class="hkg-full-fieldset">
+              <legend class="hkg-full-legend">Group Capabilities</legend>
+     </fieldset>
+*/
+.hkg-full-legend {
+    color: lightgray;
+    position: relative;
+    overflow: hidden;
+    border-bottom: none;
+    font-size: small;
+    margin-bottom: 0px;
+}
+.hkg-full-fieldset { 
+    border-top:1px solid #333; 
+}
+
+.hkg-full-legend:after {
+    display: inline-block;
+    content: "";
+    height: 1px;
+    background: lightgray;
+    position: absolute;
+    width: 400%;
+    top: 50%;
+    margin-top: -2px;
+    margin-left: 10px;
+    color: lightgray;
+}
+
+/*//Author: Akta Kalariya
+//---------used when we want to make border around some form element's group'*/
+.hkg-fieldset{
+    border: 1px solid #999 !important; padding: 0 1.4em 0em 1.4em !important;border-radius: 5px;
+}
+.hkg-legend{
+    border: 0px;font-size: inherit;margin-bottom: 0px;width: auto;
+}
+
+/*//Author: Piyush Sanghani
+//---------used when you want to make border around some form element's group and it is having atleast some height'*/
+.hkg-fieldset-min{
+    border: 1px solid #999 !important; padding: 0 1.4em 0em 1.4em !important;border-radius: 5px; min-height: 500px;
+}
+
+.hkg-scrollable-menu {
+    height: auto;
+    max-height: 100px;
+    overflow-x: hidden;
+}
+
+/* @Author Akta Kalariya
+used when we want no space beetween grid colmuns
+*/
+.hkg-nopadding {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/**
+@author djoshi
+use to show messages like 'no records found'
+ref
+    ----------------
+    creategroup.html
+    ----------------
+*/
+.hkg-norecords{
+    background-color: lightgray;
+    border: 0px solid;
+    border-radius: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    text-align: left;
+}
+
+/**
+@author avala
+use to set button in front of h3 tag
+
+    ----------------------------------
+    createorupdate-rolemanagement.html
+    ----------------------------------
+*/
+.hkg-alignwith-h3{
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+/*Added by kvithlani
+Use to display left border in div
+*/
+.hkg-left-border{
+    border-left: 1px solid lightgray; 
+}
+/*Added by dmehta
+For validation success and failure msgs
+*/
+.hkg-validation-success{
+    color: green;
+}
+.hkg-validation-failure{
+    color: #a94442;
+}
+
+/*//Author: Piyush Sanghani
+//---------used when you want round border around table header'*/
+.hkg-round-corner{
+    border-top-left-radius:30px;
+    background-color:#F0F0F0 ;
+    border-top-right-radius: 30px;
+    padding:10px 0;
+    margin: 0px;
+}
+
+/*Author: Piyush Sanghani 
+  Usage : managemessage.html  
+  When to use : When you want image inside input text use following 3 classes'*/
+.hkg-input-img-container {
+    position:relative;
+    padding:0;
+    margin:0;
+}
+
+.hkg-input-img {
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:15px;
+    height:15px;
+}
+
+.hkg-input-img-area {
+    padding-right: 30px;
+}
+
+/*//Author: Piyush Sanghani
+//---------Disable textarea resize*/
+textarea {
+    resize: none;
+}
+
+/**
+* author djoshi
+*/
+.hkg-gray{
+    color: gray
+}
+
+.hkg-notification-alert{margin-top: 15px;margin-right: 15px}
+
+/*Added by Sidhdharth
+Use when you want to display checkbox as button
+*/
+.hkg-checkbox-button {
+    margin:4px;
+    background-color:#EFEFEF;
+    border-radius:4px;
+    border:1px solid #D0D0D0;
+    overflow:auto;
+    float:left;   
+}
+
+.hkg-checkbox-button label:hover{
+    cursor: pointer;
+}
+
+.hkg-checkbox-button label {
+    float:left;
+    width:2.0em;
+    margin-bottom : 0px;
+}
+
+.hkg-checkbox-button label span {
+    text-align:center;
+    padding:3px 0px;
+    display:block;
+}
+
+.hkg-checkbox-button label input {
+    position:absolute;
+    top:-20px;
+}
+
+.hkg-checkbox-button input:checked + span {
+    background-color:#8c6eb0;
+    border-color:#8c6eb0;
+    color:white;
+}
+
+/* @author:- Akta Kalariya
+image upload directive classes*/
+.hkg-img-upld { list-style: none; text-align: center; color: #F0F0F0;}
+.hkg-image-upload {
+    position:relative;
+    width:150px;
+    overflow:hidden;
+}
+
+.hkg-image-realupload {
+    font-size:28px;
+    position:absolute;
+    top:0;
+    right:0;
+    opacity:0.4;
+    -moz-opacity:0.4;
+    filter:alpha(opacity:0);
+    z-index:2;
+    height:100%;
+}
+
+.hkg-image-fakeupload {
+    background: #8b7878;
+    cursor: pointer;
+    padding: 4px 0;
+    font: 12px Verdana, Arial, Helvetica, sans-serif;
+    height: 125px;
+}
+
+.hkg-image-fakeupload input {
+    width:125px;
+    height: 125px;
+}
+
+/*Added by Satyam
+Use this class wherever title will be shown in rounded corners.
+(Example : Go to Event information page in HKG and see Description title)
+*/
+.hkg-p-title-rounded-corner{    
+    color: #ffffff;
+    background-color: #98b280;    
+    border-color: #bce8f1;
+    border-radius: 50px;
+    padding-left: 40px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    height: 40px;
+    font-size: large;    
+    margin-left: 10px;
+    font-family: Arial Regular Arial;
+    font-weight: 700;
+    font-style: normal;
+}
+
+.hkg-carousel-caption-bottom {
+    color: black;
+    background-color: #c6c4c4;
+    opacity: 0.7;
+    border-radius: 10px;
+    position: absolute;
+    right: 2%;
+    bottom: 4%;
+    left: 2%;
+    z-index: 10;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;    
+    overflow: auto; 
+    text-align: left;    
+}
+
+.hkg-carousel-caption-top {
+    color: black;
+    background-color: #c6c4c4;
+    opacity: 0.7;
+    border-radius: 10px;
+    position: absolute;
+    top: 2%;    
+    left: 2%;
+    z-index: 10;
+    padding-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;    
+    overflow: auto; 
+    text-align: left;    
+}
+
+/*Added By kvithlani Date : 8 Apr,2014
+For multiselect functionality in report builder component
+*/
+ag-multiselect {
+    display:block;
+}
+ag-multiselect .btn {
+    width: 100%;
+    background-color: #FFF;
+    padding-top:0px;
+    padding-bottom:10px;
+    border:1px solid #ccc;
+}
+ag-multiselect .btn .caret{
+    margin-top: 10px;
+    margin-right: -5px;
+}
+ag-multiselect .btn.error{
+    border: 1px solid #da4f49 !important;
+}
+ag-multiselect .dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}
+ag-multiselect .dropdown-menu {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 2px;
+}
+ag-multiselect .dropdown-menu > li > a {
+    padding: 3px 10px;
+    cursor:pointer;
+}
+.ag-text-shadow{
+    text-shadow: 2px 2px #999
+}
+/*Added by kvithlani to display bold tasks conditinally in manage task*/
+.hkg-bold{
+    font-weight: bold;
+}
+
+.hkg-checkbox-button {
+    margin:4px;
+    background-color:#EFEFEF;
+    border-radius:4px;
+    border:1px solid #D0D0D0;
+    overflow:auto;
+    float:left;   
+}
+.hkg-scrollableDropDown-menu{
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.hkg-scrollableDropDown-tree{
+    max-width: 400px;
+    overflow-x: auto;
+}
+
+.gallery-box .title {
+    height: 22px;
+    overflow: hidden;
+    display: block;
+}
+.gallery-box .thumbnails {
+    height: 188px;
+    width: 188px;
+}
+
+.thumbnails {
+    line-height: 20px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    word-break: normal;
+}
+.gallery-box {
+    width: 200px;
+    padding: 5px;
+    margin: 7px;
+    float: left;
+    min-height: 200px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+}
+
+.arrow-gallery {
+    cursor: pointer;
+    display: block;
+    height: 64px;
+    margin-top: -35px;
+    outline: medium none;
+    position: absolute;
+    top: 50%;
+    width: 64px;
+    z-index: 5;
+}
+.arrow-gallery.prev-gallery {
+    background-image: url("../images/prev.png");
+    left: 20px;
+    opacity: 0.2;
+    transition: all 0.2s linear 0s;
+}
+.arrow-gallery.next-gallery {
+    background-image: url("../images/next.png");
+    opacity: 0.2;
+    right: 20px;
+    transition: all 0.2s linear 0s;
+}
+.arrow-gallery.prev-gallery:hover{
+    opacity:1;
+}
+.arrow-gallery.next-gallery:hover{
+    opacity:1;
+}
+
+.nav-gallery {
+    bottom: -4px;
+    display: block;
+    height: 48px;
+    left: 0;
+    margin: 0 auto;
+    padding: 1em 0 0.8em;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    width: 100%;
+    z-index: 5;
+}
+.nav-gallery li {
+    border: 5px solid #AAAAAA;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    height: 30px;
+    margin: 0 8px;
+    position: relative;
+    width: 50px;
+}
+.nav-gallery li.active {
+    border: 5px solid #FFFFFF;
+}
+.nav-gallery li img {
+    width: 100%;
+}
+
+.slider-gallery {
+    border: 15px solid #FFFFFF;
+    border-radius: 5px;
+    height: 500px;
+    margin: 20px auto;
+    position: relative;
+    width: 800px;
+
+    -webkit-perspective: 1000px;
+    -moz-perspective: 1000px;
+    -ms-perspective: 1000px;
+    -o-perspective: 1000px;
+    perspective: 1000px;
+
+    -webkit-transform-style: preserve-3d;
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    -o-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+.slide-gallery {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+.slide-gallery.ng-hide {
+    opacity:1;
+
+    -webkit-transition:1s linear all;
+    -moz-transition:1s linear all;
+    -o-transition:1s linear all;
+    transition:1s linear all;
+
+    -webkit-transform: rotateX(50deg) rotateY(30deg);
+    -moz-transform: rotateX(50deg) rotateY(30deg);
+    -ms-transform: rotateX(50deg) rotateY(30deg);
+    -o-transform: rotateX(50deg) rotateY(30deg);
+    transform: rotateX(50deg) rotateY(30deg);
+
+    -webkit-transform-origin: right top 0;
+    -moz-transform-origin: right top 0;
+    -ms-transform-origin: right top 0;
+    -o-transform-origin: right top 0;
+    transform-origin: right top 0;
+}
+.slide-gallery.ng-hide-add.ng-hide-add-active {
+    opacity:0;
+}
+.slide-gallery.ng-hide-remove {
+    -webkit-transition:1s linear all;
+    -moz-transition:1s linear all;
+    -o-transition:1s linear all;
+    transition:1s linear all;
+
+    display:block!important;
+    opacity:0;
+}
+.slide-gallery, .slide-gallery.ng-hide-remove.ng-hide-remove-active {
+    opacity:1;
+}
+
+.hkg-selected {
+    background-color:#a084c2;
+    padding: 1px 5px;
+    color:#fff;
+    width: 85%;
+    display: inline-block
+}
+
+.hkg-selected:hover {
+    background-color:#a084c2;
+    padding: 1px 5px;
+    color:#fff;
+}
+
+.cogred{
+    color:#da4f49;
+    cursor: pointer;
+}
+
+.coggreen{
+    color:green;
+    cursor: pointer;
+}
+
+.hkg-movable {
+    cursor: move;
+}
+
+.row-color-change {
+  background-color:#f5f5f5;
+}
+.noselect {
+   -webkit-touch-callout: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}

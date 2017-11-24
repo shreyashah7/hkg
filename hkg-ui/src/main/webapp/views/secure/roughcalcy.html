@@ -1,0 +1,38 @@
+<form method="POST" class="form-horizontal"  novalidate>
+    <div ng-form="roughcalcyForm" >
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li class="active">{{entity + 'Rough Calcy'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="new-panel" style="width: 100%;display: block;overflow: auto;">
+            <div class="clearfix"></div>
+            <!--<div id="messages" ng-include src="'templates/messages.html'"></div>-->
+            <div class="clearfix"></div>
+            <rap-calcy conditions="conditions" calculate-rate="calculateRate()" ng-if="generaRoughCalcyTemplate" output-data="calc.discountDetailsMap" input-data="generaRoughCalcyTemplate" ></rap-calcy>
+            <div class="col-xs-12">
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-12 pull-right text-right">
+                        <button type="submit" ng-click="reset()" class="btn btn-hkg">{{entity + 'Clear All'| translate}}</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <label class="col-md-4 control-label">Base price</label><input type="text" disabled="true" class="col-md-4 col-lg-4 " ng-model="calcFinal.baseAmount">
+            </div>
+            <div class="row">
+                <label class="col-md-4 control-label">Discount</label><input type="text" disabled="true" class="col-md-4 col-lg-4 " ng-model="calcFinal.discount">
+            </div>
+            <div class="row">
+                <label class="col-md-4 control-label">Total amount</label><input type="text" disabled="true" class="col-md-4 col-lg-4 " ng-model="calcFinal.amount">
+            </div>
+            <div class="row">
+                <label class="col-md-4 control-label">Mix</label><input type="text" disabled="true" class="col-md-4 col-lg-4 " ng-model="calcFinal.mixAmount">
+            </div>
+        </div>
+    </div>
+</form>

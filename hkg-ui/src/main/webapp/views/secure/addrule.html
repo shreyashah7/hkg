@@ -1,0 +1,142 @@
+<form method="POST" class="form-horizontal"  name="addRuleForm"  novalidate  >
+    <div>
+
+        <!--<tmp ag-grid-class="col-md-4" ag-id="menulabel" ag-name="MenuLabel"-->
+        <!--ag-model="rules.field" required req-msg="Enter menu label" valid-msg="Enter valid menu label"></tmp>------>
+
+
+        <div class='form-group required'>
+            <label for="rulesName"  class="col-md-3 control-label">
+                {{ entity+'Rule Name' | translate}}
+            </label>
+
+            <div class="col-md-6" ng-class="{'has-error': addRuleForm.rulesName.$invalid&&(addRuleForm.rulesName.$dirty||submitted)}"> 
+                <input type='text'  ng-model="ruleObject.ruleName" id="rulesName" name="rulesName" class="form-control" ng-required="true" maxlength="100"/>
+
+                <div class="error,help-block" ng-show="(addRuleForm.rulesName.$dirty||submitted)&&addRuleForm.rulesName.$invalid">
+                    <span class="help-block" ng-show="addRuleForm.rulesName.$error.required">{{ entity+'Rule name not entered' | translate}}</span>
+                    <span class="help-block" ng-show="addRuleForm.rulesName.$error.exists">{{ entity+eventExistsMsg | translate}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" > 
+            <label for="apply" class="col-md-3 control-label">{{entity+'Apply'| translate}}</label>
+            <div class="col-md-2" ng-class="{'has-error': addRuleForm.apply.$invalid&&submitted}">    
+                <select id="apply" name="apply" class="form-control"  ng-options="option for option in applyList" ng-model="ruleObject.apply">
+                    <option value="">{{entity+'Select'| translate }}</option>
+                </select>
+                <div class="error,help-block" ng-show="(addRuleForm.apply.$dirty||submitted&&addRuleForm.apply.$invalid)">
+                    <span class="help-block" ng-show="addRuleForm.apply.$error.required">{{ entity+"Select condition" | translate }}</span>                    
+                </div>
+            </div>
+        </div>
+
+        <!--        <table class="table" > 
+                    <tr ng-repeat="rules in ruleObject.ruleList">
+                        <td class="col-md-2">
+                            <label class="control-label" ng-bind="entityList[rules.entity]"/>
+                        </td>
+                        <td class="col-md-2">
+                            <label class="control-label" ng-bind="rules.field.oldLabelName"/>
+                        </td>
+                        <td class="col-md-3">
+                            <label class="control-label" ng-bind="rules.operator.label"/>
+                        </td>
+                        <td class="col-md-3">
+                            <label class="control-label"  ng-bind="rules.values"/>
+                        </td>
+                        <td class="col-md-1">
+                            <a href="" ng-click="makeEditFlagFalse();"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                            <a href="" ng-click="remove($index)"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                        </td>
+                    </tr>
+        
+                </table>-->
+
+        <!--<ng-form name="rowForm" ng-submit="rowForm.$valid&&rowForm.submit()" >-->
+        <table class="table">
+
+            <tr ng-form="rowForm" ng-repeat="rules in ruleList">
+
+                <td class="col-md-2" ng-class="{'has-error': rowForm.priority.$invalid&&rules.rowsubmitted}"> 
+
+                    <select id="priority" required  name="priority" class="form-control"  ng-options="p for p in priorityList" ng-model="rules.priority">
+                        <option value="">{{entity+'Select priority'| translate }}</option>
+                    </select>
+                    <div class="error,help-block" ng-show="(rowForm.priority.$invalid&&rules.rowsubmitted)">
+                        <span class="help-block" ng-show="rowForm.priority.$error.required">{{ entity+"Select priority" | translate }}</span>                    
+                    </div>
+                </td>
+                <td class="col-md-2"  ng-class="{'has-error': rowForm.entityName.$invalid&&rules.rowsubmitted}">    
+                    <select id="entityName" required name="entityName" class="form-control" ng-change="onEntityChange($index)"  ng-options="k as v for (k, v) in entityList" ng-model="rules.entity">
+                        <option value="">{{entity+'Select'| translate }}</option>
+                    </select>
+                    <div class="error,help-block" ng-show="(rowForm.entityName.$invalid&&rules.rowsubmitted)">
+                        <span class="help-block" ng-show="rowForm.entityName.$error.required">{{ entity+"Select entity" | translate }}</span>                    
+                    </div>
+                </td>
+
+                <td class="col-md-2" ng-class="{'has-error': rowForm.fieldName.$invalid&&rules.rowsubmitted}">    
+                    <select id="fieldName" required name="fieldName" class="form-control" ng-change="onFieldChange($index)" ng-options="field.oldLabelName for field in rules.fieldList" ng-model="rules.field">
+                        <option value="">{{entity+'Select'| translate }}</option>
+                    </select>
+
+                    <div class="error,help-block" ng-show="(rowForm.fieldName.$invalid&&rules.rowsubmitted)">
+                        <span class="help-block" ng-show="rowForm.fieldName.$error.required">{{ entity+"Select field" | translate }}</span>                    
+                    </div>
+                </td>
+
+                <td >
+                    {{ entity+"Is" | translate }}
+                </td>
+
+                <td class="col-md-2"   ng-class="{'has-error':rowForm.operator.$invalid&&rules.rowsubmitted}">    
+                    <select required id="operator" ng-mousedown="onOperatorClick($index)" name="operator" class="form-control" ng-change="onOperatorChange($index)"  ng-options="operator.label for operator in rules.operatorList" ng-model="rules.operator">
+                        <option value="">{{entity+'Select'| translate }}</option>
+                    </select>
+                    <div class="error,help-block" ng-show="rowForm.operator.$invalid&&rules.rowsubmitted">
+                        <span class="help-block" ng-show="rowForm.operator.$error.required">{{ entity+"Select operator" | translate }}</span>                    
+                    </div>
+                </td>
+
+                <td id="test" class="col-md-3" >
+                  ---isme
+                    <div ng-if="rules.showtemplate"> 
+                        <rule-field rf-count="{{rules.operator.shortcutCode}}" rf-type="{{componentType}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid"> </rule-field>
+                    
+                    </div>
+                </td>
+
+                <td class="col-md-1">
+                    <a href=""  ng-click="addRule(rowForm, $index);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                    <a href="" ng-click="remove($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                </td>
+            </tr>  
+
+        </table>
+        <!--</ng-form>-->
+        <div class='form-group required'>
+            <label for="remarks"  class="col-md-3 control-label">
+                {{ entity+'Remarks' | translate}}
+            </label>
+
+            <div class="col-md-6" ng-class="{'has-error': addRuleForm.remarks.$invalid&&(addRuleForm.remarks.$dirty||submitted)}"> 
+                <textarea rows="5"  ng-model="ruleObject.remarks" id="remarks" name="remarks" class="form-control" ng-required="true" maxlength="100" />
+
+                <div class="error,help-block" ng-show="(addRuleForm.remarks.$dirty||submitted)&&addRuleForm.remarks.$invalid">
+                    <span class="help-block" ng-show="addRuleForm.remarks.$error.required">{{ entity+'Remarks not entered' | translate}}</span>
+                    <span class="help-block" ng-show="addRuleForm.remarks.$error.exists">{{ entity+eventExistsMsg | translate}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-xs-12 col-lg-12 text-right">
+                <hr/>
+                <a href="" ng-click="rulesCancel(addRuleForm);">Cancel</a>&nbsp;
+                <button class="btn btn-hkg" ng-click="save(addRuleForm)">{{ entity+"Save" | translate }}</button>
+            </div>
+        </div> 
+
+
+    </div>
+</form>

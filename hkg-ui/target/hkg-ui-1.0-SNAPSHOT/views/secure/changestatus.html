@@ -1,0 +1,188 @@
+<form role="form" class="form-horizontal" novalidate name="statusChangeForm">
+    <div class="row" ng-init="initializeData();
+            initChangeStatusForm(statusChangeForm)">
+        <div class="col-xs-12"> 
+            <div class="col-xs-12 breadcrumb-bg">
+                <div class="col-xs-12 col-lg-8">
+                    <ol class="breadcrumb">
+                        <li>{{entity + 'You are here'| translate }}</li>
+                        <li>{{entity + 'Stock'| translate }}</li>
+                        <li class="active">{{entity + 'Change Status'| translate }}</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="col-xs-12 new-panel">
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+                <div ng-if="!flag.statusChangeflag">
+                    <div class="form-group">
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="status" class="col-md-4 control-label wordRap">{{entity + "Status"| translate}}</label>
+                            <div class="col-md-8">
+                                <select id="status"  name="status" class="form-control col-md-8"  ng-options="k as k for (k,v) in statusMap" ng-model="statusChangeDataBean.status">
+                                    <option value="">{{entity + 'Select status'| translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="proposedStatus" class="col-md-4 control-label wordRap">{{entity + "Proposed Status"| translate}}</label>
+                            <div class="col-md-8">
+                                <select id="proposedStatus" name="proposedStatus" class="form-control col-md-8" ng-options="proposedstatus as proposedstatus for proposedstatus in proposedstatusList" ng-model="statusChangeDataBean.proposedStatus">
+                                    <option value="">{{entity + 'Select proposed Status'| translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="generalSearchTemplate && searchResetFlag">
+                        <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                        internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                        ng-model="searchCustom" ng-if="generalSearchTemplate" is-diamond="true">
+                        </custom-search>
+                    </div>
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onCanelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="retrieveSearchedData()">{{entity + 'Search'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+
+                        <div class="col-xs-12 " ng-if="(stockList.length === 0 && listFilled)">
+                            <hr/>
+                            <div class="col-lg-12 col-md-12 col-xs-12">
+                                <table class="table table-bordered" >
+                                    <tr>
+                                        <td class="col-md-12">
+                                            {{entity + 'No matching results found'| translate}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div id='masterDetail' ng-if="stockList && (stockList.length) > 0" style="width: 100%">
+                        <div><h4>{{entity + 'Searched Records'| translate}}</h4></div>
+                        <div id="gridTable"  ui-grid="gridOptions"  ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                    </div>
+
+                    <div class="col-xs-12" ng-if="(stockList.length) > 0 && flag.rowSelectedflag">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onCanelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="changeStatus()">{{entity + 'Next'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="flag.statusChangeflag">
+                    <div ng-if="flag.multipleLotflag === false ">
+                        <div>
+                            <div ng-if="generaInvoiceTemplate && generaInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                               ng-model="invoiceCustom" ng-if="generaInvoiceTemplate && invoiceCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div>
+                            <div ng-if="generaParcelTemplate && generaParcelTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                               ng-model="parcelCustom" ng-if="generaParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}"  view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div>
+                            <div ng-if="generalLotTemplate && generalLotTemplate.length > 0" id="lotParent" title="Lot Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                               ng-model="lotCustom" ng-if="generalLotTemplate && lotCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div ng-if="flag.singlePacket === true">
+                            <div ng-if="generaPacketTemplate && generaPacketTemplate.length > 0" id="packetParent" title="Packet Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaPacketTemplate" 
+                                               ng-model="packetCustom" ng-if="generaPacketTemplate && packetCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="flag.multipleLotflag === true">
+                        <div>
+                            <div class="col-md-12" id="stockParent" title="Parent Details" accordion-collapse>
+                                <div id="parentGridTable" ui-grid="parentGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="!flag.staticFieldMissing">
+                        <div ng-if="flag.displayEditLotflag">
+                            <div class="panel-heading"><!-- class added to match parent collapse -->
+                                <h4 ng-if="generalLotEditTemplate">{{entity + 'Lot'| translate }}</h4>
+                            </div>
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotEditDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotEditTemplate" submit-flag-name="submittedFlag" 
+                                           ng-model="lotEditCustom" ng-if="generalLotEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" designation-id="{{rootNodeDesignationIds}}" is-diamond="true" >
+                            </dynamic-form>
+                        </div>
+                        <div ng-if="flag.displayEditPacketflag">
+                            <div class="panel-heading"><!-- class added to match parent collapse -->
+                                <h4 ng-if="generalPacketEditTemplate">{{entity + 'Packet'| translate }}</h4>
+                            </div>
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetEditDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketEditTemplate" submit-flag-name="submittedFlag" 
+                                           ng-model="packetEditCustom" ng-if="generalPacketEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}"  designation-id="{{rootNodeDesignationIds}}" is-diamond="true">
+                            </dynamic-form>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xs-12 form-group required">
+                            <label for="changestatus" class="col-md-4 control-label wordRap">{{entity + "Status"| translate}}</label>
+                            <div class="col-md-8" ng-class="{'has-error': statusChangeForm.changestatus.$invalid && submittedFlag}">
+                                <select id="changestatus" ng-required="true" name="changestatus" class="form-control col-md-8"  ng-options="status as status for status in statusListToBeChange" ng-model="statusChangeDataBean.statusToBeChange" ng-change="checkMandatoryFields(statusChangeDataBean.statusToBeChange)">
+                                    <option value="">{{entity + 'Select status'| translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-6 pull-right text-right">
+                                    <a ng-click="onBack(statusChangeForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                                    <button ng-if="flag.customFieldGenerated" class="btn btn-hkg" ng-click="onSave(statusChangeForm)">{{entity + 'Save'| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="flag.staticFieldMissing">
+                        <div class="col-xs-12">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'Mandatory fields are not configured'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-6 pull-right text-right">
+                                    <a ng-click="onBack()">{{entity + 'Back'| translate}}</a>&nbsp;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

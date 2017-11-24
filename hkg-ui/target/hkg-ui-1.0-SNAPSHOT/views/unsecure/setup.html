@@ -1,0 +1,73 @@
+<div class="row" >
+    <!--    <div class="col-xs-12 col-md-8 col-md-offset-2 " >-->
+
+    <div class="col-md-4 col-md-offset-4" style="padding-left: 0px;">  
+
+        <div class="panel panel-default" >
+
+            <div class="panel-body " >
+                <form role="form" name="setupForm" class="form-horizontal" novalidate ng-submit="doLogin(setupForm);" autocomplete="off">
+                   
+                    <div class="col-xs-12" style="margin-left: 25px"> 
+                        <center>
+                            <!--                                <img alt="HKG" src="images/hk-logo.png" /> -->
+                        </center>
+                    </div>
+                    <div class="row" ng-show="message.show">&nbsp;</div>                        
+                    <!--                        <div class="col-xs-10 col-xs-offset-1 alert alert-danger" ng-show="message.show">
+                                                <button type="button" class="close" ng-click="message.show = false">&times;</button>
+                                                {{message.text}}
+                                            </div>                        -->
+                    <div class="list-group-item-text alert alert-danger" ng-show="message.show">
+                        <span class="glyphicon  glyphicon-remove-circle pull-left" title="Failure">&nbsp;</span> 
+                        {{'SETUP.'+message.text| translate }}
+                        <span class="glyphicon  glyphicon-remove pull-right" title="Cancel" ng-click="message.show = false"></span>
+                    </div>
+                    <div class="form-group">
+                        &nbsp;
+                    </div>
+                    <div class="form-group">
+
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <div ng-class="{'has-error has-feedback': setupForm.emailaddress.$invalid&&(setupForm.emailaddress.$dirty||submitted)}">  
+                                <!--<input id="emailaddress" ng-model="username" name="emailaddress" ng-pattern="EMAIL_REGEXP" type="text" required class="form-control"/>-->
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background-color: #977bb8;color:white"><span class="glyphicon glyphicon-user"></span></span>
+                                    <input id="emailaddress" ng-model="username" placeholder="{{'SETUP.'+'Franchise Admin Username'| translate}}" name="emailaddress" type="text" required class="form-control"/>
+                                </div>
+
+                                <div class="error,help-block" ng-show="(setupForm.emailaddress.$dirty||submitted)&&setupForm.emailaddress.$invalid">
+                                    <span class="help-block" ng-show="setupForm.emailaddress.$error.required">{{'SETUP.'+'Enter Franchise Admin Username'| translate}}</span>
+                                    <span class="help-block" ng-show="setupForm.emailaddress.$error.pattern">{{'SETUP.'+'Enter Valid Username'| translate}}</span>
+                                    <span class="glyphicon glyphicon-remove form-control-feedback"></span>
+                                </div>
+                            </div>
+                        </div>                
+                    </div>
+                    <div class="form-group">                   
+
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <div ng-class="{'has-error  has-feedback': setupForm.psw.$invalid&&(setupForm.psw.$dirty||submitted)}">  
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background-color: #977bb8;color:white"><span class="glyphicon glyphicon-ok-circle"></span></span>
+                                    <input id="psw" name="psw" placeholder="{{'SETUP.'+'Password'| translate}}" ng-model="password" type="password" required class="form-control"/>
+                                </div>
+                                <div class="error,help-block" ng-show="(setupForm.psw.$dirty||submitted)&&setupForm.psw.$invalid">
+                                    <span class="help-block" ng-show="setupForm.psw.$error.required">Enter password</span>
+                                    <span class="glyphicon glyphicon-remove form-control-feedback"></span>
+                                </div>
+                            </div>
+                        </div>                  
+                    </div>
+                   
+                    <div class="form-group">
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <button class="btn btn-hkg col-xs-12"  ng-bind=" 'SETUP.'+'  LOGIN'|translate"></button>
+                        </div>
+                    </div>                    
+                </form>
+                <br/>
+            </div>           
+        </div>        
+    </div>    
+</div>

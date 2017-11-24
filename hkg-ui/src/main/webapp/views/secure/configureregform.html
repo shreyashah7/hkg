@@ -1,0 +1,132 @@
+<div>
+    <form method="POST" class="form-horizontal" name="regForm" novalidate >
+        <div ng-form="configureRegForm">
+            <div class='form-group required'>
+                <label for="regFormName"  class="col-md-3 control-label">
+                    {{ entity + 'Registration Form' | translate}}
+                </label>
+                <div class="col-md-6" ng-class="{'has-error': configureRegForm.regFormName.$invalid && (configureRegForm.regFormName.$dirty || regformSubmitted)}"> 
+                    <input type='text' ng-model="event.registrationFormName" name="regFormName" id="regFormName" class="form-control" required maxlength="100"/>
+                    <div class="error,help-block" ng-show="(configureRegForm.regFormName.$dirty || regformSubmitted) && configureRegForm.regFormName.$invalid">
+                        <span class="help-block" ng-show="configureRegForm.regFormName.$error.required">{{ entity + 'Registration form name not entered' | translate}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label for="copyEventName"  class="col-md-3 control-label">
+                    {{ entity + 'Copy From Event' | translate}}
+                </label>
+                <div class="col-md-6" ng-class="{'has-error': configureRegForm.copyEventName.$invalid && (configureRegForm.copyEventName.$dirty || submitted)}"> 
+                    <input type="text" id="copyEventName" name="copyEventName" class="col-md-12 hkg-nopadding" ui-select2="regFormNames" ng-model="event.selectedEventToCopy" placeholder="None"/>
+
+                    <div class="error,help-block" ng-show="(configureRegForm.copyEventName.$dirty || submitted) && configureRegForm.copyEventName.$invalid">
+
+                    </div>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label for="defaultFields"  class="col-md-3 control-label">
+                    {{ entity + 'Default Fields' | translate}}
+                </label>
+                <div class="col-md-6" ng-class="{'has-error': configureRegForm.defaultFields.$invalid}" id="defaultFields">  
+                    <div class="row">
+                        <div class="col-md-7">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="noOfAdults" ng-model="regFields.noOfAdults" ng-disabled="true">{{ entity + 'No. Of Adults' | translate}}
+                            </label>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="noOfChildren" ng-model="regFields.noOfChildren" ng-disabled="true">{{ entity + 'No. Of Children' | translate}}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-7">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="relWithGuest" ng-model="regFields.relWithGuest" ng-disabled="true">{{ entity + 'Relationship With Guest' | translate}}
+                            </label>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="nameOfGuest" ng-model="regFields.nameOfGuest" ng-disabled="true">{{ entity + 'Name Of Guest' | translate}}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-form="newFieldForm">
+                <div class='col-md-12 pull-left'>
+                    <label>{{ entity + 'Add New Fields' | translate}}</label>
+                </div>
+                <div class="table-responsive col-md-12">
+                    <table class="table">
+                        <tr>
+                            <td class="col-md-6">
+                                <div ng-class="{'has-error': newFieldForm.fieldLabel.$invalid && (newFieldForm.fieldLabel.$dirty || newFieldFormSubmitted)}">
+                                    <input type="text" ng-model="field.fieldName" name="fieldLabel" required class="form-control" placeholder="{{entity + 'Label of the field'|translate}}" maxlength="50" ng-change="newFieldForm.fieldLabel.$setValidity('exists', true);" ng-blur="checkUniqueLabelName(field.fieldName, newFieldForm, -1)"/>
+                                    <div class="error,help-block" ng-show="(newFieldForm.fieldLabel.$dirty || newFieldFormSubmitted) && newFieldForm.fieldLabel.$invalid">
+                                        <span class="help-block" ng-show="newFieldForm.fieldLabel.$error.required">{{ entity + 'Field label not entered' | translate}}</span>
+                                        <span class="help-block" ng-show="newFieldForm.fieldLabel.$error.exists">{{field.fieldName}}{{ entity + ' already taken' | translate}}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="col-md-4">
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="fieldRequired" ng-model="field.validationPattern" ng-true-value="required" ng-false-value="">{{ entity + 'Required' | translate}}?
+                                </label>
+                            </td>
+                            <td class="col-md-2">
+                                <span class="glyphicon glyphicon-plus-sign big-font pull-right" ng-click="addNewField(newFieldForm)" title="{{entity + 'Add Field'|translate}}"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        <div class="col-md-12">
+            <label>{{ entity + 'Fields Added' | translate}}</label>
+        </div>
+        <div class="col-md-12 table-responsive">
+            <table class="table">
+                <tr ng-repeat="field in event.registrationFieldsDataBean" ng-form="addedFieldForm">
+                    <td class="col-md-6">
+                        <div ng-class="{'has-error': addedFieldForm.fieldLabel.$invalid}">
+                            <input type="text" name="fieldLabel" class="form-control" ng-model="field.fieldName" required placeholder="{{entity + 'Label of the field'|translate}}" max='50' ng-change="addedFieldForm.fieldLabel.$setValidity('exists', true);" ng-blur="checkUniqueLabelName(field.fieldName, addedFieldForm, $index)"/>
+                            <div class="error,help-block" ng-show="(addedFieldForm.fieldLabel.$dirty || submitted) && addedFieldForm.fieldLabel.$invalid">
+                                <span class="help-block" ng-show="addedFieldForm.fieldLabel.$error.required">{{ entity + 'Field label not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addedFieldForm.fieldLabel.$error.exists">{{field.fieldName}}{{ entity + ' already taken' | translate}}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="col-md-4">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" name="fieldRequired" ng-model="field.validationPattern" ng-true-value="required" ng-false-value="">{{ entity + 'Required' | translate}}?
+                        </label>
+                    </td>
+                    <td class="col-md-2">
+                        <span ng-click="removeField($index)" class="glyphicon glyphicon-remove text-danger pull-right" title="{{entity + 'Delete'|translate}}"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <span ng-bind="entity + 'No fields added' | translate" ng-if="fields.length === 0"></span>
+        </div>
+        <div class="col-md-12">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right"> 
+                    <a href="" ng-click="cancelRegForm(regForm)">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="saveRegistrationForm(regForm)">
+                        <span ng-bind="entity + 'Save Form' | translate"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>

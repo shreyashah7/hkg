@@ -1,0 +1,186 @@
+<!--<div class="col-xs-12">--> 
+<form method="POST" class="form-horizontal" name="managesubentity" novalidate>
+
+    <div>
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Manage'|translate}}</li>
+                    <li class="active">{{entity + 'SubEntity'| translate}}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-show="displayCustomPage === 'search'"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary" title="{{entity + 'Add '|translate}}" ></span>&nbsp;
+                <a style="cursor: pointer" class="pull-right" ng-click="cancel();">{{entity + 'CONFIGURE SUBENTITY'|translate}}</a>
+            </div>
+        </div>
+        <div class="col-xs-9 new-panel">
+            <div class="col-xs-12 col-lg-12 well well-sm ">
+                <div class="input-group ">
+                    <div id="searchSubentityField">
+
+                        <input class="typeahead" type="text" ng-model="customLabel"  placeholder="Search sub-entity field" 
+                               ag-search="{{apipath}}customfield/searchsubentity" 
+                               result-format="text" 
+                               on-select="retrieveSubentityFieldFromSearch" 
+                               on-enter="getSearchedCustomPages"
+                               search-list-array='searchedList'
+                               id="searchSubentityField" />
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedCustomPages(searchedList)" type="button" tooltip-html-unsafe="{{customsearchpopover}}" ><span class="glyphicon glyphicon-search"></span></button>
+                    </span> 
+                </div>
+                <!-- input-group --> 
+            </div>
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div ng-include src="'views/secure/searchedsubentityfield.html'" ng-if="displayCustomPage === 'search'"></div>
+            <div class="clearfix"></div>
+            <div ng-show="displayCustomPage === 'view'">
+                <div>                
+                    <div class="col-md-12">
+                        <div ng-form="subEntityForm" >
+                            <form name="subEntityForm" class="form-horizontal" novalidate>
+                                <div class="form-group" >
+                                    <div class="col-md-12">
+                                        <h4>{{entity + 'Add Subentity'| translate }}</h4>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="form-group">
+                                        <div class="col-lg-6 col-md-6 col-xs-12   ">
+
+                                            <div >
+                                                <label class="control-label col-md-4" for="label"> {{ entity + "  Select Entity  " | translate }}  </label>
+                                            </div>
+                                            <div class="col-md-8 " ng-class="{'has-error': subEntityForm.select_feature.$invalid && addSubmit}">
+                                                <input type="text" id="select_feature" dynamic-options="true" name="select_feature" ui-select2="select2allFeature" ng-model="subEntityCustom.featureId" class="col-md-6 hkg-nopadding form-control" 
+                                                       select-by-id="true" required ng-change="retrieveFieldOfTypeSubEntityForFeature(subEntityCustom.featureId)"/>
+                                                <div class="error,help-block" ng-show="subEntityForm.select_feature.$invalid && addSubmit">
+                                                    <span class="help-block" ng-show="subEntityForm.select_feature.$error.required">{{ entity + "Entity not selected" | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-6 col-md-6 col-xs-12" >
+
+                                            <div >
+                                                <label class="control-label col-md-4" for="label"> {{ entity + "Select Sub-entity Field" | translate }}  </label>
+                                            </div>
+                                            <div ng-if="reloadSubEntityField" class="col-md-8" ng-class="{'has-error': subEntityForm.select_subEntity.$invalid && addSubmit }">
+                                                <input type="text" id="select_field" dynamic-options="true" name="select_subEntity" ui-select2="select2allSubEntity" ng-model="subEntityCustom.subEntityId" class="col-md-6 hkg-nopadding form-control" 
+                                                       select-by-id="true" required ng-change="retrieveListOfSubEntities(subEntityCustom.subEntityId);
+                                                               enableAddButton();" ng-bind-html="div"/>
+                                                <div class="error,help-block" ng-show=" subEntityForm.select_subEntity.$invalid && addSubmit">
+                                                    <span class="help-block" ng-show="subEntityForm.select_subEntity.$error.required">{{ entity + "SubEntity not selected" | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subEntitydirective" ng-if="subEntityShow && cancelFlag && subFieldTemplate && subFieldTemplate.length > 0">
+
+                    <subentity  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType" 
+                                internationalization-label="{{i18DynamicForm}}" form-name="form2" template="subFieldTemplate" 
+                                ng-model="subEntity" ng-if="subFieldTemplate" submit-flag-name="addSubmit">
+                    </subentity>
+                </div>
+                <div class="clearfix"></div>
+                <div class="form-group">
+                    <div class="col-xs-12">
+                        <div class="col-xs-12 pull-right text-right">
+                            <div ng-if="subFieldTemplate.length > 0 && editSubOpen === false">
+                                <hr/>
+                                <button class="btn btn-hkg " type="submit" ng-click="addSubEntityValues();">{{ entity + "Add" | translate }}</button>
+                            </div>
+                            <div ng-if="subFieldTemplate.length > 0 && editSubOpen === true">
+                                <hr/>
+                                <button class="btn btn-hkg " type="submit" ng-click="addSubEntityValues();">{{ entity + "Update" | translate }}</button>
+                            </div>
+                        </div>
+                    </div></div>
+                <!-- table -->
+                <div id='masterDetail' >
+                    <div class="form-group">
+                        <br/><br/>
+
+                        <div  class="col-md-12" ng-if="SubEntityValuesList !== undefined && SubEntityValuesList.length > 0 && subEntityShow" >
+                            <!--                        <table class="table" cellspacing="0" width="100%" ag-data-table="SubEntityValuesList" >
+                                                        <thead>
+                                                            <tr>
+                                                                <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                                                <th>{{ entity + 'Action' | translate }}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr  ng-hide=" searchDataObj.isArchive !== undefined && searchDataObj.isArchive === true" ng-repeat="searchDataObj in SubEntityValuesList" dt-rows>
+                            
+                                                                <td ng-repeat="key in modelAndHeaderList" class="wordRap"><div ng-if="dateFields.indexOf(key.model) !== -1">{{!searchDataObj[key.model]?"NA": searchDataObj[key.model] | date}}</div>
+                                                                    <div ng-if="dateFields.indexOf(key.model) === -1">{{!searchDataObj[key.model]?"NA": searchDataObj[key.model]}}</div></td>
+                                                                <td>
+                                                                    <a  ng-click="openEdit(searchDataObj)"><i class="glyphicon glyphicon-edit" title="Edit"></i></a>
+                                                                    <a  ng-click="deleteSubFieldValues($index, searchDataObj)"><i class="text-danger glyphicon glyphicon-remove" title="Remove"></i></a>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>-->
+
+                            <!--UI Grid used instead of above data-table -->
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+
+                        <div ng-if="SubEntityValuesList !== undefined && SubEntityValuesList.length > 0 && subEntityShow" class="col-xs-12 pull-right text-right"> 
+                            <hr/>
+                            <a ng-click="cancel();">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                            <button class="btn btn-hkg "  type="submit" ng-click="saveSubEntityInMongo();">{{ entity + "Save" | translate }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING FEATURES'|translate}}</strong></span>
+                <hr class="margin-md"/>
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                        <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                    </div>
+                </div>
+                <!--Tree component starts-->
+                <div class="col-xs-12 hkg-nopadding">
+                    <br/>
+                    <div ng-show="featureFieldList.length > 0">
+                        <div ng-click='selectFeaturedata(selectedFeature)' 
+                             data-angular-treeview="true"
+                             data-tree-id="selectedFeature"
+                             ag-treemodel="featureFieldList" display-count="true" entity-name="ASTCTG_NM."
+                             data-search-query='treeSearchQuery'>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="featureFieldList.length === 0">
+                    {{entity + 'No features are available'|translate}} 
+                </div>
+            </div>
+            <div class="clearfix">
+            </div>
+        </div>
+    </div>
+</form>

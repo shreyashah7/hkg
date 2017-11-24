@@ -1,0 +1,43 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-show="!searchRecords || searchRecords.length == 0">
+            {{ entity + "No matching results found" | translate }}
+        </div>
+        <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Designation'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchRecords && (searchRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords">
+                    <thead>
+                        <tr>
+                            <th>{{entity + 'No'|translate}}</th>
+                            <th>{{entity + 'Goal'|translate}}</th>
+                            <th>{{entity + 'Associated With' +translate}}</th>
+                            <th>{{entity + 'Rule For Goal Validation'|translate}}</th>
+                            <th>{{entity + 'Action'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="tempGoalTemplate in searchRecords" dt-rows>                            
+                            <td><span class="wordRap">{{$index+1}}</span></td>
+                            <td><span class="wordRap" ng-bind="tempGoalTemplate.name"></span></td>
+                            <td><span class="wordRap" ng-bind="tempGoalTemplate.nameOfAssociation"></span></td>
+                            <td>
+                                <div>
+                                    <ul>
+                                        <li ng-if="tempGoalTemplate.isValGoalAchieved">
+                                            {{entity + 'IF goal achieved, then value should be '|translate}}{{tempGoalTemplate.valgoalachievedtype}} {{tempGoalTemplate.valgoalachievedvalue}}
+                                        </li>
+                                        <li ng-if="tempGoalTemplate.isValGoalNotAchieved">
+                                            {{entity + 'IF goal not achieved, then value should be '|translate}}{{tempGoalTemplate.valgoalnotachievedtype}} {{tempGoalTemplate.valgoalnotachievedvalue}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td align="center"><a><span  class="glyphicon glyphicon-edit" ng-click="editGoalTemplateFromSearch(tempGoalTemplate.id)" title="Edit"></span></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

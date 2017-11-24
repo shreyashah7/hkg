@@ -1,0 +1,227 @@
+<form method="POST" class="form-horizontal" name="mergePacketForm" novalidate>
+    <div ng-show="dataRetrieved" ng-init="registerLocationChangeEvent(mergePacketForm);
+            initMergePacketForm(mergePacketForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Merge'|translate}}</li>
+                    <li class="active">{{entity + 'Packet'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && !generalSearchTemplate">
+                <p>{{entity + 'First configure the search field to search and merge'| translate}}</p>
+            </div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate && !flag.showUpdatePage && !flag.selectParent">
+                <h4>Search/filter</h4>
+            </div>
+            <div ng-if="!flag.showAddPage && !flag.showUpdatePage &&!flag.selectParent">
+                <div>
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 " ng-if="(!searchedData.length > 0 && listFilled)">
+                            <p class="col-md-offset-4">{{entity + 'No matching results found'| translate}}</p>
+                        </div>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch(mergePacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(mergePacketForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-show="searchedData && (searchedData.length) > 0">
+                    <div class="form-group">
+                        <br/><br/>
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData" >
+                                <thead>
+                                    <tr>
+                                        <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                        <th>{{ entity + 'Action' | translate }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="searchDataObj in searchedData" dt-rows>
+                                        <td ng-repeat="key in modelAndHeaderList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                        <td><input type="checkbox" class="checkbox checkbox-inline" ng-model="searchDataObj.hasPacket" ng-checked="row.newArchieve" ng-true-value='true'/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate && searchedData && searchedData.length>0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-click="mergePacket(mergePacketForm)">{{entity + 'Add'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <br/><br/>
+                <div ng-show="tempMergeList && (tempMergeList.length) > 0">
+                    <br/><br/>
+                    <div class="form-group">
+                        <div  class="col-md-12" ng-if="flag.mergeListFilled">
+                            <table class="table" cellspacing="0" width="100%" data-table="tempMergeList" >
+                                <thead>
+                                    <tr>
+                                        <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                        <th>{{ entity + 'Action' | translate }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="searchDataObj in tempMergeList" dt-rows>
+                                        <td ng-repeat="key in modelAndHeaderList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                        <td><a title="{{entity + 'Click to remove'|translate}}" ng-click="removePacket(searchDataObj)" class="glyphicon glyphicon-remove text-danger" ></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="tempMergeList && tempMergeList.length>0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="clearTempMergeList(mergePacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="showMergeFields(mergePacketForm)">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <span ng-if="flag.twoPacketReqd && tempMergeList.length>0">Select at least two packets to merge </span>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.showUpdatePage">
+                <div ng-if="!flag.showAddPage && !mergePacketTemplate">
+                    <span>{{entity + 'First configure the merge field'| translate}}</span>
+                </div>
+                <div>
+                    <h4>Invoice details</h4>
+                    <br/>
+                    <span>Not applicable - because there are multiple Invoices involved</span>
+                </div>
+                <div>
+                    <h4>Parcel details</h4>
+                    <br/>
+                    <span>Not applicable - because there are multiple Parcels involved</span>
+                </div>
+                <div>
+                    <h4>Lot details</h4>
+                    <br/>
+                    <span>Not applicable - because there are multiple Lots involved</span>
+                </div>
+                <div>
+                    <h4>Packet details</h4>
+                    <br/>
+                    <span>Not applicable - because there are multiple Packets involved</span>
+                </div>
+                <div>
+                    <h4 ng-if="mergePacketTemplate">Merge Packet</h4>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="mergePacketTemplate" 
+                                   ng-model="packetCustom" ng-if="mergePacketTemplate" >
+                    </dynamic-form>
+                </div>
+                <hr/>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a  ng-click="backToHomeScreen(mergePacketForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button ng-if="flag.customFieldGenerated && mergePacketTemplate && mergePacketTemplate.length > 0" 
+                                class="btn btn-hkg" ng-click="selectParent(mergePacketForm)">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.selectParent">
+                <div>
+                    <h4>Select parent entity</h4>
+                    <br/>
+                    <span>The stock items you selected belongs to multiple parents. Select appropriate parents where the merged Entity will belong to.</span>
+                </div>
+                <br/>
+                <div class="form-group required">
+                    <label for="parcelID"  class="col-md-2 control-label">
+                        <span>{{ entity + 'Lot ID' | translate}}</span>
+                    </label>
+                    <div class="col-xs-8 col-lg-4" ng-class="{
+                    'has-error'
+                    : selectedParcelDropdown.currentNode.id === 'D' && (mergePacketForm.eventCategory.$dirty || submitted)}"> 
+                        <div>
+                            <div class="dropdown" >
+                                <button class="dropdown-toggle hkg-scrollableDropDown-menu form-control" data-toggle="dropdown">
+                                    <span class="pull-left" ng-bind="selectedParcelDropdown.currentNode.displayName"></span><span class="caret pull-right no-margin"></span>
+                                </button>
+                                <div class="dropdown-menu col-xs-12 hkg-scrollableDropDown-menu hkg-scrollableDropDown-tree">
+                                    <div ng-click='parcelDropdownClick(selectedParcelDropdown);'
+                                         data-angular-treeview="true"
+                                         data-tree-id="selectedParcelDropdown"
+                                         ag-treemodel="lotIds" search-id="parcelId">
+                                    </div>
+
+                                </div>
+                                <div class="error,help-block" ng-show="(mergePacketForm.eventCategory.$dirty || submitted)">
+                                    <span class="help-block" ng-show="selectedParcelDropdown.currentNode.id === 'D'">{{ entity + 'Currency code not selected' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a  ng-click="backToMergeFieldScreen(mergePacketForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button  class="btn btn-hkg" ng-click="saveMergedPacket(mergePacketForm)">{{entity + 'Save'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deletePopUp" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/addlot" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Lot'| translate }}</h4>
+            </div>
+            <form  class="form-horizontal" name="deletePopUp" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete lot?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteLot()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

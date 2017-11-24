@@ -1,0 +1,4 @@
+define(["hkg"],function(a){a.register.factory("ManageLocalesService",["$resource","$rootScope",function(d,b){var c=d(b.apipath+"locale/:action",{},{createAllLocales:{method:"POST",params:{action:"createall"}},updateAllLocales:{method:"POST",params:{action:"updateall"}},retrieveAllLanguages:{method:"GET",isArray:true,params:{action:"retrieve/languages"}},retrieveLabelsAsPerScroll:{method:"POST",isArray:true,params:{action:"retrieveasperscroll"}},retrieveLocalesBySearchFields:{method:"POST",isArray:true,params:{action:"retrieve/bysearchfields"}},retrieveContentAsPerScroll:{method:"POST",isArray:true,params:{action:"retrieveContentAsPerScroll"}},retrieveContentTypeList:{method:"POST",isArray:false,params:{action:"retrieveContentTypeList"}}});
+return c
+}])
+});

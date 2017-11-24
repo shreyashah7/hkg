@@ -1,0 +1,4 @@
+define(["hkg"],function(a){a.register.factory("LeaveWorkflow",["$resource","$rootScope",function(d,c){var b=d(c.apipath+"leave/workflow/:action",{action:"@actionName"},{retrieveUserList:{method:"POST",isArray:true,params:{action:"retrieve/users"}},retrieveDepartmentList:{method:"POST",isArray:true,params:{action:"retrieve/departments"}},retrieveDepartmentsCombine:{method:"GET",params:{action:"retrievedepartmentcombine"}},createWorkflow:{method:"POST",isArray:true,params:{action:"create"}},updateWorkflow:{method:"POST",isArray:true,params:{action:"update"}},deleteWorkflow:{method:"POST",isArray:true,params:{action:"delete"}},retrieveWorkflowByDepartmentId:{method:"POST",isArray:false,params:{action:"retrieveWorkflowByDepId"}}});
+return b
+}])
+});

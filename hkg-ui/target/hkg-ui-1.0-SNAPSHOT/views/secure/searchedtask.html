@@ -1,0 +1,32 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-show="!searchTaskRecords || searchTaskRecords.length == 0">
+            {{ entity + "No matching results found" | translate }}
+        </div>
+        <h4 ng-if="searchTaskRecords && searchTaskRecords.length > 0">{{entity + 'Available Task'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchTaskRecords && (searchTaskRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchTaskRecords">
+                    <thead>
+                        <tr>
+                            <th>{{entity + 'Task Name'|translate}}</th>
+                            <th>{{entity + 'Assigned To'|translate}}</th>
+                            <th>{{entity + 'Due Date'|translate}}</th>
+                            <th ng-if="(canAccess('tasksAssignToAll') || canAccess('tasksAssignToSelf'))">{{entity + 'Action On'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="task in searchTaskRecords" dt-rows>
+                            <td>{{task.taskName}}</td>
+                            <td>{{task.lastUpdate}}</td>
+                            <td>{{task.dueDate|date:dateFormat}}</td>
+                            <td ng-if="(canAccess('tasksAssignToAll') || canAccess('tasksAssignToSelf'))">
+                                <a><span class="glyphicon glyphicon-edit" ng-show="task.status!='C'" title="{{entity + 'Click to edit task'|translate}}" ng-click="openEditTask(task.id);"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

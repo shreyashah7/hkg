@@ -1,0 +1,776 @@
+
+<div class="row">
+    <div class="col-xs-12"> 
+
+        <div class="col-xs-12 breadcrumb-bg" ng-if="!configureWorkFlow">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li >{{entity + 'Designation'| translate }}</li>
+                    <li ng-show="!isEditing" class="active">{{entity + 'Add designation'| translate }}</li>
+                    <li ng-show="isEditing" class="active">{{entity + 'Edit designation'| translate }}</li>
+                </ol>
+            </div>
+            <div ng-show="isEditing || displaySearchedDesignation == 'search'" class="col-xs-12 col-lg-4 text-right context-menu  "> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href=""  ng-click="addClick();">{{entity + 'Add Designation'| translate }}</a>
+            </div>
+        </div>
+        <div class="col-xs-9 new-panel">
+            <div class="col-xs-12 col-lg-12 well well-sm">
+                <div class="input-group ">
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search for designation by name" 
+                               ag-search="{{apipath}}designation/searchdesignation" 
+                               result-format="displayName" 
+                               on-select="editFromSearch" 
+                               on-enter="getSearchedDesignationRecords"
+                               search-list-array='searchedList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedDesignationRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+                </div>
+                <span ng-show="isInValidSearchDesig">{{entity + 'No matching results'| translate }}</span>
+            </div>
+
+
+            <div ng-include src="'views/secure/searcheddesignation.html'" ng-if="displaySearchedDesignation === 'search'"></div>
+            <form role="form" class="form-horizontal" novalidate name="designationForm">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div ng-show="displaySearchedDesignation === 'view'" ng-init="registerLocationChangeEvent(designationForm);
+                                    initAddDesignationForm(designationForm)" class="row">
+                    <div  class="col-md-12">
+                        <div id='AddEditDesignations'>
+                            <div class="form-group required">
+                                <label class="col-md-4 control-label" for="text_role_title">{{entity + 'Designation Title'| translate }}</label>
+                                <div class="col-md-5" ng-class="{'has-error': designationForm.text_role_title.$invalid && (designationForm.text_role_title.$dirty || submitted)}">
+                                    <input ng-pattern="/^[^.]+$/" ng-disabled="isDisabled" type="text" class="form-control" id="text_role_title" name="text_role_title" ng-model="designationTitle" ng-change="isDesigNameExist()" maxlength="100" required/>
+                                    <span ng-show="showIsDesigExist && !designationForm.text_role_title.$error.required" class="text-danger">{{designationTitle}} {{entity + 'already exists'| translate }}</span>
+                                    <div class="error,help-block" ng-show="(submitted || designationForm.text_role_title.$dirty) && designationForm.text_role_title.$invalid">
+                                        <span class="help-block" ng-show="designationForm.text_role_title.$error.required">{{entity + ' Desgination title not entered '| translate }}</span>
+                                        <span class="help-block" ng-show="designationForm.text_role_title.$error.pattern">{{ entity + 'Desgination title is invalid ' | translate}}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group required">
+                                <label class="col-md-4 control-label" for="select_department">{{entity + 'Associated Department'| translate }}</label>
+                                <div class="col-md-5" ng-class="{'has-error': designationForm.select_department.$invalid && (designationForm.select_department.$dirty || submitted)}">
+                                    <select id="select_department" name="select_department" class="form-control" ng-options="department.id as department.displayName for department in departmentList" ng-model="associatedDepartment" required>
+                                        <option value="">{{entity + 'Select Department'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(submitted || designationForm.select_department.$dirty) && designationForm.select_department.$invalid">
+                                        <span class="help-block" ng-show="designationForm.select_department.$error.required">{{entity + ' Department not selected '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="parent_desig">{{entity + 'Parent Designation'| translate }}</label>
+                                <div class="col-md-5" ng-class="{'has-error': designationForm.parent_desig.$invalid && (designationForm.parent_desig.$dirty || submitted)}">
+                                    <select id="parent_desig" name="parent_desig" class="form-control" ng-options="designation.id as designation.text for designation in designationWithDepartmentList| removeCurrent: editingDesigId" ng-model="parentDesignation" ng-change="checkIfParentAvailable(parentDesignation, designationForm.parent_desig)">
+                                        <option value="">{{entity + 'Select Designation'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(submitted || designationForm.parent_desig.$dirty) && designationForm.parent_desig.$invalid">
+                                        <span class="help-block" ng-show="designationForm.parent_desig.$error.circular">{{entity + ' Circular Dependency Detected '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-show="!isEditing">
+                                <label class="col-md-4 control-label" for="select_designation">{{entity + 'Make A Copy Of'| translate }}</label>
+                                <div class="col-md-5">
+                                    <select id="select_designation" class="form-control" ng-options="designation.id as designation.displayName for designation in designationList" ng-model="copyDesignation" ng-change="isShowEditForm(copyDesignation, isEditing, true, false);">
+                                        <option value="">{{entity + 'Select role to copy, if any'| translate }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-init="designation.status = 'Active'" ng-show="isEditing">
+                                <label class="col-md-4 control-label">{{entity + 'Status'| translate }}</label>
+                                <div class="col-md-5">
+                                    <select id="select_status" class="form-control" ng-model="designationStatus">
+                                        <option value="Active">{{entity + 'Active'| translate }}</option>
+                                        <option value="Remove">{{entity + 'Remove'| translate }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <h4>{{entity + 'Non-Diamond Related Features'| translate }}</h4>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <span ng:repeat="systemFeature in systemFeaturesList| orderBy:'name'" ng-show="systemFeaturesList.length > 0">
+                                        <div class="col-md-4" ng-show="$index % 3 == 0">
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                                            </label>
+                                            <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+                                        </div>
+                                        <div class="col-md-4" ng-show="$index % 3 == 1">
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                                            </label>
+                                            <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+                                        </div>
+                                        <div class="col-md-4" ng-show="$index % 3 == 2">
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                                            </label>
+                                            <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+                                        </div>
+                                    </span>
+                                    <div ng-show="systemFeaturesList.length <= 0">{{entity + 'No system features exists'| translate }}</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <h4>{{entity + 'Diamond Related Features'| translate }}</h4>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <span ng:repeat="diamondSystemFeature in diamondSystemFeatureList| orderBy:'name'" ng-show="diamondSystemFeatureList.length > 0">
+                                        <div class="col-md-4" ng-show="$index % 3 == 0">
+                                            <label class="checkbox-inline">
+                                                <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox" ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                            </label>
+                                            <!--<span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>-->
+                                        </div>
+                                        <div class="col-md-4" ng-show="$index % 3 == 1">
+                                            <label class="checkbox-inline">
+                                                <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)">{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                            </label>
+                                            <!--<span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>-->
+                                        </div>
+                                        <div class="col-md-4" ng-show="$index % 3 == 2">
+                                            <label class="checkbox-inline">
+                                                <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                            </label>
+                                            <!--<span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>-->
+                                        </div>
+                                    </span>
+                                    <div ng-show="diamondSystemFeatureList.length <= 0">{{entity + 'No diamond features exists'| translate }}</div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <h4>{{entity + 'Reports'| translate }}</h4>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <div ng:repeat="groups in groupFeatureMap| orderBy:'name'" ng-show="groupFeatureMap.length > 0">
+                                        <h5>{{groups.groupName}}</h5>
+                                        <div class="form-group">
+                                            <div class="col-md-12">
+                                                <span ng:repeat="systemFeature in groups.features| orderBy:'name'" ng-show="groups.features.length > 0">
+                                                    <div class="col-md-4" ng-show="$index % 3 == 0">
+                                                        <label class="checkbox-inline">
+                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-4" ng-show="$index % 3 == 1">
+                                                        <label class="checkbox-inline">
+                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-4" ng-show="$index % 3 == 2">
+                                                        <label class="checkbox-inline">
+                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                                                        </label>
+                                                    </div>
+                                                </span>
+                                                <div ng-show="groups.features.length <= 0">{{entity + 'No Report features exists'| translate }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div ng-show="groupFeatureMap.length <= 0">
+                                        {{entity + 'No Report exists'| translate }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--                            <div class="form-group">
+                                                            <div class="col-md-12">
+                                                                <span ng:repeat="systemFeature in reportSystemFeatureList| orderBy:'name'" ng-show="reportSystemFeatureList.length > 0">
+                                                                    <div class="col-md-4" ng-show="$index % 3 == 0">
+                                                                        <label class="checkbox-inline">
+                                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked">{{systemFeature.name}}
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="col-md-4" ng-show="$index % 3 == 1">
+                                                                        <label class="checkbox-inline">
+                                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked">{{systemFeature.name}}
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="col-md-4" ng-show="$index % 3 == 2">
+                                                                        <label class="checkbox-inline">
+                                                                            <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked">{{systemFeature.name}}
+                                                                        </label>
+                                                                    </div>
+                                                                </span>
+                                                                <div ng-show="reportSystemFeatureList.length <= 0">{{entity + 'No Report features exists'| translate }}</div>
+                                                            </div>
+                                                        </div>-->
+
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <a ng-show="!isEditing"   ng-click="cancelLink();
+                                            isEditing = false;
+                                            searchDesignation = null;
+                                            removeActiveLink();" href=""   >{{i18Departments + 'Cancel '| translate }}</a>
+                                <a ng-show="isEditing" href="" ng-click="cancelLink();
+                                            isEditing = false;
+                                            searchDesignation = null;
+                                            removeActiveLink();
+                                            editingDesigId = null;">{{i18Departments + 'Cancel '| translate }}</a>&nbsp;
+                                <button class="btn btn-hkg "  ng-click="createDesignation()" ng-show="!isEditing" >{{i18Departments + 'Add Designation '| translate }}</button>
+                                <button class="btn btn-hkg " ng-disabled="!isAccessEdit" ng-click="saveDesignation();" ng-show="isEditing" >{{i18Departments + 'Save'| translate }}</button>
+
+                                <!--                                isEditing = false;
+                                                                searchDesignation = null;
+                                                                removeActiveLink();
+                                                                editingDesigId = null;">{{i18Departments + 'Cancel '| translate }}</a>
+                                                            <button class="btn btn-hkg "  ng-click="createDesignation()" ng-show="!isEditing" ng-disabled="designationForm.$invalid">{{i18Departments + 'Add designation '| translate }}</button>
+                                                            <button class="btn btn-hkg "  ng-click="saveDesignation();" ng-show="isEditing" ng-disabled="designationForm.$invalid">{{i18Departments + 'Save'| translate }}</button>-->
+
+                            </div>
+                            <br/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!--    <div class="col-xs-3 tree-bg">
+                        <div class="col-md-3">
+                <div id="rightFixedVerticalNav">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'Existing designations:'| translate }}</strong></span>
+                            </div>
+                        </div>
+                        <fieldset class="hkg-fieldset">
+                        </fieldset>
+                        <div class="form-group">
+                            <div class="col-md-12">&nbsp;</div>
+                        </div>
+                        <div class="row" ng-show="designationList.length > 0">
+                            <div class="col-md-12 ">
+                                <div class="list-group" style="overflow: hidden">
+                                    <a href="" ng-repeat="designation in designationList" class="list-group-item" ng-click="
+                                            isShowEditForm(designation.id, true, false, false);" ng-class="{'active':(editingDesigId == designation.id)}">{{designation.name}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-show="designationList.length <= 0">
+                            {{entity + 'No designations exist'| translate }}
+                        </div>
+                    </div>
+                </div>
+            </div>-->
+        <div class="col-xs-3 tree-bg ">
+            <div  class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>Existing Designations</strong></span>
+                <hr class="margin-md"/>
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                        <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                    </div><!-- /input-group -->
+                </div>
+                <!--Tree component starts-->
+                <div class="col-xs-12">
+                    <br/>
+                    <div style="max-height: 400px;overflow: auto;float: left" ng-show="designationList.length > 0" ng-click='isShowEditForm(selectedDesignation.currentNode.id, true, false, false);' 
+                         data-angular-treeview="true"
+                         data-tree-id="selectedDesignation"
+                         ag-treemodel="designationList" entity-name="DESIG_NM."
+                         data-search-query='treeSearchQuery'>
+                    </div>
+                </div>
+
+                <!--Tree component ends--> 
+                <div ng-show="designationList.length === 0">
+                    No designation exist
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+
+        <!--</div>-->
+        <div class="modal fade"   id="designationActiveUserModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" >
+                <div class="modal-content" >
+                    <div class="modal-header">
+
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel"> {{entity + 'Active Users'| translate }}</h4>
+                    </div>
+                    <div class="modal-body"  >
+                        <div class="row"> <div class="col-md-12"> 
+                                {{entity + "\{\{designationName\}\} designation cannot be removed. It has active users"| translate:{designationName:(designationNameForRemove | translate)} }}
+                                <!--{{designationTitle}}{{entity + ' designation cannot be removed. It has active users'| translate }}&nbsp;-->
+                            </div></div>
+                    </div>
+                    <div class="modal-footer" >
+                        <button type="button" class="btn btn-hkg" ng-click="hideConfirmationPopup()"> {{entity + 'OK'| translate }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" role="dialog" id="confirmationPopUp" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" href="#/managedesignation" ng-click="hideConfirmationPopup()">&times;</a>
+                        <h4 class="modal-title" id="myModalLabel">{{entity + 'Remove Designation'| translate }}</h4>
+                    </div >
+                    <form  class="form-horizontal" name="confirmationPopUpForm" role='form'>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    {{ entity + "Are you sure you want to remove \{\{designationName\}\} ?" | translate:{designationName:(designationNameForRemove | translate)} }}
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <a ng-click="hideConfirmationPopup();
+                                        designationStatus = 'Active'"> {{ entity + 'Cancel' | translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="deleteDesignationById(editingDesigId)">{{ entity + 'Remove' | translate}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="notConfiguredPopup" role="dialog" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" ng-click="cancelConfirmPopup()">&times;</a>
+                        <h4 class="modal-title">
+                            <span>{{ entity + "Configuration" | translate }}</span>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{ entity + "All selected diamond features are not configured yet, still do you want to save this designation?"|translate}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row">
+                            <div class="col-md-6 pull-right">
+                                <a href="" ng-click="cancelConfirmPopup()">{{ entity + "No" | translate }}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="createBothDesignation()" ng-if="!isEditing">
+                                    {{ entity + "Yes" | translate }}
+                                </button>
+                                <button class="btn btn-hkg" ng-click="updateDesignation()" ng-if="isEditing">
+                                    {{ entity + "Yes" | translate }}
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="configurePopUp" role="dialog" tabindex="-1" aria-hidden="true" data-backdrop="static">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" ng-if="!nextPage">
+                    <div class="modal-header">
+                        <a class="close" ng-click="cancelConfigurationPopup()">&times;</a>
+                        <div class="modal-title">
+                            <h4><span>{{ entity + "Configure "| translate }} {{labels}} {{entity + " Feature"|translate}}</span></h4>
+                        </div>
+                    </div>
+                    <div class="modal-body" >
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <label for='searchField' class="control-label pull-right">
+                                    <span>{{ entity + 'Configure Search' | translate}}</span>
+                                </label>
+                            </div>
+                            <div class="col-xs-8 col-lg-7"> 
+                                <div id='searchField' name='searchField' ng-if="(fieldList.length) > 0" multi-select output-model="$parent.selectedFieldsForSearch" input-model="combinedFieldListForSearch" button-label="modelName fieldName" item-label="modelName fieldName" 
+                                     tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup" max-height="200px" on-item-click="setSearchField($parent.selectedFieldsForSearch);">
+                                </div> 
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <label for='parentField' class="control-label pull-right">
+                                    <span>{{ entity + 'Parent Entity Info' | translate}}</span>
+                                </label>
+                            </div>
+                            <div class="col-xs-8 col-lg-7"> 
+                                <div id='parentField' name='parentField' ng-if="fieldList.length > 0" multi-select output-model="$parent.selectedFieldsForParent" input-model="combinedFieldListForParent" button-label="modelName fieldName" item-label="modelName fieldName" 
+                                     tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup1" max-height="200px" on-item-click="setParentField($parent.selectedFieldsForParent);" >
+                                </div> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="" ng-click="cancelConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click='setNextPage()'>
+                                    {{ entity + "Next" | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-content" ng-if="nextPage">
+                    <div class="modal-header">
+                        <a class="close" ng-click="cancelConfigurationPopup()">&times;</a>
+                        <div class="modal-title">
+                            <h4><span>{{ entity + 'Configure Field Visibility - '|translate}}{{labels}}{{' Feature'| translate}}</span></h4>
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        <form name="configurePopupForm" class="form-horizontal">
+                            <div class="table-responsive">
+                                <div class="row">
+                                    <div class="col-md-1"></div>
+                                    <div  class="col-md-10">
+                                        <div class='form-group required'>
+                                            <label for="entityDropdownForDei"  class="col-md-4 control-label">
+                                                {{ entity + 'Select Entity' | translate}}
+                                            </label>
+                                            <!--<div class="col-md-4 col-lg-4 col-sm-8" ng-if='type === "DMI" && labels !== "static print" && labels !== "merge stock"'>-->
+                                            <!--                                            <select ng-disabled="true" class="form-control" name="entityDropdownForDmi" id="entityDropdownForDmi"> 
+                                                                                            <option value="featureEntity">{{featureEntity}}</option>
+                                                                                        </select>-->
+                                            <!--</div>-->
+                                            <div class="col-md-4 col-lg-4 col-sm-8" >
+                                                <select class="form-control" ng-model="entitys.name" name="entityDropdownForDei" id="entityDropdownForDei" ng-change="fieldTableContent()" ng-options="entitys.id as entitys.name for entitys in entityList"> 
+                                                    <option value="">Select</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <br/><br/>
+                                        <div class='form-group required'>
+                                            <div ng-if='!!entitys.name'>
+                                                <table class="table table-striped table-responsive" ag-data-table="entitys.filteredList" dt-options="dataTableOptions">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center">{{ entity + 'Field Name' | translate}}</th>
+                                                            <th class="text-center">{{ entity + 'Permissions' | translate}}</th>
+                                                            <th  class="text-center">{{entity + 'Tab Index'| translate}}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr ng-repeat="table in commonList|commonListFilter : entitys.name" dt-rows >
+                                                            <td>{{table.fieldName}}</td>
+                                                            <td class="text-center">
+                                                                <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" ng-click="table.isRequired = false" value="hide"><span ng-bind="entity + 'Hide' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                                <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" ng-click="table.isRequired = false" value="view only"><span ng-bind="entity + 'View only' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                                <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" value="view and edit"><span ng-bind="entity + 'View and edit' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                                <label><input type='checkbox' ng-disabled="table.selected !== 'view and edit'" name='isRequired' ng-model="table.isRequired" value="true"><span ng-bind="entity + 'Required' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                            </td>
+                                                            <td class="text-center"><input type="number" style="width: 40px;" min="1" ng-model="table.sequenceNo"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div ng-if="commonList.length === 0">
+                                            <span ng-bind="entity + 'No Fields are available for this feature' | translate"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="" ng-click="cancelConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="setPreviousPage()">
+                                    {{ entity + "Previous" | translate }}
+                                </button>
+                                <button class="btn btn-hkg" ng-click='savePermission()'>
+                                    {{ entity + "Save" | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!--        <div class="modal fade" id="configureNonDiamondPopUp" role="dialog" tabindex="-1" aria-hidden="true" data-backdrop="static">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <a class="close" ng-click="cancelGoalConfigurationPopup()">&times;</a>
+                                <div class="modal-title">
+                                    <h4><span>{{ entity + 'Configure'|translate}} {{labels}}</span></h4>
+                                </div>
+                            </div>
+                            <form id="roleForm" name="roleForm">
+                                <div class="modal-body">
+                                     Model body goes here
+                                    <div class="table-responsive">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Select' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-xs-5 col-lg-5" ng-class="{'has-error': configureGoal.type == null && configureGoal.submitted}"> 
+                                                <select class="form-control" name="selectType" ng-model="configureGoal.type" id="selectType" required> 
+                                                    <option value="">Select</option>
+                                                    <option value="1">Activity-Service</option>
+                                                    <option value="2">Designation</option>
+                                                    <option value="3">Department</option>
+                                                </select>
+        
+                                                <div class="error,help-block" ng-show="configureGoal.type == null && configureGoal.submitted">
+                                                    <span class="help-block">{{ entity + 'Select type' | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoal.type == 1" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Service' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class=" col-md-4" ng-class="{'has-error': configureGoal.service == null && configureGoal.submitted}" >
+                                                <input type="text" class="col-xs-12 hkg-nopadding" id="service" name="service" value="configureGoal.service" ng-required="configureGoal.type == 1" ui-select2="autoCompleteApproverForService" ng-model="configureGoal.service"/>
+        
+                                                <div class="error,help-block" ng-show="configureGoal.service == null && configureGoal.submitted">
+                                                    <span class="help-block">{{ entity + 'Select service' | translate }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" disabled="true" class="col-md-12 form-control"  ng-model="configureGoal.designationNamesInString"/>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoal.type == 2" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Designation' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-xs-5 col-lg-5" ng-class="{'has-error': configureGoal.designation == null && configureGoal.submitted}" >
+                                                <input type="text" class="col-xs-12 hkg-nopadding" id="designation" name="designation" value="configureGoal.designation" ng-required="configureGoal.type == 2" ui-select2="autoCompleteApprover" ng-model="configureGoal.designation"/>
+                                                <div class="error,help-block" ng-show="configureGoal.designation == null && configureGoal.submitted">
+                                                    <span class="help-block">{{ entity + 'Select designation' | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoal.type == 3" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Department' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-7" >
+                                                <div class="dropdown" ng-class="{'has-error': configureGoal.isDepInvalid === true && configureGoal.submitted}">
+                                                    <button data-toggle="dropdown" class="dropdown-toggle form-control" id="select_department" >   <span class="pull-left">{{selectedInString.toString() !== '' ? selectedInString.toString() : "Select Department"}}</span><span class="caret pull-right no-margin"></span></button>
+                                                    <div class="dropdown-menu col-md-12">
+                                                        <div ng-click="$event.stopPropagation();" style="padding-left: 7%;" ng-init="initDept()" >
+                                                            <span style="width: 100%">
+                                                                <ag-treeview-multiselect ng-required="configureGoal.type == 3" val="multiselecttree" selecteditem="selectedItemList" defaultselectedids="defaultDepartmentIds">
+                                                                </ag-treeview-multiselect>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="error,help-block" ng-show="configureGoal.isDepInvalid === true && configureGoal.submitted">
+                                                        <span class="help-block">{{ entity + 'Select department' | translate }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" ng-show="!!listForTable && listForTable.length > 0">
+                                            <div class="col-md-12">
+                                                <h4>{{entity + 'SELECTED PERMISSIONS'| translate }}</h4>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" >
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{entity + 'Sr No.'|translate}}</th>
+                                                            <th>{{entity + 'Name'|translate}}</th>
+                                                            <th>{{entity + 'Type'|translate}}</th>
+                                                            <th>{{entity + 'Action'|translate}}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr ng-repeat="item in listForTable" dt-rows>                            
+                                                            <td><span class="wordRap">{{$index + 1}}</span></td>
+                                                            <td><span class="wordRap" ng-bind="item.name"></span></td>
+                                                            <td><span class="wordRap" ng-bind="item.type"></span></td>
+                                                            <td align="center"><a><span  class="glyphicon glyphicon-remove" ng-click="deletePermission(item)" title="Delete"></span></a></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <a href="" ng-click="cancelGoalConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                                        <button class="btn btn-hkg" ng-click='saveGoalPermission()'>
+                                            {{ entity + "Save" | translate }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="configureGoalSheetSheetPopUp" role="dialog" tabindex="-1" aria-hidden="true" data-backdrop="static">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <a class="close" ng-click="cancelGoalSheetPopup()">&times;</a>
+                                <div class="modal-title">
+                                    <h4><span>{{ entity + 'Configure'|translate}} {{labels}}</span></h4>
+                                </div>
+                            </div>
+                            <form id="goalSheetForm" name="goalSheetForm">
+                                <div class="modal-body">
+                                     Model body goes here
+                                    <div class="table-responsive">
+                                        <div class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Select' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-xs-5 col-lg-5" ng-class="{'has-error': configureGoalSheet.type == null && configureGoalSheet.submitted}"> 
+                                                <select class="form-control" name="selectType" ng-model="configureGoalSheet.type" id="selectType" required> 
+                                                    <option value="">Select</option>
+                                                    <option value="1">Activity-Service</option>
+                                                    <option value="2">Designation</option>
+                                                    <option value="3">Department</option>
+                                                </select>
+        
+                                                <div class="error,help-block" ng-show="configureGoalSheet.type == null && configureGoalSheet.submitted">
+                                                    <span class="help-block">{{ entity + 'Select type' | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoalSheet.type == 1" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Service' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class=" col-md-4" ng-class="{'has-error': configureGoalSheet.service == null && configureGoalSheet.submitted}" >
+                                                <input type="text" class="col-xs-12 hkg-nopadding" id="service1" name="service1" value="configureGoalSheet.service" ng-required="configureGoalSheet.type == 1" ui-select2="autoCompleteApproverForServiceGoalSheet" ng-model="configureGoalSheet.service"/>
+        
+                                                <div class="error,help-block" ng-show="configureGoalSheet.service == null && configureGoalSheet.submitted">
+                                                    <span class="help-block">{{ entity + 'Select service' | translate }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="text" disabled="true" class="col-md-12 form-control"  ng-model="configureGoalSheet.designationNamesInStringGoalSheet"/>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoalSheet.type == 2" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Designation' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-xs-5 col-lg-5" ng-class="{'has-error': configureGoalSheet.designation == null && configureGoalSheet.submitted}" >
+                                                <input type="text" class="col-xs-12 hkg-nopadding" id="designation1" name="designation1" value="configureGoalSheet.designation" ng-required="configureGoalSheet.type == 2" ui-select2="autoCompleteApproverGoalSheet" ng-model="configureGoalSheet.designation"/>
+                                                <div class="error,help-block" ng-show="configureGoalSheet.designation == null && configureGoalSheet.submitted">
+                                                    <span class="help-block">{{ entity + 'Select designation' | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div ng-show="configureGoalSheet.type == 3" class="form-group row">
+                                            <div class="col-md-4">
+                                                <label for="entityDropdown"  class="col-md-4 control-label">
+                                                    {{ entity + 'Department' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-7" >
+                                                <div class="dropdown" ng-class="{'has-error': configureGoalSheet.isDepInvalid === true && configureGoalSheet.submitted}">
+                                                    <button data-toggle="dropdown" class="dropdown-toggle form-control" id="select_department" >   <span class="pull-left">{{selectedInStringGoalSheet.toString() !== '' ? selectedInStringGoalSheet.toString() : "Select Department"}}</span><span class="caret pull-right no-margin"></span></button>
+                                                    <div class="dropdown-menu col-md-12">
+                                                        <div ng-click="$event.stopPropagation();" style="padding-left: 7%;" ng-init="initDeptGoalSheet()" >
+                                                            <span style="width: 100%">
+                                                                <ag-treeview-multiselect ng-required="configureGoalSheet.type == 3" val="multiselecttreeGoalSheet" selecteditem="selectedItemListGoalSheet" defaultselectedids="defaultDepartmentIdsGoalSheet">
+                                                                </ag-treeview-multiselect>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="error,help-block" ng-show="configureGoalSheet.isDepInvalid === true && configureGoalSheet.submitted">
+                                                        <span class="help-block">{{ entity + 'Select department' | translate }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" ng-show="!!listOfPermissionGoalSheet && listOfPermissionGoalSheet.length > 0">
+                                            <div class="col-md-12">
+                                                <h4>{{entity + 'SELECTED PERMISSIONS'| translate }}</h4>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" >
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{entity + 'Sr No.'|translate}}</th>
+                                                            <th>{{entity + 'Name'|translate}}</th>
+                                                            <th>{{entity + 'Type'|translate}}</th>
+                                                            <th>{{entity + 'Action'|translate}}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr ng-repeat="item in listOfPermissionGoalSheet" dt-rows>                            
+                                                            <td><span class="wordRap">{{$index + 1}}</span></td>
+                                                            <td><span class="wordRap" ng-bind="item.name"></span></td>
+                                                            <td><span class="wordRap" ng-bind="item.type"></span></td>
+                                                            <td align="center"><a><span  class="glyphicon glyphicon-remove" ng-click="deletePermissionGoalSheet(item)" title="Delete"></span></a></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="modal-footer">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <a href="" ng-click="cancelGoalSheetPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                                        <button class="btn btn-hkg" ng-click='saveGoalSheetPermission()'>
+                                            {{ entity + "Save" | translate }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>-->
+
+    </div>
+</div>

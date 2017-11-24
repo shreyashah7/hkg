@@ -1,0 +1,42 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-show="!searchedManageLeaveRecords || searchedManageLeaveRecords.length == 0">
+            {{entity + 'No matching results found' |translate }}
+        </div>
+        <h4 ng-if="searchedManageLeaveRecords.length > 0">{{entity + 'Searched Results'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="(searchedManageLeaveRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchedManageLeaveRecords">
+                    <thead>
+                        <tr>
+                            <th  style=" white-space: nowrap;"> {{ entity + 'Request From' | translate}}</th>
+                            <th>{{ entity + 'Department' | translate}}</th>
+                            <th>{{ entity + 'Reason' | translate}}</th>
+                            <th>{{ entity + 'Dates' | translate}}</th>
+                            <th>{{ entity + 'Days' | translate}}</th>
+                            <th  style=" white-space: nowrap;">{{ entity + 'Request Type' | translate}}</th>
+                            <th>{{ entity + 'Action' | translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="record in searchedManageLeaveRecords" dt-rows>
+                            <!--<td><a href="" ng-click="retrieveAllleaveByUserId(record)">{{record.requestFrom}}</a></td>-->
+                            <td>{{record.requestFrom}}</td>
+                            <td><span class="wordRap" ng-bind="record.department"></span></td>
+                            <td><span class="wordRap" ng-bind="record.reason"></span></td>
+                            <td>{{record.fromDate| date:" dd/MM/yyyy"}}-{{record.toDate| date:" dd/MM/yyyy"}}</td>
+                            <td>{{record.days}}</td>
+                            <td>{{record.requestType}}</td>
+                            <td>
+                                <div ng-show="record.status == 'Pending' && record.requestType == 'Leave'"><a href="" ng-click="setManageLeaveOperation('respondLeave', record)">{{ entity + 'Respond' | translate}}</a></div>
+                                <div ng-show="record.requestType == 'Cancellation'"><a href="" ng-click="setManageLeaveOperation('respondLeave', record, true)">{{ entity + 'Respond' | translate}}</a></div>
+                                <div ng-show="record.status != 'Pending'">{{record.status}}</div>
+                            </td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

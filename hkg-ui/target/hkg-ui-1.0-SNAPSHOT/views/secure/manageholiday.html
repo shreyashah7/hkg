@@ -1,0 +1,169 @@
+<div ng-if="canAccess('manageHoliday')">
+    <div class="row">
+        <div class="col-xs-12"> 
+            <!--breadcrumb-->
+            <div class="col-xs-12 breadcrumb-bg" >
+                <div class="col-xs-12 col-lg-8">
+                    <ol class="breadcrumb">
+                        <li>{{ entity + "You are here" | translate}}</li>
+                        <li class="active" ng-click="setHolidayOperation('manageHoliday')">{{ entity + "Manage Holidays" | translate }}</li>
+                        <li class="active" ng-if="canAccess('holidayAddEdit') && holidayOperation == 'addHoliday' &&  !isEdit">{{ entity + "Add Holiday" | translate }}</li>
+                         <li class="active" ng-if="canAccess('holidayAddEdit') && holidayOperation == 'addHoliday' &&  isEdit">{{ entity + "Edit Holiday" | translate }}</li>
+                    </ol>
+                </div>
+                <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="canAccess('holidayAddEdit') && (holidayOperation !== 'addHoliday' ||  isEdit)"> 
+                    <span class="glyphicon glyphicon-plus-sign text-primary">
+                    </span>
+                    &nbsp;<a class="pull-right"  ng-click="setHolidayOperation('addHoliday')">
+                        {{ entity + "Add Holiday(s)" | translate}}
+                    </a>
+                </div>
+            </div>
+            <!--breadcrumb-->
+            <hr class="margin-md" />
+            <div class="col-xs-12 new-panel">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="col-xs-12 col-lg-12 well well-sm">
+                            <div class="input-group ">
+                                <div id="scrollable-dropdown-menu">
+                                    <input class="typeahead" type="text"  placeholder="Search holidays by name,date and/or year" 
+                                           ag-search="{{apipath}}holiday/searchHoliday" 
+                                           result-format="title,startDt" 
+                                           on-select="redirectToEdit" 
+                                           on-enter="getSearchedRecords"
+                                           search-list-array='searchedList'
+                                           on-reset="resetList"
+                                           id="scrollable-dropdown-menu">
+
+                                    </input>
+
+                                </div>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-hkg" ng-click="getSearchedRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                                </span>
+                            </div>
+                            <!-- input-group --> 
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <div id="messages" ng-include src="'templates/messages.html'">
+
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-lg-12" ng-show="holidayOperation === 'manageHoliday'">
+                        <h4>{{ entity + "Holiday list for " | translate}}{{currentYear}}</h4>
+                    </div>
+
+                    <div class="col-xs-12 col-lg-4 text-right context-menu pull-right" ng-show="holidayOperation === 'manageHoliday' && allHolidays.length > 0"> 
+                        <span class="glyphicon glyphicon-plus-sign text-primary">
+                        </span>
+                        &nbsp; <a  ng-href="{{apipath}}holiday/downloadholidaylist?token={{authToken}}" ng-click="">
+                            {{ entity + "Download holiday list" | translate }}
+                        </a>
+                    </div>
+                    <div class="col-xs-12 col-lg-12" ng-show="!allHolidays.length > 0 && holidayOperation === 'manageHoliday'">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{ entity + "No holiday(s) created yet.. for year " | translate}}{{currentYear}}
+                                </td>
+                            </tr>
+                          
+                        </table>
+
+                        <!--                        <div>
+                                                    <div class=" text-right context-menu pull-right" ng-show="canAccess('holidayAddEdit')"> 
+                                                        <span class="glyphicon glyphicon-plus-sign text-primary">
+                                                        </span>
+                                                        &nbsp;                   
+                                                        <a   ng-click="setHolidayOperation('addHoliday')">{{ entity + "Add holiday by clicking here.. " | translate }}
+                                                        </a>
+                                                    </div>
+                                                </div>-->
+                    </div>
+
+                    <div class="col-xs-12 col-lg-12" ng-if="holidayOperation === 'manageHoliday' && renderTable && isRecordsExits">
+                        <!--            {{ $parent.filteredHoliday = (allHolidays | filter: search )}}
+                                    ****{{filteredHoliday}}-->
+                        <table class="table" ag-data-table="allHolidays">
+                            <thead ng-show="allHolidays.length > 0">
+                                <tr>
+                                    <th>{{ entity + "Sr.No" | translate }}</th>
+                                    <th>{{ entity + "Date" | translate }}</th>
+                                    <th>{{ entity + "Day" | translate }}</th>
+                                    <th style="width:40%">{{ entity + "Reason For Holiday" | translate }}</th>
+                                    <th ng-if="canAccess('holidayAddEdit')">{{ entity + "Actions" | translate }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="holiday in allHolidays" dt-rows>
+
+                                    <td>{{$index + 1}}</td>
+                                    <td>{{combineStartAndToDate(holiday.startDt, holiday.endDt)}}</td>
+                                    <td>{{retrievFullDayName(holiday.startDt, $index, holiday.title, ConvertTimeStamptodate(holiday.startDt))}}</td>
+
+                                    <td><span class="wordRap">{{holiday.title}}</span></td>
+                                    <!--<td>{{holiday.startDt | date:" dd/MM/yyyy"}}</td>-->
+                                    <td ng-if="canAccess('holidayAddEdit')">
+                                        <a  class="col-md-offset-1" title="Edit Holiday" ng-show="{{holiday.editFlage}}" ng-click="redirectToEdit(holiday.id)"><i class="glyphicon glyphicon-edit"></i></a>
+                                        <a  class="col-md-offset-2" title="Remove Holiday" ng-click="showConfirmDialog(holiday)" ng-show="{{holiday.editFlage}}"><i class="text-danger glyphicon glyphicon-remove"></i></a>
+                                        <!--<button class="btn btn-success" ng-click="launch('confirm')">Confirm Dialog</button>-->
+
+                                        <!--                       <i class="glyphicon glyphicon-edit icon-large" ng-click="editHoliday(holiday)"></i>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp 
+                                        <i class="glyphicon glyphicon-remove-sign icon-large" ng-click="removeHoliday(holiday)"></i>
+                                        -->
+                                        <!--<a class="btn btn-primary" ng-disabled="{{d.editFlage}}" ng-click="editHoliday(d)">Edit</a>-->
+                                        <!--<a class="btn btn-primary" ng-click="removeHoliday(d)">Remove</a>-->
+
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-if="holidayOperation === 'addHoliday'">
+                        <div ng-include src="'views/secure/addholiday.html'"></div>
+                    </div>
+                    <div ng-if="holidayOperation === 'searchedHoliday'">
+                        <div ng-include src="'views/secure/searchedholiday.html'"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--col-xs-12 en-->
+    <form>
+        <div class="modal fade" id="removePopupId">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" ng-click="removeCancelPress()">&times;</a>
+                        <h4 class="modal-title">
+                            {{ entity + "Remove Holiday" | translate }}
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div>                                
+                                <span class="wordRap">{{ entity + "Are you sure you want to remove holiday \{\{holidayName\}\} ?"| translate:{holidayName:(holidayName | translate)} }}</span>
+                                <!--{{ entity + "removeMsg" | translate:{holidayName:(holidayName | translate)} }}-->
+                                <!--<i18n text-expr="{{holidayName}}"  | translate }}-->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="" ng-click="removeCancelPress()">{{ entity + "Cancel" | translate }}</a>
+                        <button class="btn btn-hkg" ng-click="removeOkPress()">
+                            {{ entity + "Remove" | translate }}
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div ng-if="!canAccess('manageHoliday')">
+    you have no authorization for this page.
+</div>

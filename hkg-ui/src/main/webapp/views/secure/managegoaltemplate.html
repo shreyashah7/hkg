@@ -1,0 +1,407 @@
+<div class="row" ng-init="initData()">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li class="active">{{entity + 'Goal Template'| translate }}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="col-xs-12 col-lg-12 well well-sm">
+                <div class="input-group ">
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search for goal template by name" 
+                               ag-search="{{apipath}}goal/retrieveActiveAndPendingGoalTemplatesBySearch" 
+                               result-format="name,nameOfAssociation" 
+                               on-select="editFromSearch" 
+                               on-enter="getSearchedDesignationRecords"
+                               search-list-array='searchedList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedDesignationRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+                </div>
+                <span ng-show="isInValidSearchDesig">{{entity + 'No matching results'| translate }}</span>
+            </div>
+            <div ng-include src="'views/secure/searchedgoaltemplate.html'" ng-if="displaySearchedGoalTemplate === 'search'"></div>
+            <div class="col-xs-12 col-lg-12 ">
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+            </div>
+            <form role="form" class="form-horizontal" novalidate name="goalTemplateForm" ng-show="displaySearchedGoalTemplate === 'view'">
+                <div class="col-xs-12">
+                    <div class="form-group required">
+                        <div class="col-md-3 control-label">
+                            <label for="goaltemplatename">
+                                {{entity + 'Goal Name'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 ">
+                            <div class="row">
+                                <div class="col-xs-10" ng-class="{'has-error': (goalTemplateForm.goaltemplatename.$dirty || submitted) && goalTemplateForm.goaltemplatename.$invalid}">
+                                    <input type="text" class="form-control" id="goaltemplatename" name="goaltemplatename" ng-model="goalTemplate.name" required/>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.goaltemplatename.$dirty || submitted) && goalTemplateForm.goaltemplatename.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.goaltemplatename.$error.required">{{ entity + 'Enter goal name' | translate }}</span>
+                                    </div>                   
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div  class="form-group">
+                        <div class="col-md-3 control-label">
+                            <label for="description">
+                                {{entity + 'Description'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 ">
+                            <div class="row">
+                                <div class="col-xs-10">
+                                    <textarea id="description" class="form-control" name="description" ng-model="goalTemplate.description" rows="4" cols="20"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div  class="form-group" ng-show="!goalTemplatePayload.editGoalTemplateId">
+                        <div class="col-md-3 control-label">
+                            <label for="copyof">
+                                {{entity + 'Make A Copy Of'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 ">
+                            <div class="row">
+                                <div class="col-xs-10">
+                                    <select name="copyof" id="copyof"  class="form-control" ng-model="goalTemplate.copyOf" ng-mouseup="onRuleChange()" ng-options="goaltemplate as goaltemplate.name for goaltemplate in goalTemplateList">
+                                        <option value="" >{{entity + "Select"|translate}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-md-3 control-label">
+                            <label for="period">
+                                {{entity + 'Period'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 ">
+                            <div class="row">
+                                <div class="col-xs-10" ng-class="{'has-error': (goalTemplateForm.period.$dirty || submitted) && goalTemplateForm.period.$invalid}">
+                                    <select name="period" id="period"  class="form-control" required ng-model="goalTemplate.period" ng-options="period.id as period.text for period in periodList">
+                                        <option value="" >{{entity + "Select"|translate}}</option>
+                                    </select>
+
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.period.$dirty || submitted) && goalTemplateForm.period.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.period.$error.required">{{ entity + 'Select period' | translate }}</span>
+                                    </div>                   
+                                </div>
+                                <span class="pull-left">{{entity + "days"| translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!--  <div class="form-group required">
+                          <div class="col-md-3 control-label">
+                              <label for="type">
+                                  {{entity + 'Type of goal'| translate }}
+                              </label>
+                          </div>
+                                                  <div class="col-md-7 ">
+                                                      <div class="row">
+                                                          <div class="col-xs-10" ng-class="{'has-error': (goalTemplateForm.type.$dirty || submitted) && goalTemplateForm.type.$invalid}">
+                                                              <select name="type" id="type"  class="form-control" required ng-model="goalTemplate.type" >
+                                                                  <option value="" >{{entity + "Select"| translate}}</option>
+                                                                  <option value="N" >{{entity + "Numeric"| translate}}</option>
+                                                                  <option value="B" >{{entity + "Boolean"| translate}}</option>
+                                                              </select>
+                          
+                                                              <div class="error,help-block" ng-show="(goalTemplateForm.type.$dirty || submitted) && goalTemplateForm.type.$invalid">
+                                                                  <span class="help-block" ng-show="goalTemplateForm.type.$error.required">{{ entity + 'Select type' | translate }}</span>
+                                                              </div>                   
+                                                          </div>
+                                                      </div>
+                                                  </div>-->
+                    <!--</div>-->
+                    <div class="form-group required" ng-if="goalTemplate.type == 'N'">
+                        <div class="col-md-3 control-label">
+                            <label for="apply">
+                                {{entity + "Set Realization Rules"|translate}}
+                            </label>
+                        </div>
+                        <div class="col-md-2 ">
+                            <div ng-class="{'has-error': goalTemplateForm.apply.$invalid && ruleSubmitted}">    
+                                <select  id="apply"  name="apply" class="form-control col-md-2"  ng-options="option for option in applyList" required ng-model="goalTemplate.apply">
+                                    <option value="" ng-bind="entity + 'Select' | translate"> </option>
+                                </select>
+                                <div class="error,help-block" ng-show="(goalTemplateForm.apply.$dirty || ruleSubmitted) && goalTemplateForm.apply.$invalid">
+                                    <span class="help-block" ng-show="goalTemplateForm.apply.$error.required" ng-bind="entity + 'Select apply' | translate"></span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table  class="table" ng-if="goalTemplate.type == 'N'">
+                            <tr ng-form="rowForm" ng-repeat="rules in ruleList">
+                                <td class="col-md-2"  ng-class="{'has-error': rowForm.entityName.$invalid && rules.rowsubmitted}">    
+                                    <select id="entityName" ng-disabled="(goalTemplate.apply === null || goalTemplate.apply === undefined)" required name="entityName" class="form-control" ng-change="onEntityChange($index)"  ng-options="k as v for (k, v) in entityList" ng-model="rules.entity">
+                                        <option value="">{{entity + 'Select entity'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(rowForm.entityName.$invalid && rules.rowsubmitted)">
+                                        <span class="help-block" ng-show="rowForm.entityName.$error.required">{{ entity + "Select entity" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td class="col-md-2" ng-class="{'has-error': rowForm.fieldName.$invalid && rules.rowsubmitted}">
+                                    <select ng-disabled="((goalTemplate.apply === null || goalTemplate.apply === undefined))" id="fieldName" required name="fieldName" class="form-control" ng-change="onFieldChange($index)" ng-options="field.oldLabelName for field in rules.fieldList" ng-model="rules.field">
+                                        <option value="">{{entity + 'Select field'| translate }}</option>
+                                    </select>
+
+                                    <div class="error,help-block" ng-show="(rowForm.fieldName.$invalid && rules.rowsubmitted)">
+                                        <span class="help-block" ng-show="rowForm.fieldName.$error.required">{{ entity + "Select field" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td class="col-md-1 text-center">
+                                    {{ entity + "is" | translate }}
+                                </td>
+
+                                <td class="col-md-2"   ng-class="{'has-error':rowForm.operator.$invalid && rules.rowsubmitted}">    
+                                    <select  ng-disabled="(goalTemplate.apply === null || goalTemplate.apply === undefined)" ng-mouseup="onOperatorChange($index)" required id="operator" ng-mousedown="onOperatorClick($index)" name="operator" class="form-control"   ng-options="operator.label for operator in rules.operatorList" ng-model="rules.operator">
+                                        <option value="">{{entity + 'Select operator'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="rowForm.operator.$invalid && rules.rowsubmitted">
+                                        <span class="help-block" ng-show="rowForm.operator.$error.required">{{ entity + "Select operator" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td id="test" class="col-md-3" >
+                                    <div ng-class="{'has-error':rowForm.multiselect.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectSingleComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.usermultiselect.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userMultiselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+                                        </div>
+                                        <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userSingleselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.dropdown.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownSingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.dropdown.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.dropdown.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+
+                                    <div ng-class="{'has-error':rowForm.pointer.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerSingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.pointer.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.pointer.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.subentity.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntityMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntitySingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.subentity.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.subentity.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-if="rules.showtemplate === true">
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type !== 'MultiSelect' && rules.field.type !== 'Pointer' && rules.field.type !== 'SubEntity' && rules.field.type !== 'UserMultiSelect' && rules.field.type !== 'Dropdown'">
+
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.type}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'Pointer' && rules.field.pointertype !== 'MultiSelect' && rules.field.pointertype !== 'Dropdown'">
+
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.pointertype}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'SubEntity' && rules.field.subentityDropListType === 'Date'">
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.subEntityType}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+
+
+
+                                    </div>
+                                </td>
+
+                                <td class="col-md-1">
+                                    <a href=""  ng-click="addRule(rowForm, $index);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                                    <a href="" ng-click="remove($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                                </td>
+                            </tr>
+                        </table>
+
+                    <div class="form-group required" ng-if="goalTemplate.type == 'N'">
+                        <div class="col-md-3 control-label">
+                            <label>
+                                {{entity + 'Set Validation Rules'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-9">
+                            <!-- General validation -->
+                            <div class="row">&nbsp;</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{entity + " General validations"|translate}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-offset-1 col-md-5" ng-class="{'has-error': (goalTemplateForm.genvaltype.$dirty || submitted) && goalTemplateForm.genvaltype.$invalid}">
+                                    <select id="genvaltype" name="genvaltype" required class="form-control" ng-model="goalTemplate.genvaltype">
+                                        <option value="">{{entity + "Select"| translate}}</option>
+                                        <option value="equal to">{{entity + "equal to"| translate}}</option>
+                                        <option value="less than">{{entity + "less than"| translate}}</option>
+                                        <option value="less than equal to">{{entity + "less than equal to"| translate}}</option>
+                                        <option value="greater than">{{entity + "greater than"| translate}}</option>
+                                        <option value="greater than equal to">{{entity + "greater than equal to"| translate}}</option>
+                                        <option value="not equal to">{{entity + "not equal to"| translate}}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.genvaltype.$dirty || submitted) && goalTemplateForm.genvaltype.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.genvaltype.$error.required">{{ entity + 'Select operator' | translate }}</span>
+                                    </div> 
+                                </div>
+                                <div class="col-md-6" ng-class="{'has-error': (goalTemplateForm.genvalvalue.$dirty || submitted) && goalTemplateForm.genvalvalue.$invalid}">
+                                    <input type="text"  numbers-only class="form-control" required placeholder="Enter value.." id="genvalvalue" name="genvalvalue" ng-model="goalTemplate.genvalvalue"/>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.genvalvalue.$dirty || submitted) && goalTemplateForm.genvalvalue.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.genvalvalue.$error.required">{{ entity + 'Enter value' | translate }}</span>
+                                    </div> 
+                                </div>
+                            </div>
+
+                            <!--If goal achieved--> 
+                            <div class="row">&nbsp;</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{entity + " IF Goal Achieved"| translate}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-offset-1">Then Value Should Be</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-offset-1 col-md-5" ng-class="{'has-error': (goalTemplateForm.valgoalachievedtype.$dirty || submitted) && goalTemplateForm.valgoalachievedtype.$invalid}">
+                                    <select id="valgoalachievedtype" name="valgoalachievedtype" required class="form-control" ng-model="goalTemplate.valgoalachievedtype">
+                                        <option value="">{{entity + "Select"| translate}}</option>
+                                        <option value="equal to">{{entity + "equal to"| translate}}</option>
+                                        <option value="less than">{{entity + "less than"| translate}}</option>
+                                        <option value="less than equal to">{{entity + "less than equal to"| translate}}</option>
+                                        <option value="greater than">{{entity + "greater than"| translate}}</option>
+                                        <option value="greater than equal to">{{entity + "greater than equal to"| translate}}</option>
+                                        <option value="not equal to">{{entity + "not equal to"| translate}}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.valgoalachievedtype.$dirty || submitted) && goalTemplateForm.valgoalachievedtype.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.valgoalachievedtype.$error.required">{{ entity + 'Select operator' | translate }}</span>
+                                    </div> 
+                                </div>
+                                <div class="col-md-6" ng-class="{'has-error': (goalTemplateForm.valgoalachievedvalue.$dirty || submitted) && goalTemplateForm.valgoalachievedvalue.$invalid}">
+                                    <!--<input type="text" class="form-control" placeholder="Enter value.." ng-required="goalTemplate.isValGoalAchieved" id="valgoalachievedvalue" name="valgoalachievedvalue" ng-model="goalTemplate.valgoalachievedvalue"/>-->
+                                    <textarea required ng-model="goalTemplate.valgoalachievedvalue" id="valgoalachievedvalue" name="valgoalachievedvalue" placeholder="Enter value.."  class="tagging form-control" rows="2" cols="10"></textarea>
+                                    <div class="text text-right" style="color: gray"><span >{{entity + "eg. : 10 Or $prev_set_value$ + 1"| translate}}</span></div>
+                                    <div class="text text-right" style="color: gray"><span >{{entity + "      Or $prev_achieved_value$ +1"| translate }}</span></div>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.valgoalachievedvalue.$dirty || submitted) && goalTemplateForm.valgoalachievedvalue.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.valgoalachievedvalue.$error.required">{{ entity + 'Enter value' | translate }}</span>
+                                    </div> 
+                                </div>
+                            </div>
+
+                            <!--If goal not achieved--> 
+                            <div class="row">&nbsp;</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{entity + " IF goal not achieved"| translate}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-offset-1">{{entity + "Then value should be"| translate}}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-offset-1 col-md-5" ng-class="{'has-error': (goalTemplateForm.valgoalnotachievedtype.$dirty || submitted) && goalTemplateForm.valgoalnotachievedtype.$invalid}">
+                                    <select id="valgoalnotachievedtype" required name="valgoalnotachievedtype" class="form-control" ng-model="goalTemplate.valgoalnotachievedtype">
+                                        <option value="">{{entity + "Select"| translate}}</option>
+                                        <option value="equal to">{{entity + "equal to"| translate}}</option>
+                                        <option value="less than">{{entity + "less than"| translate}}</option>
+                                        <option value="less than equal to">{{entity + "less than equal to"| translate}}</option>
+                                        <option value="greater than">{{entity + "greater than"| translate}}</option>
+                                        <option value="greater than equal to">{{entity + "greater than equal to"| translate}}</option>
+                                        <option value="not equal to">{{entity + "not equal to"| translate}}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.valgoalnotachievedtype.$dirty || submitted) && goalTemplateForm.valgoalnotachievedtype.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.valgoalnotachievedtype.$error.required">{{ entity + 'Select operator' | translate }}</span>
+                                    </div> 
+                                </div>
+                                <div class="col-md-6" ng-class="{'has-error': (goalTemplateForm.valgoalnotachievedvalue.$dirty || submitted) && goalTemplateForm.valgoalnotachievedvalue.$invalid}">
+                                    <!--<input type="text" class="form-control" ng-required="goalTemplate.isValGoalNotAchieved" placeholder="Enter value.." id="valgoalnotachievedvalue" name="valgoalnotachievedvalue" ng-model="goalTemplate.valgoalnotachievedvalue"/>-->
+                                    <textarea required ng-model="goalTemplate.valgoalnotachievedvalue" id="valgoalnotachievedvalue" name="valgoalnotachievedvalue" placeholder="Enter value.."  class="tagging form-control" rows="2" cols="10"></textarea>
+                                    <div class="text text-right" style="color: gray"><span >{{entity + "eg. : 10 Or $prev_set_value$ + 1"| translate}}</span></div>
+                                    <div class="text text-right" style="color: gray"><span >{{entity + "      Or $prev_achieved_value$ +1"| translate }}</span></div>
+                                    <div class="error,help-block" ng-show="(goalTemplateForm.valgoalnotachievedvalue.$dirty || submitted) && goalTemplateForm.valgoalnotachievedvalue.$invalid">
+                                        <span class="help-block" ng-show="goalTemplateForm.valgoalnotachievedvalue.$error.required">{{ entity + 'Enter value' | translate }}</span>
+                                    </div> 
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="!goalTemplatePayload.editGoalTemplateId">
+                        <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="generalGoalTemplate" ng-model="dynamicGoalData" ng-if="generalGoalTemplate" submit-flag-name="submitted" edit-flag="{{goalTemplatePayload.editGoalTemplateId}}">
+                        </dynamic-form></div>
+                    <div ng-if="goalTemplatePayload.editGoalTemplateId">
+                        <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="generalGoalTemplate" ng-model="dynamicGoalData" ng-if="generalGoalTemplate" submit-flag-name="submitted" edit-flag="{{goalTemplatePayload.editGoalTemplateId}}">
+                        </dynamic-form></div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button class="btn btn-link" ng-click="cancelNewTemplate()">{{entity + "Cancel"| translate }}</button>
+                                    <button class="btn btn-hkg" ng-if="!goalTemplatePayload.editGoalTemplateId" ng-click="saveAndSubmit(goalTemplateForm)">{{entity + "Add Goal Template"| translate }}</button>
+                                    <button class="btn btn-hkg" ng-if="goalTemplatePayload.editGoalTemplateId" ng-click="saveAndSubmit(goalTemplateForm)">{{entity + "Save"| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

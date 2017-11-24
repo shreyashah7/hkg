@@ -1,0 +1,26 @@
+define(["hkg","customFieldService","mergeparcelService","ngload!uiGrid","addMasterValue","customsearch.directive","lotService","accordionCollapse","ParcelTemplateController"],function(a){a.register.controller("MergeParcelController",["$rootScope","$scope","DynamicFormService","MergeParcelService","CustomFieldService","ParcelTemplateService","$route",function(c,e,d,f,g,b,h){c.mainMenu="stockLink";
+c.childMenu="mergeParcelMenu";
+b.setEntityName("MERGEPARCEL.");
+c.activateMenu();
+e.mergeParcelDataBean={};
+b.setFeatureName("parcelmerge");
+e.mergeParcel=function(){e.data=e.getSelectedData();
+e.mergeParcelDataBean.roughStockDetailDataBeans=[];
+if(e.data!==undefined&&e.data.footerData!==undefined){e.mergeParcelDataBean.mergedCarat=e.data.footerData.changedCarat;
+e.mergeParcelDataBean.mergedPieces=e.data.footerData.changedPieces;
+e.mergeParcelDataBean.mergedAmountInDollar=e.data.footerData.changedAmountInDollar;
+e.mergeParcelDataBean.mergedRate=e.data.footerData.changedRate
+}e.mergeParcelDataBean.roughStockDetailDataBeans=angular.copy(e.data.roughStock);
+f.mergeParcel(e.mergeParcelDataBean,function(i){e.resetPage()
+})
+};
+e.getSelectedData=function(){return b.getSelectedParcelData()
+};
+e.resetSelectedData=function(){b.setSelectedParcelData({});
+b.setSelectedParcels({})
+};
+e.resetSelectedData();
+e.resetPage=function(){h.reload()
+}
+}])
+});

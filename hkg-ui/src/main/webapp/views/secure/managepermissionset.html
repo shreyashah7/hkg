@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<div>
+    <h3><i18n environment="S" type="LM" text="User Management" entity="i18Designation"></i18n></h3>
+</div>
+<div class="hkg-fieldset-min">
+    <div ag-alert entity="i18Designation"/>
+    <br/>
+    <h3><i18n environment="S" type="LM" text="Change permission set" entity="i18Designation"></i18n></h3>    
+    <br/>
+    <div class="table-responsive">
+        <!--        <table ng-table="tableParams" class="table table-bordered text-center table-striped table-hover" >
+                    <tr ng-repeat="designation in $data| filter:queryTable">
+                        <td data-title="'SR No.'" >
+                            {{(tableParams.count() * (tableParams.page() - 1)) + ($index + 1)}}
+                        </td>
+                        <td data-title="'Designation'" sortable="label">
+                            {{designation.label}}
+                        </td>
+                        <td data-title="'Permissions set'">
+                            <select name="permissionSet" ng-options="permission.value as permission.label for permission in permissionSets" ng-model="selectedpermissonid" ng-change="setSelectedPermission(selectedpermissonid, designation)" style="width: 70%"> 
+                            </select>     
+                        </td>
+                        <td>
+                            <i class="icon-ok" ng-show="designation.isChange == true"/>
+                        </td>
+                    </tr>
+                </table>-->
+
+        <table ng-table="tableParams" class="table table-bordered text-center table-striped table-hover" >
+            <tr>
+                <th>
+            <div><i18n environment="S" type="LM" text="SR No." entity="i18Designation"></i18n></div>
+            </th>
+            <th class="sortable" ng-class="{'sort-asc': tableParams.sorting().label == 'asc','sort-desc': tableParams.sorting().label == 'desc'}"
+                ng-click="tableParams.sorting({'label': tableParams.sorting().label == 'asc' ? 'desc' : 'asc'})">
+            <div><i18n environment="S" type="LM" text="Designation" entity="i18Designation"></i18n></div>
+            </th>
+            <th>
+            <div><i18n environment="S" type="LM" text="Permissions set" entity="i18Designation"></i18n></div>
+            </th>
+            <th></th>
+            </tr>
+            <tr ng-repeat="designation in $data">
+                <td>
+                    {{(tableParams.count() * (tableParams.page() - 1)) + ($index + 1)}}
+                </td>
+                <td>
+                    {{designation.label}}
+                </td>
+                <td>
+                    <select name="permissionSet" ng-options="permission.value as permission.label for permission in permissionSets" ng-model="selectedpermissonid" ng-change="setSelectedPermission(selectedpermissonid, designation)" style="width: 70%"> 
+                    </select>     
+                </td>
+                <td>
+                    <i class="icon-ok" ng-show="designation.isChange == true"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-md-offset-10">
+            {{isUpdated}}
+            <!--<button class="btn" ng-click="updateAllPermissionSet()" ng-disabled="isUpdated === true">Save</button>-->
+            <button class="btn btn-primary" ng-click="updateAllPermissionSet()"><i18n environment="S" type="LM" text="Save" entity="i18Designation"></i18n></button>
+            <button class="btn btn-primary" ng-click="backToHome()"><i18n environment="S" type="LM" text="Cancel" entity="i18Designation"></i18n></button>
+        </div>
+    </div>
+
+    <div ng-show="$data.length === 0">
+        <i18n environment="S" type="LM" text="No Permission Set are available." entity="i18Designation"></i18n>
+    </div>
+</div>

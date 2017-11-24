@@ -1,0 +1,437 @@
+<div class="form-group">
+    <div class="col-md-12">
+        <h4>{{entity + 'Non-Diamond Related Features'| translate }}</h4>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <span ng:repeat="systemFeature in systemFeaturesList| orderBy:'name'" ng-show="systemFeaturesList.length > 0">
+            <div class="col-md-4" ng-show="$index % 3 == 0">
+                <label class="checkbox-inline">
+                    <input ng-if="false" type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                </label>
+                <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+            </div>
+            <div class="col-md-4" ng-show="$index % 3 == 1">
+                <label class="checkbox-inline">
+                    <input ng-if="false" type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                </label>
+                <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+            </div>
+            <div class="col-md-4" ng-show="$index % 3 == 2">
+                <label class="checkbox-inline">
+                    <input ng-if="false" type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked" ng-change="checkUncheckIA(systemFeature)">{{systemFeature.name}}
+                </label>
+                <!--<span ng-class="{cogred : systemFeature.checked, coggreen: systemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureNonDiamondFeature(systemFeature)" ng-show="systemFeature.name == 'goals_add_edit' || systemFeature.name == 'goalsheet_access'"></span>-->
+            </div>
+        </span>
+        <div ng-show="systemFeaturesList.length <= 0">
+            <table class="table table-bordered">
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + 'No system features exists'| translate }}
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+</div>
+<br/>
+<div class="form-group">
+    <div class="col-md-12">
+        <h4>{{entity + 'Diamond Related Features'| translate }}</h4>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <span ng:repeat="diamondSystemFeature in diamondSystemFeatureList| orderBy:'name'" ng-show="diamondSystemFeatureList.length > 0">
+            <div class="col-md-4" ng-show="$index % 3 == 0">
+                <label class="checkbox-inline">
+                    <input ng-if="false" ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox" ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                </label>
+                <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+            </div>
+            <div class="col-md-4" ng-show="$index % 3 == 1">
+                <label class="checkbox-inline">
+                    <input ng-if="false" ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)">{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                </label>
+                <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+            </div>
+            <div class="col-md-4" ng-show="$index % 3 == 2">
+                <label class="checkbox-inline">
+                    <input ng-if="false" ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                </label>
+                <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+            </div>
+        </span>
+        <div ng-show="diamondSystemFeatureList.length <= 0">
+            <table class="table table-bordered">
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + 'No diamond features exists'| translate }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+<br/>
+<div class="form-group">
+    <div class="col-md-12">
+        <h4>{{entity + 'Reports'| translate }}</h4>
+    </div>
+</div>
+<div class="form-group">
+    <div class="col-md-12">
+        <div ng:repeat="groups in groupFeatureMap| orderBy:'name'" ng-show="groupFeatureMap.length > 0">
+            <h5>{{groups.groupName}}</h5>
+            <div class="form-group">
+                <div class="col-md-12">
+                    <span ng:repeat="systemFeature in groups.features| orderBy:'name'" ng-show="groups.features.length > 0">
+                        <div class="col-md-4" ng-show="$index % 3 == 0">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4" ng-show="$index % 3 == 1">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                            </label>
+                        </div>
+                        <div class="col-md-4" ng-show="$index % 3 == 2">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" ng-disabled="isDisabled && (systemFeature.name == 'designation_add' || systemFeature.name == 'designation_edit')" ng-model="systemFeature.checked"><span class="wordRap">{{systemFeature.name}}</span>
+                            </label>
+                        </div>
+                    </span>
+                    <div ng-show="groups.features.length <= 0">{{entity + 'No Report features exists'| translate }}</div>
+                </div>
+            </div>
+        </div>
+        <div ng-show="groupFeatureMap.length <= 0">
+            <table class="table table-bordered">
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + 'No Report exists'| translate }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="configurePopUp{{(uniqueIndex !== null ? uniqueIndex : '')}}" role="dialog" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" ng-if="firstPage">
+            <form name="featureModifierForm" novalidate>
+                <div class="modal-header">
+                    <a class="close" ng-click="cancelConfigurationPopup()">&times;</a>
+                    <div class="modal-title">
+                        <h4><span>{{ entity + "Configure Modifier - "| translate }} {{labels}} {{entity + " Feature"|translate}}</span></h4>
+                    </div>
+                </div>
+                <div class="modal-body" >
+
+                    <div class="form-group row" ng-if="modifiers.plan">
+                        <div class="col-md-4">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Plan access' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-lg-7">
+                            <div class="checkbox-inline" ng-repeat="value in modifiers.plan">
+                                <input type="checkbox" name="plan" id="plan{{value.text}}" ng-change="changeInPlanModifier(value)" ng-model="value.value"/>
+                                <label for="plan{{value.text}}" class="control-label-static">
+                                    <span>{{ entity + value.text | translate}}</span>
+                                </label>
+                            </div>
+
+                            <div class="col-md-12 " ng-if="flags.planFlag === true">
+                                <table class="table table-bordered table-responsive table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-md-1">{{entity + "Sr no" | translate}}</th>
+                                            <th class="col-md-4">{{entity + "Recipients" | translate}}</th>
+                                            <th class="col-md-4">{{entity + "Status" | translate}}</th>
+                                            <th class="col-md-3">{{entity + "Action" | translate}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="planAccess in flags.planAccesArray" ng-form="planAccessForm">
+                                            <td class="col-md-1"><span >{{$index+1}}</span></td>
+                                            <td class="col-md-4">
+                                                <div class="col-md-12" ng-class="{'has-error': planAccessForm.users.$invalid && (planAccessForm.users.$dirty || submitted)}">
+                                                    <div class="input-group ">
+                                                        <input type="text" class="col-md-12 hkg-nopadding" id="users{{$index}}" name="users" ui-select2="planAccess.autoCompleteInvitees" ng-model="planAccess.users"/>
+                                                        <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{planpopover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                                    </div>
+                                                    <div class="error,help-block" ng-show="(planAccessForm.users.$dirty || submitted) && planAccessForm.users.$invalid">
+                                                        <span class="help-block" ng-show="planAccessForm.users.$error.required">{{entity + 'Select entities'| translate }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="col-md-4">
+                                                <div  ng-class="{'has-error': planAccessForm.status.$invalid && (planAccessForm.status.$dirty || submitted)}">
+                                                    <select id="status" name="status" class="form-control" ng-model="planAccess.status">
+                                                        <option value="">{{entity + "---Select---" | translate}}</option>
+                                                        <option value="S">{{entity + "Submitted" | translate}}</option>
+                                                        <option value="F">{{entity + "Finalized" | translate}}</option>
+                                                        <option value="A">{{entity + "All" | translate}}</option>
+                                                    </select>
+                                                    <div class="error,help-block" ng-if="(estimatePredictionForm.status.$dirty || submitted) && estimatePredictionForm.status.$invalid">
+                                                        <span class="help-block" ng-show="estimatePredictionForm.status.$error.required">{{ entity + "Field cannot be empty" | translate }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="col-md-3">
+                                                <div >
+                                                    <a href=""  ng-click="addnewPlanAccess(planAccessForm);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                                                    <a href="" ng-click="deletePlanAccess($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" ng-if="modifiers.medium">
+                        <div class="col-md-4">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Medium' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-lg-7">
+                            <div class="checkbox-inline" ng-repeat="value in modifiers.medium">
+                                <input type="checkbox" name="medium" id="medium{{value.text}}" ng-model="value.value"/>
+                                <label for="medium{{value.text}}" class="control-label-static">
+                                    <span>{{ entity + value.text | translate}}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" ng-if="modifiers.type">
+                        <div class="col-md-4">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Type' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-lg-7">
+                            <div class="checkbox-inline" ng-repeat="value in modifiers.type">
+                                <input type="checkbox" name="medium" id="medium{{value.text}}" ng-model="value.value"/>
+                                <label for="medium{{value.text}}" class="control-label-static">
+                                    <span>{{ entity + value.text | translate}}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" ng-if="modifiers.mode">
+                        <div class="col-md-4">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Mode' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-lg-7">
+                            <div class="checkbox-inline" ng-repeat="value in modifiers.mode">
+                                <input type="checkbox" name="medium" id="medium{{value.text}}" ng-model="value.value" ng-change="checkAccessModifier();"/>
+                                <label for="medium{{value.text}}" class="control-label-static">
+                                    <span>{{ entity + value.text | translate}}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row" ng-if="modifiers.access && modifiers.showAccessModifiers === true">
+                        <div class="col-md-4">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Access' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-lg-7">
+                            <div class="checkbox-inline" ng-repeat="value in modifiers.access">
+                                <input type="checkbox" name="medium" id="medium{{value.text}}" ng-model="value.value"/>
+                                <label for="medium{{value.text}}" class="control-label-static">
+                                    <span>{{ entity + value.text | translate}}</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row required" ng-if="modifiers.designation">
+                        <div class="col-md-3">
+                            <label class="control-label pull-right">
+                                <span>{{ entity + 'Designation' | translate}}</span>
+                            </label>
+                        </div>
+                        <div class="col-lg-5">
+                            <div ng-class="{'has-error':featureModifierForm.designations.$invalid && flags.modifierSubmitted}"> 
+                                <div class="input-group">
+                                    <input type="text" class="col-md-12 hkg-nopadding" ng-required="true" required name="designations" id="designations" ui-select2="autoCompleteDesignation" ng-model="modifiers.designation[0].value"/>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                </div>
+                                <div class="error,help-block" ng-show="featureModifierForm.designations.$invalid && flags.modifierSubmitted">
+                                    <span class="help-block" ng-show="featureModifierForm.designations.$error.required">{{ entity + "Select designation" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div ng-if="modifiers.noRecords === true">
+                        <span class="col-md-offset-1">{{ entity + 'No modifiers required for selected feature' | translate}}</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a href="" ng-click="cancelConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click='setNextPage(1, featureModifierForm)'>
+                                {{ entity + "Next" | translate }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-content" ng-if="!nextPage && secondPage">
+            <div class="modal-header">
+                <a class="close" ng-click="cancelConfigurationPopup()">&times;</a>
+                <div class="modal-title">
+                    <h4><span>{{ entity + "Configure "| translate }} {{labels}} {{entity + " Feature"|translate}}</span></h4>
+                </div>
+            </div>
+            <div class="modal-body" >
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label for='searchField' class="control-label pull-right">
+                            <span>{{ entity + 'Configure Search' | translate}}</span>
+                        </label>
+                    </div>
+                    <div class="col-xs-8 col-lg-7"> 
+                        <div id='searchField' name='searchField' ng-if="(fieldList.length) > 0" multi-select output-model="$parent.selectedFieldsForSearch" input-model="combinedFieldListForSearch" button-label="modelName fieldName" item-label="modelName fieldName" 
+                             tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup" max-height="200px" on-item-click="setSearchField($parent.selectedFieldsForSearch);">
+                        </div> 
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-4">
+                        <label for='parentField' class="control-label pull-right">
+                            <span>{{ entity + 'Parent Entity Info' | translate}}</span>
+                        </label>
+                    </div>
+                    <div class="col-xs-8 col-lg-7"> 
+                        <div id='parentField' name='parentField' ng-if="fieldList.length > 0" multi-select output-model="$parent.selectedFieldsForParent" input-model="combinedFieldListForParent" button-label="modelName fieldName" item-label="modelName fieldName" 
+                             tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup1" max-height="200px" on-item-click="setParentField($parent.selectedFieldsForParent);" >
+                        </div> 
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-12">
+                        <a href="" ng-click="cancelConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="setPreviousPage(1)">
+                            {{ entity + "Previous" | translate }}
+                        </button>
+                        <button class="btn btn-hkg" ng-click='setNextPage(2)'>
+                            {{ entity + "Next" | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-content" ng-if="nextPage">
+            <div class="modal-header">
+                <a class="close" ng-click="cancelConfigurationPopup()">&times;</a>
+                <div class="modal-title">
+                    <h4><span>{{ entity + 'Configure Field Visibility - '|translate}}{{labels}}{{' Feature'| translate}}</span></h4>
+                </div>
+            </div>
+            <div class="modal-body">
+                <form name="configurePopupForm" class="form-horizontal">
+                    <div class="table-responsive">
+                        <div class="row">
+                            <div class="col-md-1"></div>
+                            <div  class="col-md-10">
+                                <div class='form-group required'>
+                                    <label for="entityDropdownForSection"  class="col-md-4 control-label">
+                                        {{ entity + 'Select Section' | translate}}
+                                    </label>
+                                    <!--<div class="col-md-4 col-lg-4 col-sm-8" ng-if='type === "DMI" && labels !== "static print" && labels !== "merge stock"'>-->
+                                    <!--                                            <select ng-disabled="true" class="form-control" name="entityDropdownForDmi" id="entityDropdownForDmi"> 
+                                                                                    <option value="featureEntity">{{featureEntity}}</option>
+                                                                                </select>-->
+                                    <!--</div>-->
+                                    <div class="col-md-4 col-lg-4 col-sm-8" >
+                                        <select class="form-control" ng-model="entitys.section" name="entityDropdownForSection" id="entityDropdownForSection" ng-change="changeEntityList()" ng-options="section.sectionId as section.sectionName for section in sectionList"> 
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">&nbsp;</div>
+                                <div class='form-group required'>
+                                    <label for="entityDropdownForDei"  class="col-md-4 control-label">
+                                        {{ entity + 'Select Entity' | translate}}
+                                    </label>
+                                    <!--<div class="col-md-4 col-lg-4 col-sm-8" ng-if='type === "DMI" && labels !== "static print" && labels !== "merge stock"'>-->
+                                    <!--                                            <select ng-disabled="true" class="form-control" name="entityDropdownForDmi" id="entityDropdownForDmi"> 
+                                                                                    <option value="featureEntity">{{featureEntity}}</option>
+                                                                                </select>-->
+                                    <!--</div>-->
+                                    <div class="col-md-4 col-lg-4 col-sm-8" >
+                                        <select class="form-control" ng-model="entitys.name" name="entityDropdownForDei" id="entityDropdownForDei" ng-change="fieldTableContent()" ng-options="entitys.id as entitys.name for entitys in entityList"> 
+                                            <option value="">Select</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <br/><br/>
+                                <div class='form-group required'>
+                                    <div ng-if='!!entitys.name'>
+                                        <table class="table table-striped table-responsive" ag-data-table="entitys.filteredList" dt-options="dataTableOptions">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center">{{ entity + 'Field Name' | translate}}</th>
+                                                    <th class="text-center">{{ entity + 'Permissions' | translate}}</th>
+                                                    <th  class="text-center">{{entity + 'Tab Index'| translate}}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr ng-repeat="table in commonList|commonListFilter : entitys.name: entitys.section" dt-rows >
+                                                    <td>{{table.fieldName}}</td>
+                                                    <td class="text-center">
+                                                        <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" ng-click="table.isRequired = false" value="hide"><span ng-bind="entity + 'Hide' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" ng-click="table.isRequired = false" value="view only"><span ng-bind="entity + 'View only' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <label><input type='radio' name='{{table.fieldName}}' ng-model="table.selected" value="view and edit"><span ng-bind="entity + 'View and edit' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        <label><input type='checkbox' ng-disabled="table.selected !== 'view and edit'" name='isRequired' ng-model="table.isRequired" value="true"><span ng-bind="entity + 'Required' | translate"></span></label>&nbsp;&nbsp;&nbsp;&nbsp;
+                                                    </td>
+                                                    <td class="text-center"><input type="number" style="width: 40px;" min="1" ng-model="table.sequenceNo"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div ng-if="commonList.length === 0">
+                                    <span ng-bind="entity + 'No Fields are available for this feature' | translate"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-12">
+                        <a href="" ng-click="cancelConfigurationPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="setPreviousPage(2)">
+                            {{ entity + "Previous" | translate }}
+                        </button>
+                        <button class="btn btn-hkg" ng-click='savePermission()'>
+                            {{ entity + "Save" | translate }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,69 @@
+<div>
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12 col-lg-8">
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate}}</li>
+                <li>{{entity + 'Stock'|translate}}</li>
+                <li class="active">{{entity + 'Rough Purchase'| translate}}</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 new-panel">
+        <div class="clearfix"></div>
+        <div id="messages" ng-include src="'templates/messages.html'"></div>
+        <div class="clearfix"></div>
+        <form method="POST" class="form-horizontal" name="purchaseForm" novalidate>
+            <div class="form-group col-md-12 hkg-nopadding" ng-init="registerLocationChangeEvent(purchaseForm);
+                    initPurchaseForm(purchaseForm)">
+                <h4>{{entity + 'Search Purchases'| translate}}</h4>
+            </div>
+            <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                            internationalization-label="{{i18DynamicForm}}" template="generalPurchaseTemplate" 
+                            ng-model="searchCustom" ng-if="generalPurchaseTemplate" is-diamond ="true">
+            </custom-search>
+            <div ng-if="!generalPurchaseTemplate || generalPurchaseTemplate.length == 0">
+                <div class="col-xs-12 col-lg-12">
+                    <table class="table  table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Search Fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <hr style="margin-top: 2px;margin-bottom: 10px"/>
+            <div class="col-xs-12 pull-right text-right hkg-nopadding" ng-if="generalPurchaseTemplate">                     
+                <a ng-click="onCancelOfSearch(purchaseForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                <button class="btn btn-hkg" ng-click="retrieveSearchedData(purchaseForm)">{{entity + 'Search'| translate}}</button>
+            </div>
+            <br/>
+
+            <h4>{{entity + 'Available Purchases'| translate}}</h4>
+            <div ng-if="showConfigMsg === true">
+                <div class="col-xs-12 col-lg-12">
+                    <table class="table  table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div ng-if="showConfigMsg === false">
+                <editable-custom-grid editable-grid-options="editableGridPuchaseOptions" feature-name="roughPurchase" entity-type="purchase">
+                </editable-custom-grid>
+                <div class="col-xs-12 col-lg-12 hkg-nopadding" ng-if="editableGridPuchaseOptions.datarows.length === 0 && allDataRetrieved !== undefined && !allDataRetrieved">
+                    <table class="table  table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'No Results found'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

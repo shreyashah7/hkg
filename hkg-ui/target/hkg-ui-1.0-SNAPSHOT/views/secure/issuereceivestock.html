@@ -1,0 +1,942 @@
+<style type="text/css">
+    hideTab {
+        display: none;
+    }
+    .divider{
+        position:absolute;
+        left:50%;
+        top:10%;
+        bottom:10%;
+        border-left:1px solid white;
+    }
+    .nomargin{
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+    }
+</style>
+<form method="POST" class="form-horizontal" ng-init="initForm()" novalidate>
+    <div ng-form="issueReceiveForm" >
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + codeToType[dataVals.type]+" "+ codeToOperation[dataVals.operation]| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="new-panel" style="width: 100%;display: block;overflow: auto;">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div ng-if="operation.length === 0">
+                <table class="table table-bordered">
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the mofifiers for issuereceive'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6 form-group" ng-if="type.length > 1 && dataVals.operation !== 'CL' && dataVals.operation !== 'IS' && dataVals.operation !== 'RC'">
+                <label class="col-md-1 control-label" for="type{{typeObj.key}}">{{entity + "Type" | translate}}</label>
+                <div class="col-md-11"  > 
+                    <label class="hkg-nopadding col-md-2" ng-repeat="typeObj in type">
+                        <input type="radio" name="type" id="type{{typeObj.key}}" ng-change="loadList()" ng-model="dataVals.type" ng-value="typeObj.key"/> {{typeObj.value}}
+                    </label>
+                </div>
+            </div>
+            <br/>
+            <tabset class="col-md-12 hkg-nopadding"  ng-show="operation && operation.length > 0">
+                <tab ng-repeat="optionsval1 in operation" class="{{operation.length === 1 ? 'hide' : ''}}" heading="{{optionsval1.value}}" active="optionsval1.active" ng-click="tabChanged(optionsval1.key)">                          
+                    <div ng-form="mainForm">
+                        <div class="col-md-12">&nbsp;</div>
+                        <div class="row form-group nomargin" style="margin-bottom: 10px" ng-if="dataVals.type === 'IW' && (dataVals.operation === 'II' || dataVals.operation === 'RQ')">
+                            <div class="col-md-12 hkg-nopadding">
+                                <label class="col-md-2 control-label">{{entity + "Designation" | translate}}</label>
+                                <div class="col-md-8">
+                                    <label class="hkg-nopadding col-md-2" ng-repeat="designation in designationList" for="desig{{designation.value}}">
+                                        <input type="radio" name="desig-{{optionsval1.key}}"  id="desig{{designation.value}}" ng-change="retrieveUsersByDesignation(dataVals.designation)" ng-model="dataVals.designation" ng-value="designation.value"/> {{entity + designation.label | translate}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row nomargin" style="margin-bottom: 10px" ng-if="dataVals.type === 'OW' && (dataVals.operation === 'II' || dataVals.operation === 'RQ')" >
+                            <div class="col-md-12 col-md-12 col-xs-12 hkg-nopadding">
+                                <label class="col-md-2 control-label" for="department{{optionsval1}}">{{entity + "Department" | translate}}</label>
+                                <div class="col-md-8">
+                                    <label class="hkg-nopadding col-md-2" ng-repeat="dept in associatedDeptList">
+                                        <input  type="radio" name="department={{optionsval1.key}}" id="department{{optionsval1}}" ng-change="setMedium(dept)" ng-model="dataVals.department" ng-value="dept.value"/> {{entity + dept.description | translate}}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group required nomargin" ng-if="dataVals.operation === 'II' && dataVals.type === 'OW'">
+                            <div class="col-md-6 col-md-6 col-xs-12 hkg-nopadding" >
+                                <label class="col-md-4 control-label" for="assignee">{{entity + "Assignee" | translate}}</label>
+                                <div ng-class="{'has-error': isUserInvalid && submitted}">
+                                    <div class="dropdown col-md-7">
+                                        <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                                            <span class="pull-left" ng-show="displayName !== null && displayName !== undefined && displayName !== ''" ng-bind="displayName"></span>
+                                            <span ng-hide="displayName !== null && displayName !== undefined && displayName !== ''" class="pull-left">Select User</span>
+                                            <span class="caret pull-right no-margin"></span>
+                                        </button>
+                                        <div class="dropdown-menu " style="width:280px">
+                                            <div ng-if="usersForCompany" ng-click='setSelectedParent(selectedUserDropdown)'
+                                                 data-angular-treeview="true"
+                                                 data-tree-id="selectedUserDropdown"
+                                                 ag-treemodel="usersForCompany"
+                                                 entity-name="DPT_NM."
+                                                 search-id="parentId">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row error,help-block" ng-show="isUserInvalid && submitted">
+                                        <span class="help-block">{{ entity + 'Select Asignee' | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group required nomargin" ng-if="dataVals.operation === 'II' && dataVals.type === 'IW'">
+                            <div class="col-md-6 hkg-nopadding" >
+                                <label class="col-md-4 control-label" for="assignee">{{entity + "Assignee" | translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': mainForm.assignee.$invalid && (mainForm.assignee.$dirty || submitted)}">
+                                    <select name="assignee" id="assignee" class="form-control" ng-options="user.value as user.label for user in userList" ng-model="dataVals.userId" required>
+                                        <option value="">{{entity + "--Select--" | translate}}</option>
+                                    </select>
+                                    <div class="error,help-block,has-error" ng-show="(mainForm.assignee.$dirty || submitted) && mainForm.assignee.$invalid">
+                                        <span class="help-block" ng-show="mainForm.assignee.$error.required">{{entity + 'Select Asignee'| translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group nomargin" ng-if="dataVals.operation === 'IS'">
+                            <div class="col-md-6 hkg-nopadding">
+                                <label class="col-md-4 control-label" for="franchise">{{entity + "Franchise" | translate}}</label>
+                                <div class="col-md-8">
+                                    <select name="franchise" id="franchise" class="form-control" ng-options="fran.value as fran.label for fran in franchiseList" ng-model="payload.selectedFranchise" ng-change="franchiseChanged()">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group nomargin" ng-if="dataVals.operation === 'RC' || dataVals.operation === 'RI'">
+                            <div class="col-md-6 hkg-nopadding">
+                                <label for="slipno" class="col-md-4 control-label">{{entity + "Slip No" |translate}}</label>
+                                <div class="col-md-8">
+                                    <span class="input-group">
+                                        <input type="text" id="slipno" class="form-control" placeholder="{{format}}" datepicker-popup="{{format}}" ng-model="payload.slipnoDate" datepicker-options="dateOptions" is-open="ir_dob_opened" close-text="Close" name="slipno"/>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" ng-click="ir_dob_opened = true;
+                                                    open($event);"><i class="glyphicon glyphicon-calendar"></i></button>
+                                        </span>
+                                        <input class="form-control" type="text" maxlength="3" name="slipnoNumber" placeholder="Slip number" ng-keydown="onSubmitFuncSlipNo($event)" id="slipnoNumber" ng-model="payload.slipnoNumber">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-if="generalTemplate && generalTemplate.length > 0 && templateFlag">
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="fieldDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalTemplate" 
+                                           ng-model="generalCustom" ng-if="generalTemplate && generalCustom" is-diamond="true" >
+                            </dynamic-form>
+                        </div>
+                        <div ng-if="dataVals.operation !== 'RC' && dataVals.operation !== 'RI' && dataVals.operation !== 'CL' && dataVals.operation !== 'IS' && dataVals.operation !== 'RT'">
+                            <div class="row form-group nomargin" ng-if="(dataVals.type === 'OW' && medium === 'Rough') || (dataVals.type === 'IW' && configuredMediums.indexOf('Rough') !== -1) && dataVals.roughFlag === true">
+                                <div class="col-md-6 hkg-nopadding">
+                                    <label for="parcel" class="col-md-4 control-label ">{{entity + "Parcel" |translate}}</label>
+                                    <div class="col-md-5"> 
+                                        <input class="col-xs-12 hkg-nopadding" ui-select2="autoCompleteRough" type="text" name="parcel"  id="parcel" ng-model="dataVals.selectedparcel" >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row form-group nomargin" ng-if="(dataVals.type === 'OW' && medium === 'Lot') || (dataVals.type === 'IW' && configuredMediums.indexOf('Lot') !== -1) && dataVals.lotFlag === true">
+                                <div class="col-md-6 hkg-nopadding">
+                                    <label for="lot" class="col-md-4 control-label" >{{entity + "Lot" |translate}}</label>
+                                    <div class="col-md-5"> 
+                                        <input class="col-xs-12 hkg-nopadding" ui-select2="autoCompleteLot" type="text" name="lot"  id="lot" ng-model="dataVals.selectedlot" >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row form-group nomargin" ng-if="(dataVals.type === 'OW' && medium === 'Packet') || (dataVals.type === 'IW' && configuredMediums.indexOf('Packet') !== -1) && dataVals.packetFlag === true">
+                                <div class="col-md-6 hkg-nopadding">
+                                    <label for="packet" class="col-md-4 control-label">{{entity + "Packet" |translate}}</label>
+                                    <div class="col-md-5"> 
+                                        <input class="col-xs-12 hkg-nopadding" ui-select2="autoCompletePacket" type="text" name="packet"  id="packet" ng-model="dataVals.selectedpacket" >
+                                        <!--<input class="form-control" type="text" name="packet" id="packet" ng-keydown="onSubmitFunc($event, 'Packet', mainForm)"  ng-model="dataVals.selectedpacket" >-->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="dataVals.operation === 'CL' || dataVals.operation === 'IS' || dataVals.operation === 'RT'">
+                            <div class="row form-group nomargin">
+                                <div class="col-md-6 hkg-nopadding" ng-if="configuredMediums.indexOf('Rough') !== -1">
+                                    <label for="parcel" class="col-md-4 control-label" >{{entity + "Parcel" |translate}}</label>
+                                    <div class="col-md-5">                                     
+                                        <input class="form-control"  type="text" name="parcel" ng-keydown="onSubmitFuncCollect($event, 'Rough', mainForm)" id="parcel" ng-model="payload.parcel" >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row form-group nomargin">
+                                <div class="col-md-6 hkg-nopadding" ng-if="configuredMediums.indexOf('Lot') !== -1">
+                                    <label for="lot" class="col-md-4 control-label" >{{entity + "Lot" |translate}}</label>
+                                    <div class="col-md-5"> 
+                                        <input class="form-control" type="text" ng-keydown="onSubmitFuncCollect($event, 'Lot', mainForm)" name="lot" id="lot"  ng-model="payload.lot" >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row form-group nomargin">
+                                <div class="col-md-6 hkg-nopadding" ng-if="configuredMediums.indexOf('Packet') !== -1">
+                                    <label for="packet" class="col-md-4 control-label" >{{entity + "Packet" |translate}}</label>
+                                    <div class="col-md-5"> 
+                                        <input class="form-control" type="text" name="packet" id="packet" ng-keydown="onSubmitFuncCollect($event, 'Packet', mainForm)"  ng-model="payload.packet" >
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Request table starts-->
+                        <div class="col-xs-12" ng-form="form1" ng-show="dataVals.operation === 'RQ'">
+                            <div class="col-xs-8" ng-show="dataVals.operation === 'RQ'">
+                                <h4>{{entity + "Stock available to request" | translate}}</h4>
+                                <div class="col-xs-6 pull-right text-right">    
+                                    <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrieveAvailableRequestStock()" title="Refresh"></span>
+                                </div>
+                                <div class="row" >
+                                    <table ng-show="availableRequestStock.length > 0" class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Request</th>
+                                                <th>Invoice</th>
+                                                <th>Parcel</th>
+                                                <th>Lot</th>
+                                                <th>Packet</th>
+                                                <th>Carat</th>
+                                                <th>Pieces</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="stock in availableRequestStock" ng-show="dataVals.type === 'IW' || (dataVals.type === 'OW' && (
+                                                                    (medium === 'Rough' && stock.parcelNumber !== null && stock.lotNumber === null && stock.packetNumber === null) ||
+                                                                    (medium === 'Lot' && stock.parcelNumber !== null && stock.lotNumber !== null && stock.packetNumber === null) ||
+                                                                    (medium === 'Packet' && stock.parcelNumber !== null && stock.lotNumber !== null && stock.packetNumber !== null)
+                                                                    ))">
+                                                <td><input type="checkbox" ng-model="stock.toRequest" ng-checked="selectorIdsForRequest.indexOf(stock.selectorId) !== -1" ng-click="addOrRemoveForRequest(stock)"/></td>
+                                                <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                                </td>
+                                                <td>
+                                                    <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                                </td>
+                                                <td>
+                                                    <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                                </td>
+                                                <td>
+                                                    <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                                </td>
+                                                <td>
+                                                    <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                                </td>
+                                                <td>
+                                                    <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                                    <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div ng-if="availableRequestStock.length === 0">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <td class="col-md-12">
+                                                    {{entity + 'No stock to request'| translate}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="border-left: 1px solid gray;min-height: 400px" class="col-xs-4" ng-show="dataVals.operation === 'RQ'">
+                                <h4>{{entity + "Request" | translate}}</h4>
+                                <div class="row">
+                                    <div  
+                                        data-angular-treeview="true"
+                                        data-tree-id="selectedDepartment"
+                                        ag-treemodel="treeForRequest">
+                                    </div>
+                                </div>
+                                <div class="col-xs-12 pull-right text-right">                     
+                                    <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                    <button class="btn btn-hkg" ng-click="saveAll()">{{entity + 'Request'| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Request table ends-->
+
+                        <!-- Table to show available stock for collect -->
+                        <div class="col-xs-8" ng-show="dataVals.operation === 'CL'">
+                            <h4>{{entity + "Stock available to collect" | translate}}</h4>
+                            <div class="col-xs-6 pull-right text-right">    
+                                <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrieveAvailableCollectStock()" title="Refresh"></span>
+                            </div>
+                            <div class="row" >
+                                <table ng-show="availableCollectStock.length > 0" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Collect</th>
+                                            <th>Invoice</th>
+                                            <th>Parcel</th>
+                                            <th>Lot</th>
+                                            <th>Packet</th>
+                                            <th>Issue Carat</th>
+                                            <th>Issue Pieces</th>
+                                            <th>Issue By</th>
+                                            <th>Issue Department</th>
+                                            <th ng-repeat="tmpl in generalTemplateForView">{{entity + tmpl.label | translate}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="stock in availableCollectStock">
+                                            <td><input type="checkbox" ng-model="stock.toCollect" ng-checked="selectorIds.indexOf(stock.selectorId) !== -1" ng-click="addOrRemoveForCollect(stock)"/></td>
+                                            <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.createdByUserName === null || stock.createdByUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.createdByUserName !== null && stock.createdByUserName !== undefined">{{entity + stock.createdByUserName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.sourceDepartmentName === null || stock.sourceDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.sourceDepartmentName !== null && stock.sourceDepartmentName !== undefined">{{entity + stock.sourceDepartmentName | translate}}</span>
+                                            </td>
+                                            <td ng-repeat="tmpl in generalTemplateForView">
+                                                <span ng-if="stock.fieldValueForUi[tmpl.model] === null || stock.fieldValueForUi[tmpl.model] === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.fieldValueForUi[tmpl.model] !== null && stock.fieldValueForUi[tmpl.model] !== undefined">{{entity + stock.fieldValueForUi[tmpl.model] | translate}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div ng-if="availableCollectStock.length === 0">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'No stock to collect'| translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="border-left: 1px solid gray;min-height: 400px" class="col-xs-4" ng-show="dataVals.operation === 'CL'">
+                            <h4>{{entity + "Collected" | translate}}</h4>
+                            <div class="row">
+                                <div  
+                                    data-angular-treeview="true"
+                                    data-tree-id="selectedDepartment"
+                                    ag-treemodel="treeForCollect">
+                                </div>
+                            </div>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                <button class="btn btn-hkg" ng-click="reject()">{{entity + 'Reject'| translate}}</button>
+                                <button class="btn btn-hkg" ng-click="collect(mainForm)">{{entity + 'Collect'| translate}}</button>
+                            </div>
+                        </div>
+
+                        <!-- Issue table -->
+                        <div class="col-xs-8" ng-show="dataVals.operation === 'IS'">
+                            <h4>{{entity + "Stock available to issue" | translate}}</h4>
+                            <div class="col-xs-6 pull-right text-right">    
+                                <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrieveAvailableIssueStock()" title="Refresh"></span>
+                            </div>
+                            <div class="row" >
+                                <table ng-show="availableIssueStock.length > 0" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Issue</th>
+                                            <th>Invoice</th>
+                                            <th>Parcel</th>
+                                            <th>Lot</th>
+                                            <th>Packet</th>
+                                            <th>Issue Carat</th>
+                                            <th>Issue Pieces</th>
+                                            <th>Issue By</th>
+                                            <th>Issue Department</th>
+                                            <th ng-repeat="tmpl in generalTemplateForView">{{entity + tmpl.label | translate}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="stock in availableIssueStock">
+                                            <td><input type="checkbox" ng-model="stock.toCollect" ng-checked="selectorIds.indexOf(stock.selectorId) !== -1" ng-click="addOrRemoveForIssue(stock)"/></td>
+                                            <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.createdByUserName === null || stock.createdByUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.createdByUserName !== null && stock.createdByUserName !== undefined">{{entity + stock.createdByUserName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.sourceDepartmentName === null || stock.sourceDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.sourceDepartmentName !== null && stock.sourceDepartmentName !== undefined">{{entity + stock.sourceDepartmentName | translate}}</span>
+                                            </td>
+                                            <td ng-repeat="tmpl in generalTemplateForView">
+                                                <span ng-if="stock.fieldValueForUi[tmpl.model] === null || stock.fieldValueForUi[tmpl.model] === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.fieldValueForUi[tmpl.model] !== null && stock.fieldValueForUi[tmpl.model] !== undefined">{{entity + stock.fieldValueForUi[tmpl.model] | translate}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div ng-if="availableIssueStock.length === 0">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'No stock to issue'| translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <h4>{{entity + "Stock issued" | translate}}</h4>
+                            <div class="col-xs-6 pull-right text-right">    
+                                <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrievePendingIssuedStock()" title="Refresh"></span>
+                            </div>
+                            <div class="row" >
+                                <table ng-show="pendingIssuedStock.length > 0" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Parcel</th>
+                                            <th>Lot</th>
+                                            <th>Packet</th>
+                                            <th>Issue Carat</th>
+                                            <th>Issue Pieces</th>
+                                            <th>Issue By</th>
+                                            <th>Issue Department</th>
+                                            <th>Issued To</th>
+                                            <th>Destination Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="stock in pendingIssuedStock">
+                                            <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.createdByUserName === null || stock.createdByUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.createdByUserName !== null && stock.createdByUserName !== undefined">{{entity + stock.createdByUserName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.sourceDepartmentName === null || stock.sourceDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.sourceDepartmentName !== null && stock.sourceDepartmentName !== undefined">{{entity + stock.sourceDepartmentName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issueToUserName === null || stock.issueToUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issueToUserName !== null && stock.issueToUserName !== undefined">{{entity + stock.issueToUserName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.destinationDepartmentName === null || stock.destinationDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.destinationDepartmentName !== null && stock.destinationDepartmentName !== undefined">{{entity + stock.destinationDepartmentName | translate}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div ng-if="pendingIssuedStock.length === 0">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'No stock remain to receive'| translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="border-left: 1px solid gray;min-height: 400px" class="col-xs-4" ng-show="dataVals.operation === 'IS'">
+                            <h4>{{entity + "Issued" | translate}}</h4>
+                            <div class="row form-group" ng-show="dataVals.operation === 'IS' && selectorIdsForIssue.length > 0 && payload.selectedFranchise === $root.session.companyId">
+
+                                <div class="col-md-10" >
+                                    <label class="col-md-5 control-label" for="assignee">{{entity + "Issue To" | translate}}</label>
+                                    <div>
+                                        <div class="dropdown col-md-7">
+                                            <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                                                <span class="pull-left" ng-show="displayName !== null && displayName !== undefined && displayName !== ''" ng-bind="displayName"></span>
+                                                <span ng-hide="displayName !== null && displayName !== undefined && displayName !== ''" class="pull-left">Select User</span>
+                                                <span class="caret pull-right no-margin"></span>
+                                            </button>
+                                            <div class="dropdown-menu " style="width:280px">
+                                                <div ng-if="usersForCompany" ng-click='setSelectedParent(selectedUserDropdown)'
+                                                     data-angular-treeview="true"
+                                                     data-tree-id="selectedUserDropdown"
+                                                     ag-treemodel="usersForCompany"
+                                                     entity-name="DPT_NM."
+                                                     search-id="parentId">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div  
+                                    data-angular-treeview="true"
+                                    data-tree-id="selectedForIssue"
+                                    ag-treemodel="treeForIssue">
+                                </div>
+                            </div>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                <button class="btn btn-hkg" ng-click="issue(mainForm)">{{entity + 'Issue'| translate}}</button>
+                            </div>
+                        </div>
+                        <!-- Issue table ends-->
+
+                        <!-- Return form -->
+
+                        <div class="col-xs-8" ng-show="dataVals.operation === 'RT'">
+                            <h4>{{entity + "Stock available to return" | translate}}</h4>
+                            <div class="col-xs-6 pull-right text-right">    
+                                <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrieveAvailableReturnStock()" title="Refresh"></span>
+                            </div>
+                            <div class="row" >
+                                <table ng-show="availableReturnStock.length > 0" class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Collect</th>
+                                            <th>Invoice</th>
+                                            <th>Parcel</th>
+                                            <th>Lot</th>
+                                            <th>Packet</th>
+                                            <th>Issue Carat</th>
+                                            <th>Issue Pieces</th>
+                                            <th>Issue By</th>
+                                            <th>Issue Department</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="stock in availableReturnStock">
+                                            <td><input type="checkbox" ng-model="stock.toCollect" ng-checked="selectorIds.indexOf(stock.selectorId) !== -1" ng-click="addOrRemoveForReturn(stock)"/></td>
+                                            <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.createdByUserName === null || stock.createdByUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.createdByUserName !== null && stock.createdByUserName !== undefined">{{entity + stock.createdByUserName | translate}}</span>
+                                            </td>
+                                            <td>
+                                                <span ng-if="stock.sourceDepartmentName === null || stock.sourceDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                                <span ng-if="stock.sourceDepartmentName !== null && stock.sourceDepartmentName !== undefined">{{entity + stock.sourceDepartmentName | translate}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div ng-if="availableReturnStock.length === 0">
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'No stock to return'| translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="border-left: 1px solid gray;min-height: 400px" class="col-xs-4" ng-show="dataVals.operation === 'RT'">
+                            <h4>{{entity + "Return" | translate}}</h4>
+                            <div class="row">
+                                <div  
+                                    data-angular-treeview="true"
+                                    data-tree-id="selectedDepartment"
+                                    ag-treemodel="treeForReturn">
+                                </div>
+                            </div>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                <button class="btn btn-hkg" ng-click="returnStock()">{{entity + 'Return'| translate}}</button>
+                            </div>
+                        </div>
+                        <!-- Return form ends -->
+                    </div>
+                    <!-- Receive table starts -->
+                    <div class="col-xs-12" ng-show="dataVals.operation === 'RC'">
+                        <div class="row" >
+                            <table ng-show="receiveArray.length > 0" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No.</th>
+                                        <th>Invoice</th>
+                                        <th>Parcel</th>
+                                        <th>Lot</th>
+                                        <th>Packet</th>
+                                        <th>Issue Carat</th>
+                                        <th>Issue Pieces</th>
+                                        <th ng-repeat="tmpl in generalTemplateForView">{{entity + tmpl.label | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="stock in receiveArray" ng-form="receiveForm">
+                                        <td>{{$index+1}}</td>
+                                        <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                        </td>
+                                        <td ng-repeat="tmpl in generalTemplateForView">
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] === null || stock.fieldValueForUi[tmpl.model] === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] !== null && stock.fieldValueForUi[tmpl.model] !== undefined">{{entity + stock.fieldValueForUi[tmpl.model] | translate}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-xs-12" ng-show="receiveArray.length > 0">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                    <button class="btn btn-hkg" ng-click="receive(mainForm)">{{entity + 'Receive'| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>{{entity + "Stock pending to receive" | translate}}</h4>
+                        <div class="col-xs-6 pull-right text-right">    
+                            <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="refresh" ng-click="retrievePendingReceivedStock()" title="Refresh"></span>
+                        </div>
+                        <div class="row" >
+                            <table ng-show="pendingReceiveStock.length > 0" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice</th>
+                                        <th>Parcel</th>
+                                        <th>Lot</th>
+                                        <th>Packet</th>
+                                        <th>Issue Carat</th>
+                                        <th>Issue Pieces</th>
+                                        <th>Issue By</th>
+                                        <th>Issue Department</th>
+                                        <th>Slip Number</th>
+                                        <th>Slip Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="stock in pendingReceiveStock">
+                                        <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.createdByUserName === null || stock.createdByUserName === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.createdByUserName !== null && stock.createdByUserName !== undefined">{{entity + stock.createdByUserName | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.sourceDepartmentName === null || stock.sourceDepartmentName === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.sourceDepartmentName !== null && stock.sourceDepartmentName !== undefined">{{entity + stock.sourceDepartmentName | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.slipNo === null || stock.slipNo === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.slipNo !== null && stock.slipNo !== undefined">{{entity + stock.slipNo | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.slipDate === null || stock.slipDate === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.slipDate !== null && stock.slipDate !== undefined">{{stock.slipDate | date}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div ng-if="pendingReceiveStock.length === 0">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td class="col-md-12">
+                                            {{entity + 'No stock remain to receive'| translate}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Receive table ends-->
+
+                    <!-- Inward Issue table starts-->
+                    <div class="col-xs-12" ng-show="dataVals.operation === 'II'">
+                        <div class="row" >
+                            <table ng-show="IIStockDtls.length > 0" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No.</th>
+                                        <th>Invoice</th>
+                                        <th >Parcel</th>
+                                        <th >Lot</th>
+                                        <th >Packet</th>
+                                        <th>Issue Carat</th>
+                                        <th>Issue Pieces</th>
+                                        <th ng-repeat="tmpl in generalTemplateForView">{{entity + tmpl.label | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="stock in IIStockDtls" ng-form="inwardIssueForm">
+                                        <td>{{$index+1}}</td>
+                                        <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                        </td>
+                                        <td><span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                        </td>
+                                        <td><span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                        </td>
+                                        <td><span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <div ng-class="{'has-error': inwardIssueForm.issuecarat.$invalid && (inwardIssueForm.issuecarat.$dirty || submitted)}">
+                                                <div class="hkg-nopadding col-md-12" >
+                                                    <input class="form-control" type="text" name="issuecarat" id="issuecarat" ng-model="stock.issueCarat" ng-required="dataVals.operation === 'II'"/>
+                                                    <div class="error,help-block,has-error" ng-show="(inwardIssueForm.issuecarat.$dirty || submitted) && inwardIssueForm.issuecarat.$invalid">
+                                                        <span class="help-block" ng-show="inwardIssueForm.issuecarat.$error.required">{{entity + 'Field cannot be empty'| translate}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div ng-class="{'has-error': inwardIssueForm.issuepcs.$invalid && (inwardIssueForm.issuepcs.$dirty || submitted)}">
+                                                <div class="hkg-nopadding col-md-12" >
+                                                    <input class="form-control" type="text" numbers-only name="issuepcs" id="issuepcs" ng-model="stock.issuePcs" ng-required="dataVals.operation === 'II'"/>
+                                                    <div class="error,help-block,has-error" ng-show="(inwardIssueForm.issuepcs.$dirty || submitted) && inwardIssueForm.issuepcs.$invalid">
+                                                        <span class="help-block" ng-show="inwardIssueForm.issuepcs.$error.required">{{entity + 'Field cannot be empty'| translate}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td ng-repeat="tmpl in generalTemplateForView">
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] === null || stock.fieldValueForUi[tmpl.model] === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] !== null && stock.fieldValueForUi[tmpl.model] !== undefined">{{entity + stock.fieldValueForUi[tmpl.model] | translate}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-xs-12" ng-show="IIStockDtls.length > 0">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                    <button class="btn btn-hkg" ng-click="issueInward(mainForm)">{{entity + 'Issue'| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inward Issue table ends-->
+
+                    <!-- Inward Receive table starts-->
+                    <div class="col-xs-12" ng-show="dataVals.operation === 'RI'" >
+                        <div class="row" >
+                            <table ng-show="directReceiveArray.length > 0" class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No.</th>
+                                        <th>Invoice</th>
+                                        <th>Parcel</th>
+                                        <th>Lot</th>
+                                        <th>Packet</th>
+                                        <th>Issue Carat</th>
+                                        <th>Issue Pieces</th>
+                                        <th>Receive Carat</th>
+                                        <th>Receive Pieces</th>
+                                        <th ng-repeat="tmpl in generalTemplateForView">{{entity + tmpl.label | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="stock in directReceiveArray" ng-form="inwardReceiveForm">
+                                        <td>{{$index+1}}</td>
+                                        <td><span ng-if="stock.invoiceNumber === null || stock.invoiceNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.invoiceNumber !== null && stock.invoiceNumber !== undefined">{{entity + stock.invoiceNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.parcelNumber === null || stock.parcelNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.parcelNumber !== null && stock.parcelNumber !== undefined">{{entity + stock.parcelNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.lotNumber === null || stock.lotNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.lotNumber !== null && stock.lotNumber !== undefined">{{entity + stock.lotNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.packetNumber === null || stock.packetNumber === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.packetNumber !== null && stock.packetNumber !== undefined">{{entity + stock.packetNumber | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issueCarat === null || stock.issueCarat === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issueCarat !== null && stock.issueCarat !== undefined">{{entity + stock.issueCarat | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <span ng-if="stock.issuePcs === null || stock.issuePcs === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.issuePcs !== null && stock.issuePcs !== undefined">{{entity + stock.issuePcs | translate}}</span>
+                                        </td>
+                                        <td>
+                                            <div ng-class="{'has-error': inwardReceiveForm.receivecarat.$invalid && (inwardReceiveForm.receivecarat.$dirty || submitted)}">
+                                                <div class="hkg-nopadding col-md-12" >
+                                                    <input class="form-control" type="text" numbers-only='true' name="receivecarat" id="receivecarat" ng-model="stock.receiveCarat" ng-required="dataVals.operation === 'RI'" max="{{stock.maxCarat}}"/>
+                                                    <div class="error,help-block,has-error" ng-show="(inwardReceiveForm.receivecarat.$dirty || submitted) && inwardReceiveForm.receivecarat.$invalid">
+                                                        <span class="help-block" ng-show="inwardReceiveForm.receivecarat.$error.required">{{entity + 'Field cannot be empty'| translate}}</span>
+                                                        <span class="help-block" ng-show="inwardReceiveForm.receivecarat.$error.max">{{entity + 'Value cannot be greater than '+ stock.maxCarat| translate}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div ng-class="{'has-error': inwardReceiveForm.receivepcs.$invalid && (inwardReceiveForm.receivepcs.$dirty || submitted)}">
+                                                <div class="hkg-nopadding col-md-12" >
+                                                    <input class="form-control" type="text" numbers-only name="receivepcs" id="receivepcs" ng-model="stock.receivePcs" ng-required="dataVals.operation === 'RI'" max="{{stock.maxPcs}}"/>
+                                                    <div class="error,help-block,has-error" ng-show="(inwardReceiveForm.receivepcs.$dirty || submitted) && inwardReceiveForm.receivepcs.$invalid">
+                                                        <span class="help-block" ng-show="inwardReceiveForm.receivepcs.$error.required">{{entity + 'Field cannot be empty'| translate}}</span>
+                                                        <span class="help-block" ng-show="inwardReceiveForm.receivepcs.$error.max">{{entity + 'Value cannot be greater than '+ stock.maxPcs| translate}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td ng-repeat="tmpl in generalTemplateForView">
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] === null || stock.fieldValueForUi[tmpl.model] === undefined">{{entity + "N/A" | translate}}</span>
+                                            <span ng-if="stock.fieldValueForUi[tmpl.model] !== null && stock.fieldValueForUi[tmpl.model] !== undefined">{{entity + stock.fieldValueForUi[tmpl.model] | translate}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-xs-12" ng-show="directReceiveArray.length > 0">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button class="btn btn-link" ng-click="cancel()">{{entity + 'Cancel'| translate}}</button>
+                                    <button class="btn btn-hkg" ng-click="receiveInward(mainForm)">{{entity + 'Receive'| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Inward Issue table ends-->
+                </tab>
+            </tabset>
+
+        </div>
+    </div>
+</form>

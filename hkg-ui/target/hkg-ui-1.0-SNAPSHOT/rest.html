@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>REST API testing</title>
+<script language="JavaScript" type="text/javascript" src="scripts/third-party/jquery/jquery-1.10.2.min.js"></script>
+<script language="JavaScript" type="text/javascript" src="scripts/third-party/bootstrap/bootstrap.min.js"></script>
+<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+#response{
+	border: 1px solid #ccc;
+        min-height: 100px;
+        padding: 10px;        
+    }
+    pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+.string { color: green; }
+.number { color: darkorange; }
+.boolean { color: blue; }
+.null { color: magenta; }
+.key { color: red; }
+.border-right {
+    border-right: 1px solid #ccc;
+}
+</style>
+</head>
+<body>
+<div >
+    <div class="col-sm-6 border-right">
+<form>
+
+    <h3>REST Web Services Test </h3>
+    
+<div class="form-group"><label for="url">Url :</label>    
+        <input  class="form-control" type="text" id="url" />
+</div>    
+
+<div class="form-group">
+<label for="data">Data :</label>
+<textarea  class="form-control" id="data"  rows="10"></textarea>
+</div>
+<div class="form-group"><label for="method">Method :</label>
+<select  class="form-control" id="method">
+<option>GET</option>
+<option>POST</option>
+<option>DELETE</option>
+<option>PUT</option>
+</select>
+</div>
+    <input   class="btn btn-primary pull-right" id="send" type="button" value="TEST">
+</form></div>
+    <div class="col-sm-6">
+<h3>Response</h3>
+<div id="response"></div>
+</div>    
+</div>
+
+<script type="text/javascript" >
+$(document).ready(function(){
+	$("#url").val("http://localhost:9090/hkgmaster/api/");
+	//$("#response").html("");
+	$("#send").on('click', function(){
+		$("#response").html("");
+		$.ajax({
+			  type: $("#method").val(),
+			  dataType: "json",
+			  url: $("#url").val(),
+			  data: $("#data").val(),
+			  contentType:"application/json",
+			  processData:false,
+			  success: function(resp) {  $("#response").html(
+                                      '<pre>' +syntaxHighlight(JSON.stringify(resp, undefined, 5)));+'</pre>' } ,
+			  error: function(resp, status, txt){$("#response").html("ERROR: "+status + "  -  "+txt);}
+			  
+			});
+	});
+});
+
+function syntaxHighlight(json) {
+    if (typeof json !== 'string') {
+         json = JSON.stringify(json, undefined, 5);
+    }
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+</script>
+</body>
+
+</html>

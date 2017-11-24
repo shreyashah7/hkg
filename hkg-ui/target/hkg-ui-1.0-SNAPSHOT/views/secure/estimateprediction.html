@@ -1,0 +1,146 @@
+<style>
+    .margin-my{
+        margin:-2px 5px 5px 5px
+    }
+</style>
+<form method="POST" class="form-horizontal"  novalidate>
+    <div ng-form="estimatePredictionForm" >
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Estimate'|translate}}</li>
+                    <li class="active">{{entity + 'Prediction'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="new-panel" style="width: 100%;display: block;overflow: auto;">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <fieldset class="scheduler-border col-md-12" style="display: inline-block;float: left">
+                <div class="carat1">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <label for="packetNumber" class="col-md-12 control-label hkg-nopadding" style="text-align:left; padding-left:0px">{{entity + "Packet number" |translate}}</label>
+                            <div ng-class="{'has-error': estimatePredictionForm.packetNumber.$invalid && (estimatePredictionForm.packetNumber.$dirty || submitted)}"> 
+                                <div class="hkg-nopadding col-md-12" >
+                                    <input class="form-control" type="text" name="packetNumber" id="packetNumber" ng-change="rapcalcyflag = false;" ng-blur="beforeSearch()" ng-model="packetNumber" required>
+                                </div>
+                                <div class="error,help-block" ng-show="(estimatePredictionForm.packetNumber.$dirty || submitted) && estimatePredictionForm.packetNumber.$invalid">
+                                    <span class="help-block" ng-show="estimatePredictionForm.packetNumber.$error.required">{{ entity + "Field cannot be empty" | translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <rap-calcy conditions="conditions" calculate-rate="calculateRate()" ng-if="generaRoughCalcyTemplate" output-data="tab" input-data="generaRoughCalcyTemplate" ></rap-calcy>
+            <div ng-if="rapcalcyflag === true">
+                <div class="row col-md-12">
+                    <fieldset class="scheduler-border col-md-12" style="display: inline-block;float: left">
+                        <legend class="scheduler-border">{{entity + "Tag" | translate}}</legend>
+                        <div class="carat1">
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <div class="carat1">
+                                        <div class="col-md-12 hkg-nopadding" data-toggle="buttons">
+                                            <input type="text" style="margin: 3px 3px 3px 3px;width: 5% !important" name="tagValue" id="tagValue" class="col-md-1 form-control" ng-model="tagValue" numbers-only ng-blur="prepareTagList(tagValue)"/>
+                                            <label style="margin: 3px 3px 3px 3px" ng-repeat="tag in tagList" class="btn btn-primary" ng-model="tagVal.val" btn-radio='tag'>
+                                                {{entity + tag | translate}}
+                                            </label>                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">
+                            <button type="submit" ng-click="clearPlanData()" ng-if="tab.inStockOf === $root.session.id && (modifiers.indexOf('CP') !== - 1 || modifiers.indexOf('DP') !== - 1 || modifiers.indexOf('AP') !== - 1)" ng-disabled="tab.empId !== $root.session.id" class="btn btn-hkg pull-right margin-my">{{entity + 'Clear All'| translate}}</button>
+                            <button type="submit" ng-click="addPlan()" ng-if="tab.inStockOf === $root.session.id && modifiers.indexOf('AP') !== - 1" class="btn btn-hkg pull-right margin-my">{{entity + 'New'| translate }}</button>
+                            <button type="submit" ng-if="modifiers.indexOf('CP') !== - 1 && tab.inStockOf === $root.session.id && planList[editIndex]['id'] !== null && planList[editIndex]['id'] !== undefined" ng-click="copyPlan()" class="btn btn-hkg pull-right margin-my">{{entity + 'Copy Plan'| translate }}</button>
+                            <button type="submit" ng-disabled="tab.empId !== $root.session.id" ng-if="modifiers.indexOf('DP') !== - 1 && tab.inStockOf === $root.session.id && tab['id'] === null || tab['id'] === undefined" ng-click="cancelPlan()" class="btn btn-hkg pull-right margin-my">{{entity + 'Cancel Plan'| translate }}</button>
+                            <button type="submit" ng-click="savePlans()" ng-if="tab.inStockOf === $root.session.id" class="btn btn-hkg pull-right margin-my">{{entity + 'Save'| translate}}</button>
+                            <div class="col-md-1 pull-right margin-my" ng-if="tab.inStockOf === $root.session.id" ng-class="{'has-error': estimatePredictionForm.finalPlan.$invalid && (estimatePredictionForm.finalPlan.$dirty || submitted)}">
+                                <select id="finalPlan" name="finalPlan" class="form-control" ng-model="vals.finalPlan" ng-options="plan.value as plan.key for plan in planIds" required>
+                                    <option value="">{{entity + "---Select---" | translate}}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="(estimatePredictionForm.finalPlan.$dirty || submitted) && estimatePredictionForm.finalPlan.$invalid">
+                                    <span class="help-block" ng-show="estimatePredictionForm.finalPlan.$error.required">{{ entity + "Field cannot be empty" | translate }}</span>
+                                </div>
+                            </div>
+                            <label ng-if="tab.inStockOf === $root.session.id" class="col-md-1 control-label pull-right margin-my" for="finalPlan">{{entity + "Final Plan" | translate}}</label>
+                            <button type="submit" ng-click="finalizePlans()" ng-if="tab.inStockOf === $root.session.id && modifiers.indexOf('FP') !== - 1 && finalPlans.length > 0" class="btn btn-hkg pull-right margin-my">{{entity + 'Finalize'| translate}}</button>
+                            <div class="col-md-2 pull-right margin-my" ng-if="tab.inStockOf === $root.session.id && modifiers.indexOf('FP') !== - 1 && finalPlans.length > 0" >
+                                <select id="finalizedPlan" name="finalizedPlan" class="form-control" ng-model="vals.finalizedPlan" ng-options="plan.id as plan.empName for plan in finalPlans">
+                                    <option value="">{{entity + "---Select---" | translate}}</option>
+                                </select>
+                            </div>
+                            <label ng-if="tab.inStockOf === $root.session.id && modifiers.indexOf('FP') !== - 1 && finalPlans.length > 0" class="col-md-1 control-label pull-right margin-my" for="finalizedPlan">{{entity + "Finalize" | translate}}</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div style="height: 500px;width: 100%;overflow: auto">
+                            <table class="table table-bordered header-fixed">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: center" ng-repeat="header in headerList">
+                                            {{header}}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="cursor: pointer;" ng-attr-title="{{item.empId === $root.session.id && 'Click to edit' || 'Cannot edit'}}" ng-class="{'selectedrow': item.index === editIndex}" ng-click="editPlan(planList.indexOf(item))" ng-repeat="item in planList| filter:filterFn| orderBy:'index'" >
+                                        <td style="width: 20px;word-wrap: break-word;text-align: center" ng-repeat="header in headerList" ng-if="item.indexOf(headerListModel[header]) !== - 1">
+                                            <span ng-if="headerListModel[header] !== 'size$DRP$long' && headerListModel[header] !== 'gsize$DRP$long'">{{item[headerListModel[header]]}}</span>
+                                            <span ng-if="headerListModel[header] === 'size$DRP$long' || headerListModel[header] === 'gsize$DRP$long'">{{item[headerListModel[header]] | number:3}}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" id="saveModificationPopup" role="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" title="Close" ng-click="removeEventCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "Save modification" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ entity + "Changes in plan data, Do you want to save first? "|translate}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <button class="btn btn-hkg" ng-click="searchPlan()">
+                            {{ entity + "No" | translate }}
+                        </button>
+                        <button class="btn btn-hkg" ng-click="savePlans(previousPacketNumber)">
+                            {{ entity + "Yes" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

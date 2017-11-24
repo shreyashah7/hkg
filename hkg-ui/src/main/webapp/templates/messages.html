@@ -1,0 +1,6 @@
+<div ng-repeat="alert in validations" class="alert alert-dismissable" ng-class="alert.type">
+    <button type="button" ng-click="closeAlertMessage($index)" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    {{alert.msg}}
+    ------
+    <span ng-href="{{alert.showLoginLink}}"><button class="btn btn-link" onclick="" ng-href="{{alert.link}}">{{alert.linkText}}</a></span>
+</div>

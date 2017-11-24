@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans ="http://www.springframework.org/schema/beans"
+             xmlns:context="http://www.springframework.org/schema/context"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <http auto-config="false"  entry-point-ref="hkRestAuthenticationEntryPointFilter">
+        <access-denied-handler ref="hkAjaxAccessDeniedHandler"></access-denied-handler>
+        
+        <custom-filter before="FILTER_SECURITY_INTERCEPTOR" ref="filterInvocationDefinitionSource" />         
+        <custom-filter ref="authenticationTokenProcessingFilter" position="FORM_LOGIN_FILTER" />
+        <logout success-handler-ref="hkAjaxLogoutSuccessHandler" delete-cookies="JSESSIONID"/>
+        <!--        <form-login 
+            login-processing-url="/j_spring_security_check" 
+            authentication-failure-handler-ref="hkAjaxAuthenticationFailureHandler" 
+            authentication-success-handler-ref="hkAjaxAuthenticationSuccessHandler" 
+            username-parameter="j_username"
+            password-parameter="j_password" />
+        
+        <session-management>
+            <concurrency-control max-sessions="2"/>
+        </session-management>        
+                
+        <anonymous username="Guest" />
+        
+        <logout success-handler-ref="hkAjaxLogoutSuccessHandler" delete-cookies="JSESSIONID"/>            
+        
+        <remember-me key="aeZSvpDJ"  token-validity-seconds="84600" />  one day 84600-->
+                        
+    </http>
+    <beans:bean id="hkAjaxAccessDeniedHandler" class="com.argusoft.hkg.web.security.AjaxAccessDeniedHandler" />         
+    <beans:bean id="hkAjaxAuthenticationFailureHandler" class="com.argusoft.hkg.web.security.AjaxAuthenticationFailureHandler"/>    
+    <beans:bean id="hkAjaxAuthenticationSuccessHandler" class="com.argusoft.hkg.web.security.AjaxAuthenticationSuccessHandler"/>
+    <beans:bean id="hkAjaxLogoutSuccessHandler" class="com.argusoft.hkg.web.security.AjaxLogoutSuccessHandler"/>            
+    <beans:bean id="hkRestAuthenticationEntryPointFilter" class="com.argusoft.hkg.web.filter.RestAuthenticationEntryPointFilter"/>
+    <beans:bean id="jasyptPasswordEncryptor" class="org.jasypt.util.password.BasicPasswordEncryptor" />
+    
+    <beans:bean id="passwordEncoder" class="org.jasypt.spring.security3.PasswordEncoder">
+        <beans:property name="passwordEncryptor">
+            <beans:ref bean="jasyptPasswordEncryptor" />
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="hkSpringSecurityUserService" class="com.argusoft.hkg.web.security.SpringSecurityUserService"/>
+    
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider user-service-ref="hkSpringSecurityUserService">
+            <password-encoder ref="passwordEncoder"/>            
+            <!--            <jdbc-user-service data-source-ref="dataSource"
+            users-by-username-query="SELECT user_id, password, is_active FROM um_system_user where user_id=?"
+            authorities-by-username-query="SELECT user_id,type FROM um_system_user WHERE user_id=?" />            -->
+        </authentication-provider>    
+    </authentication-manager>
+    
+    <beans:bean id="roleVoter" class="org.springframework.security.access.vote.RoleVoter">
+        <beans:property name="rolePrefix" value="" />
+    </beans:bean>
+    
+    <beans:bean id="accessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+        <beans:property name="decisionVoters">
+            <beans:list>
+                <beans:ref bean="roleVoter"/>                
+                <beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+            </beans:list>
+        </beans:property>
+    </beans:bean>
+    
+    <beans:bean id="securityMetadataSource" class="com.argusoft.hkg.web.security.FilterSecurityMetadataSource"/>        
+    
+    <beans:bean id="filterInvocationDefinitionSource" class="org.springframework.security.web.access.intercept.FilterSecurityInterceptor">
+        <beans:property name="authenticationManager" ref="authenticationManager" />
+        <beans:property name="accessDecisionManager" ref="accessDecisionManager" />
+        <beans:property name="securityMetadataSource" ref="securityMetadataSource"/>
+    </beans:bean>
+    <beans:bean class="com.argusoft.hkg.web.security.AuthenticationTokenProcessingFilter" id="authenticationTokenProcessingFilter">
+        <beans:constructor-arg ref="hkSpringSecurityUserService" />
+    </beans:bean>
+    
+</beans:beans>

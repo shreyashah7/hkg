@@ -1,0 +1,165 @@
+<form method="POST" class="form-horizontal" name="splitPacketForm" novalidate>
+    <div ng-show="dataRetrieved" ng-init="registerLocationChangeEvent(splitPacketForm);
+            initSplitPacketForm(splitPacketForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Split'|translate}}</li>
+                    <li class="active">{{entity + 'Packet'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && !generalSearchTemplate">
+                <p>{{entity + 'First configure the search field to search and split'| translate}}</p>
+            </div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate">
+                <h4>Search/filter</h4>
+            </div>
+            <div ng-if="!flag.showAddPage">
+                <div>
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate">
+                    <div class="row">
+                        <hr/>                        
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch(splitPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(splitPacketForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="listFilled && generalSearchTemplate.length > 0">
+                    <h4>{{entity + 'Searched Packets'| translate}}</h4>
+                    <div class="form-group">
+                        <div  class="col-md-12" ng-if="listFilled && issuedStock.data && issuedStock.data.length > 0">
+                            <div id="gridTable" ui-grid="issuedStock" ui-grid-selection  ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                        <div  class="col-md-12" ng-if="((listFilled && issuedStock.data.length === 0))">
+                            <br/>
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No matching results found'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>                
+                <div class="col-xs-12" ng-if="issuedStock.data && issuedStock.data.length > 0">
+                    <div class="row">                        
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-disabled="!selectedStock || selectedStock.length === 0" ng-click="addPacket()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.showUpdatePage">
+                <div ng-if="fieldNotConfigured">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Mandatory fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div ng-if="updateInvoiceTemplate && updateInvoiceTemplate.length > 0 && !fieldNotConfigured" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                    <!--<h4 ng-if="updateInvoiceTemplate">Invoice Detail</h4>-->
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceTemplate" 
+                                   ng-model="invoiceCustom" ng-if="updateInvoiceTemplate && invoiceCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" packet-id="{{packetIdForConstraint}}"  view-only="true" is-diamond="true">
+                    </dynamic-form>
+                </div>
+
+                <div ng-if="updateParcelTemplate && updateParcelTemplate.length > 0 && !fieldNotConfigured" id="parcelParent" title="Parcel Details" accordion-collapse>
+                    <!--<h4 ng-if="updateParcelTemplate">Parcel Detail</h4>-->    
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateParcelTemplate" 
+                                   ng-model="parcelCustom" ng-if="updateParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" packet-id="{{packetIdForConstraint}}" view-only="true" is-diamond="true">
+                    </dynamic-form>
+                </div>
+                <div ng-if="updateLotTemplate && updateLotTemplate.length > 0 && !fieldNotConfigured" id="lotParent" title="Lot Details" accordion-collapse>
+                    <!--<h4 ng-if="updateLotTemplate">Lot Detail</h4>-->
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateLotTemplate" 
+                                   ng-model="lotCustom" ng-if="updateLotTemplate && lotCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" packet-id="{{packetIdForConstraint}}" view-only="true" is-diamond="true">
+                    </dynamic-form>
+                </div>
+                <div ng-if="updatePacketParentTemplate && updatePacketParentTemplate.length > 0 && !fieldNotConfigured" id="packetParent" title="Packet Details" accordion-collapse is-open="true">
+                    <!--<h4 ng-if="updatePacketParentTemplate"> Packet Detail</h4>-->
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbTypeParent" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updatePacketParentTemplate" 
+                                   ng-model="packetParentCustom" ng-if="updatePacketParentTemplate && packetParentCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" packet-id="{{packetIdForConstraint}}" view-only="true" is-diamond="true">
+                    </dynamic-form>
+                </div>
+                <div ng-if="Packet.packetSplitFlag && !fieldNotConfigured">
+                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                        <h4 ng-if="finalUpdatePacketTemplate">Split Packet</h4>
+                    </div>                    
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="finalUpdatePacketTemplate" 
+                                   ng-model="packetCustom" ng-if="finalUpdatePacketTemplate && packetCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" packet-id="{{packetIdForConstraint}}" edit-flag="true" is-diamond="true" screen-rules="packetScreenRules" >
+                    </dynamic-form>
+                </div>           
+                <div class="col-xs-12" ng-if="!fieldNotConfigured">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a  ng-click="onCanel(splitPacketForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button ng-if="flag.customFieldGenerated && finalUpdatePacketTemplate && finalUpdatePacketTemplate.length > 0"                                     
+                                    class="btn btn-hkg" ng-click="splitStock(splitPacketForm)" ng-disabled="(preRuleSatisfied || stockPiecesOfPacket == 1)">{{entity + 'Split Packet'| translate}}</button>                                                        
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="searchedDataFromDbForUiGrid && (searchedDataFromDbForUiGrid.length > 0)">
+                    <h4>{{entity + 'Split Packet'| translate}}</h4>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="splitlistFilled">
+                            <div id="gridTable" ui-grid="gridOptionsForParcel" ui-grid-pinning  ui-grid-auto-resize></div>                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deletePopUp" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/splitpacket" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Packet'| translate }}</h4>
+            </div >
+            <form  class="form-horizontal" name="deletePopUp" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete packet?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteLot()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

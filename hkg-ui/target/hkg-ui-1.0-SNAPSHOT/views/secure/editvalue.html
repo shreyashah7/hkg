@@ -1,0 +1,84 @@
+<form method="POST" class="form-horizontal"  novalidate ng-init="initializeData()">
+    <div ng-form="editValueForm" >
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Edit'|translate}}</li>
+                    <li class="active">{{entity + 'Value'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-show="!flag.showstockPage && !stockdataflag">
+                <div class="col-xs-12">
+                    <table class="table table-bordered" ng-if="flag.configSearchFlag===true">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'First configure search fields for edit stock'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table table-bordered" ng-if="!stockList.length > 0 && flag.configSearchFlag===false">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'No details found to edit value'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id='masterDetail' ng-if="stockList.length > 0">
+                    <div><h4>{{entity + 'Stock details'| translate}}</h4></div>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                    </div>  
+                </div>
+                <div class="col-xs-12" ng-show="lotPacketMap && !!generalSearchTemplate">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="editvalueNext()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="flag.showstockPage && stockdataflag">
+                <h4>{{Entity + "Edit Value" | translate}}</h4>
+                <div class="row">
+                    <div class="col-md-2">{{entity + "View Previous Price" | translate}}</div>
+                    <div class="col-md-3">
+                        <select id="pricelist" class="form-control" ng-change="retrievePreviousValue()" name="pricelist" ng-model="flag.pricelist" ng-options="key as value for (key , value) in pricelistDtl">
+                            <option value="">{{entity + "--Select--" | translate}}</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <div  class="col-md-12" ng-if="listFilled1 && !!gridForPlan.data && gridForPlan.data.length>0">
+                    <div id="gridTable1" ui-grid="gridForPlan" ui-grid-selection  ui-grid-pinning ui-grid-auto-resize></div>
+                </div>
+                <table class="table table-bordered" ng-if="listFilled1 && !!gridForPlan.data && gridForPlan.data.length===0">
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'No Plans found for selected Lot/Packets'| translate}}
+                        </td>
+                    </tr>
+                </table>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <button  class="btn btn-link" ng-click="initializeData()">{{entity + 'Back'| translate}}</button>
+                            <button  class="btn btn-hkg" ng-disabled="!flag.pricelist || (!planIdsToChange || planIdsToChange.length === 0)" ng-click="editPlans()">{{entity + 'Edit value'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

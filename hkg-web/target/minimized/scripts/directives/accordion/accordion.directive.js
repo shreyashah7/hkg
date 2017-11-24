@@ -1,0 +1,20 @@
+define(["angular"],function(){globalProvider.compileProvider.directive("accordionCollapse",["$rootScope","$filter","$templateCache",function(b,d,a){var c=function(g,f,e){g.collapsed=true;
+g.isOpen=false;
+e.$observe("id",function(h){if(angular.isDefined(h)){g.parentId=h+"-unique"
+}else{g.parentId="unique-one"
+}g.collapseId=g.parentId+"-collapse"
+});
+e.$observe("title",function(h){if(angular.isDefined(h)){g.title=h
+}});
+if(e.isOpen==="true"){g.isOpen=true;
+g.collapsed=false
+}f.on("hidden.bs.collapse",function(h){g.collapsed=true;
+g.$apply()
+});
+f.on("shown.bs.collapse",function(h){g.collapsed=false;
+g.$apply()
+})
+};
+return{restrict:"A",link:c,transclude:true,templateUrl:"scripts/directives/accordion/accordion.tmpl.html"}
+}])
+});

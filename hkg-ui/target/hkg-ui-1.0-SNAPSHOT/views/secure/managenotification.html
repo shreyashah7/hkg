@@ -1,0 +1,514 @@
+<div class="row" ng-init="initData()">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li >{{entity + 'Notification'| translate }}</li>
+                    <li class="active">
+                        <span ng-if="operationFlag == 'add'">{{entity + 'Add notification'| translate }}</span>
+                        <span ng-if="operationFlag == 'edit' || operationFlag == 'view'">{{entity + 'Edit notification'| translate }}</span>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span ng-if="operationFlag == 'edit'" class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href="" ng-if="operationFlag == 'edit'" ng-click="addClick();">{{entity + 'Add Notification'| translate }}</a>
+                <a href="" ng-if="operationFlag == 'add' || operationFlag == 'view'" ng-click="showNotifications();"><span class="glyphicon glyphicon-eye-open"></span>{{entity + ' Notification'| translate }}</a>
+            </div>
+        </div>
+        <div class="col-xs-9 new-panel">
+            <div class="col-xs-12 col-lg-12 well well-sm">
+                <div class="input-group ">
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search for notification by name" 
+                               ag-search="{{apipath}}notification/searchnotificationconfigurations" 
+                               result-format="name" 
+                               on-select="editFromSearch" 
+                               on-enter="getSearchedNotificationRecords"
+                               search-list-array='searchedList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedNotificationRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+                </div>
+                <span ng-show="isInValidSearchDesig">{{entity + 'No matching results'| translate }}</span>
+            </div>
+            <div ng-include src="'views/secure/searchednotifications.html'" ng-if="displaySearchedNotification === 'search'"></div>
+            <form role="form" class="form-horizontal" novalidate name="notificationForm">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-show="operationFlag == 'add' || operationFlag == 'edit'"> 
+                    <div class="form-group required">
+                        <div class="col-xs-4 col-md-3 control-label">
+                            <label for="notiName">
+                                {{entity + 'Name'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-xs-8 col-md-7 ">
+                            <div ng-class="{'has-error': (notificationForm.notiName.$dirty || submitted) && notificationForm.notiName.$invalid}">
+                                <input type="text" id="notiName" name="notiName" class="form-control" ng-model="notification.name" required/>
+                                <div class="error,help-block" ng-show="(notificationForm.notiName.$dirty || submitted) && notificationForm.notiName.$invalid">
+                                    <span class="help-block" ng-show="notificationForm.notiName.$error.required">{{ entity + 'Enter name' | translate }}</span>
+                                </div>                   
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-4 col-md-3 control-label">
+                            <label for="desc">
+                                {{entity + 'Description'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 col-xs-8">
+                            <div>
+                                <textarea class="form-control" id="desc" name="desc" ng-model="notification.desc" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-3 control-label">
+                            <label for="copyOf">
+                                {{entity + 'Make A Copy Of'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 col-xs-8">
+                            <select id="copyOf" class="form-control" name="copyOf" ng-model="notification.copyOf" ng-options="not as not.name for not in notificationList" ng-change="makeACopy()">
+                                <option value="">{{entity + "Select"| translate}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-md-3 control-label">
+                            <label for="copyOf">
+                                {{entity + 'Type'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-md-7 col-xs-8">
+                            <label class="radio-inline">
+                                <span class="pull-left "><input type="radio" value="1" ng-click="enableTagging()" ng-model="notification.basedOn"/>{{entity + ' Rule based'| translate }}</span>
+                            </label>
+                            <label class="radio-inline">
+                                <span class="pull-left"><input type="radio" value="2" ng-model="notification.basedOn"/>{{entity + ' Time based'| translate }}</span>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Rule Based -->
+                    <div class="form-group required" ng-if="notification.basedOn == 1">
+                        <div class="required">
+                            <div class="col-md-6" style="padding-left: 0px;padding-right: 0px;">
+                                <label for="activityName" class="col-md-6 control-label"><span class="pull-right">{{entity + "Activity" | translate}}</span></label>
+                                <div class="col-md-6" ng-class="{'has-error' : notificationForm.activityName.$invalid && (notificationForm.activityName.$dirty || submitted)}">
+                                    <select id="activityName" required name="activityName" class="form-control" ng-change="retrieveServices()" ng-options="k as v for (k, v) in mapOfActivities" ng-model="notification.activity">
+                                        <option value="">{{entity+'Select activity'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="notificationForm.activityName.$invalid && (notificationForm.activityName.$dirty || submitted)">
+                                        <span class="help-block" ng-show="notificationForm.activityName.$error.required">{{ entity+"Select activity" | translate }}</span>                    
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="padding-left: 0px;padding-right: 0px;">
+                                <label for="serviceName" class="col-md-6 control-label">{{entity + "Service" | translate}}</label>
+                                <div class="col-md-6" ng-class="{'has-error' : notificationForm.serviceName.$invalid && (notificationForm.serviceName.$dirty || submitted)}">
+                                    <select id="serviceName" required name="serviceName" class="form-control" ng-options="serviceList.nodeId as serviceList.serviceName for serviceList in service" ng-model="notification.service">
+                                        <option value="">{{entity+'Select service'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="notificationForm.serviceName.$invalid && (notificationForm.serviceName.$dirty || submitted)">
+                                        <span class="help-block" ng-show="notificationForm.serviceName.$error.required">{{ entity+"Select service" | translate }}</span>                    
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">&nbsp;</div>
+                        </div>
+                        <div class="col-md-3 col-xs-4 control-label" ><span class="pull-right ">{{entity + 'Set A Rule'|translate}}</span></div>
+                        <div class="col-md-3 col-xs-4">
+                            <div ng-class="{'has-error': notificationForm.apply.$invalid && submitted}">    
+                                <select id="apply" name="apply" class="form-control"  ng-options="option for option in applyList" ng-required="notification.basedOn == 1" ng-model="notification.apply">
+                                    <!--<option value="" ng-bind="entity + 'Select' | translate"> </option>-->
+                                </select>
+                                <div class="error,help-block" ng-show="(notificationForm.apply.$dirty || submitted) && notificationForm.apply.$invalid">
+                                    <span class="help-block" ng-show="notificationForm.apply.$error.required" ng-bind="entity + 'Select apply' | translate"></span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-if="notification.basedOn == 1">
+                        <div class="col-md-12">
+                            <table class="table">
+                                <tr ng-form="rowForm" ng-repeat="rules in ruleList">
+                                    <td class="col-md-2"  ng-class="{'has-error': rowForm.entityName.$invalid && rules.rowsubmitted}">    
+                                        <select id="entityName" ng-disabled="(notification.apply === null || notification.apply === undefined)" required name="entityName" class="form-control" ng-change="onEntityChange($index)"  ng-options="k as v for (k, v) in entityList" ng-model="rules.entity">
+                                            <option value="">{{entity + 'Select entity'| translate }}</option>
+                                        </select>
+                                        <div class="error,help-block" ng-show="(rowForm.entityName.$invalid && rules.rowsubmitted)">
+                                            <span class="help-block" ng-show="rowForm.entityName.$error.required">{{ entity + "Select entity" | translate }}</span>                    
+                                        </div>
+
+                                    </td>
+
+                                    <td class="col-md-2" ng-class="{'has-error': rowForm.fieldName.$invalid && rules.rowsubmitted}">
+                                        <select ng-disabled="((notification.apply === null || notification.apply === undefined))" id="fieldName" required name="fieldName" class="form-control" ng-change="onFieldChange($index)" ng-options="field.oldLabelName for field in rules.fieldList" ng-model="rules.field">
+                                            <option value="">{{entity + 'Select field'| translate }}</option>
+                                        </select>
+
+                                        <div class="error,help-block" ng-show="(rowForm.fieldName.$invalid && rules.rowsubmitted)">
+                                            <span class="help-block" ng-show="rowForm.fieldName.$error.required">{{ entity + "Select field" | translate }}</span>                    
+                                        </div>
+
+                                    </td>
+
+                                    <td class="col-md-1 text-center">
+                                        {{ entity + "is" | translate }}
+                                    </td>
+
+                                    <td class="col-md-2"   ng-class="{'has-error':rowForm.operator.$invalid && rules.rowsubmitted}">    
+                                        <select  ng-disabled="(notification.apply === null || notification.apply === undefined)" ng-mouseup="onOperatorChange($index)" required id="operator" ng-mousedown="onOperatorClick($index)" name="operator" class="form-control"   ng-options="operator.label for operator in rules.operatorList" ng-model="rules.operator">
+                                            <option value="">{{entity + 'Select operator'| translate }}</option>
+                                        </select>
+                                        <div class="error,help-block" ng-show="rowForm.operator.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.operator.$error.required">{{ entity + "Select operator" | translate }}</span>                    
+                                        </div>
+
+                                    </td>
+
+                                    <td id="test" class="col-md-3" >
+                                        <div ng-class="{'has-error':rowForm.multiselect.$invalid && rules.rowsubmitted}">
+                                            <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                                <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                                <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectSingleComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                                <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                            </div>
+                                        </div>
+                                        <div ng-class="{'has-error':rowForm.usermultiselect.$invalid && rules.rowsubmitted}">
+                                            <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                                <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userMultiselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+                                            </div>
+                                            <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                                <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userSingleselectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+                                            </div>
+                                            <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                                <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                            </div>
+                                        </div>
+                                        <div ng-class="{'has-error':rowForm.dropdown.$invalid && rules.rowsubmitted}">
+                                            <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                                <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                                <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownSingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+                                            </div>
+                                            <div class="error,help-block" ng-show="rowForm.dropdown.$invalid && rules.rowsubmitted">
+                                                <span class="help-block" ng-show="rowForm.dropdown.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                            </div>
+                                        </div>
+
+                                        <div ng-class="{'has-error':rowForm.pointer.$invalid && rules.rowsubmitted}">
+                                            <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                                <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                                <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerSingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div class="error,help-block" ng-show="rowForm.pointer.$invalid && rules.rowsubmitted">
+                                                <span class="help-block" ng-show="rowForm.pointer.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                            </div>
+                                        </div>
+                                        <div ng-class="{'has-error':rowForm.subentity.$invalid && rules.rowsubmitted}">
+                                            <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                                <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntityMultiSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                                <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntitySingleSelectComponent" class="col-md-12"  ng-model="rules.values"  ng-required="true"/> 
+
+                                            </div>
+                                            <div class="error,help-block" ng-show="rowForm.subentity.$invalid && rules.rowsubmitted">
+                                                <span class="help-block" ng-show="rowForm.subentity.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                            </div>
+                                        </div>
+                                        <div ng-if="rules.showtemplate === true">
+                                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type !== 'MultiSelect' && rules.field.type !== 'Pointer' && rules.field.type !== 'SubEntity' && rules.field.type !== 'UserMultiSelect' && rules.field.type !== 'Dropdown'">
+
+                                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.type}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                            </div>
+
+                                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'Pointer' && rules.field.pointertype !== 'MultiSelect' && rules.field.pointertype !== 'Dropdown'">
+
+                                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.pointertype}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                            </div>
+                                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'SubEntity' && rules.field.subentityDropListType === 'Date'">
+                                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.subEntityType}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                            </div>
+
+
+
+                                        </div>
+                                    </td>
+
+                                    <td class="col-md-1">
+                                        <a href=""  ng-click="addRule(rowForm, $index);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                                        <a href="" ng-click="remove($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <!--                    <div class="form-group" ng-if="notification.basedOn == 1">
+                                            <div class="col-md-3">
+                                                <span class="pull-right">{{entity + 'Configured Rule'|translate}}</span>
+                                            </div>
+                                            <div class="col-md-7 well well-sm">
+                                                <ul>
+                                                    <li ng-repeat="rules in ruleList">
+                                                        <span ng-show="rules.entityName">{{rules.entityName}}.</span><span ng-show="!rules.entityName && rules.entity" ng-bind="$parent.entityList[rules.entity]">.</span>  {{rules.field.label}} {{rules.operator.label}} <span ng-bind="getValueToDisplay(rules)">.</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>-->
+                    <!-- Rule based Ends -->
+
+                    <!-- Time Based -->
+                    <div class="form-group" ng-if="notification.basedOn == 2">
+                        <div class="col-md-3 col-xs-4">&nbsp;</div>
+                        <div class="col-md-7 " >
+                            <div>
+                                <div class="form-group" >
+                                    <div class="col-md-12" ng-class="{'has-error': notificationForm.repeatTask.$invalid}" id="repeatTaskPeriod"> 
+                                        <div class="row">
+                                            <div class="col-md-3" ng-model="notification.atTime" >
+                                                {{entity + "At"|translate}}<timepicker hour-step="hstep" minute-step="mstep" id="stime" name="stime" show-meridian="ismeridian" ng-required="notification.basedOn == 2"></timepicker>
+                                            </div>
+                                        </div>
+                                        <div class="row radio">
+                                            <label class="col-md-2">
+                                                <input type="radio" id="repeatTaskDaily" name="repeatativeMode" ng-model="notification.repeatativeMode" value="D">{{ entity + 'Daily' | translate}}
+                                            </label>
+                                        </div>
+                                        <div class="row radio">
+                                            <label class="col-md-2">
+                                                <input type="radio" id="repeatTaskWeekly" name="repeatativeMode" ng-model="notification.repeatativeMode" value="W">{{ entity + 'Weekly' | translate}}
+                                            </label>
+                                            <div class="col-md-10" ng-if="notification.repeatativeMode === 'W'">
+                                                <span ng-repeat="day in weekList" >
+                                                    <div class="hkg-checkbox-button">
+                                                        <label>
+                                                            <input type="checkbox" hidden="true" ng-model="day.isChecked" ng-true-value='true' ng-disabled="disableWeeklyChecbox[$index]" ng-change="getSelectedWeekCount()"><span>{{day.code}}</span>
+                                                        </label>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="row radio">
+                                            <label class="col-md-2">
+                                                <input type="radio" id="repeatTaskMonthly" name="repeatativeMode" ng-model="notification.repeatativeMode" value="M">{{ entity + 'Monthly' | translate}}
+                                            </label>
+                                            <div class="col-md-10" ng-if="notification.repeatativeMode === 'M'">
+                                                {{ entity + 'On day' | translate}} 
+                                                <select class="input-sm" ng-model="notification.monthlyOnDay" ng-options="day as day for day in dayList">
+                                                </select>
+                                                {{ entity + 'of every month' | translate}} 
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">{{ entity + 'End repeat' | translate}}</label>
+                                    <div class="col-md-9" ng-class="{'has-error': notificationForm.endRepeat.$invalid}" id="endRepeat"> 
+                                        <div class="form-group required">
+                                            <div class="col-md-3 radio">
+                                                <label>
+                                                    <input type="radio" name="endRepeat" ng-checked="clearFromRadio()" ng-model="notification.endRepeatMode" value="OD">{{ entity + 'On Date' | translate}} 
+                                                </label>
+                                            </div>
+                                            <div class="col-md-6" ng-class="{'has-error': notificationForm.endRepeatDate.$invalid && notification.endRepeatMode === 'OD' && (notificationForm.endRepeatDate.$dirty || submitted)}"> 
+                                                <div class="input-group">
+                                                    <input type="text" id="endRepeatDate" name="endRepeatDate" class="form-control input-sm" placeholder="{{format}}" datepicker-popup="{{format}}" ng-model="notification.endDate" is-open="datePicker.opened_end_repeat_date"  min="minEndRepeatDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="notification.endRepeatMode === 'OD' && notification.basedOn == 2" close-text="Close" ng-disabled="notification.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()"/>
+                                                    <span class="input-group-btn">
+                                                        <button class="form-control input-sm" ng-click="open($event, 'opened_end_repeat_date')" ng-disabled="notification.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()">
+                                                            <span class="glyphicon glyphicon-calendar"></span>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                                <div class="error,help-block" ng-show="(notificationForm.endRepeatDate.$dirty || submitted) && notificationForm.endRepeatDate.$invalid && notification.endRepeatMode === 'OD'">
+
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.required && !(notificationForm.endRepeatDate.$error.date || notificationForm.endRepeatDate.$error.min || notificationForm.endRepeatDate.$error.max)">
+                                                        {{ entity + "End repeat date not entered" | translate }}</span>
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group required">
+                                            <div class="col-md-3 radio">
+                                                <label>
+                                                    <input type="radio" name="endRepeat" ng-model="notification.endRepeatMode" value="AD">{{ entity + 'After' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-4" ng-class="{'has-error': notificationForm.endRepeatDays.$invalid && notification.endRepeatMode === 'AD' && (notificationForm.endRepeatDays.$dirty || submitted)}"> 
+                                                <input type="text" class="form-control" name="endRepeatDays" ng-model="endRepeat.afterDaysUnits" ng-disabled="notification.endRepeatMode !== 'AD'" ng-required="notification.endRepeatMode === 'AD' && notification.basedOn == 2" numbers-only/>
+                                                <div class="error,help-block" ng-show="(notificationForm.endRepeatDays.$dirty || submitted) && notificationForm.endRepeatDays.$invalid && notification.endRepeatMode === 'AD'">
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatDays.$error.required">{{ entity + 'Days limit to end repeat not entered' | translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2"><p class="form-control-static">{{ entity + 'days' | translate}}</p></div>
+                                        </div>
+                                        <div class="form-group required">
+                                            <div class="col-md-3 radio">
+                                                <label>
+                                                    <input type="radio" name="endRepeat" ng-model="notification.endRepeatMode" value="AR">{{ entity + 'After' | translate}}
+                                                </label>
+                                            </div>
+                                            <div class="col-md-4" ng-class="{'has-error': notificationForm.endRepeatRepititions.$invalid && notification.endRepeatMode === 'AR' && (notificationForm.endRepeatRepititions.$dirty || submitted)}"> 
+                                                <input type="text" class="form-control" name="endRepeatRepititions" ng-model="endRepeat.afterRepititionsUnits" ng-disabled="notification.endRepeatMode !== 'AR'" ng-required="notification.endRepeatMode === 'AR' && notification.basedOn == 2" numbers-only/>
+                                                <div class="error,help-block" ng-show="(notificationForm.endRepeatRepititions.$dirty || submitted) && notificationForm.endRepeatRepititions.$invalid && notification.endRepeatMode === 'AR'">
+                                                    <span class="help-block" ng-show="notificationForm.endRepeatRepititions.$error.required">{{ entity + 'Repititions limit to end repeat not entered' | translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2"><p class="form-control-static">{{ entity + 'repititions' | translate}}</p></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Time Based Ends -->
+                    <div class="form-group">
+                        <div class="col-md-3 col-xs-4">
+                            <div class="pull-right">
+                                <input type="checkbox" name="interfaceType" value="W" ng-model="notification.interfaceWType"/>&nbsp;<label class="control-label">{{ entity + 'Web Interface' | translate}}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-7 col-xs-8">
+                            <textarea ng-trim="false" maxlength="500" ng-disabled="!notification.interfaceWType" ng-model="notification.interfaceWTypeText" id="tagging" ng-if="notification.basedOn == 1" class="tagging form-control" rows="5" cols="10"></textarea>
+                            <div ng-if="notification.basedOn == 1" class="text text-right" style="color: gray"><span>{{entity +"$ to add placeholder"| translate}}</span></div>
+                            <textarea ng-trim="false" maxlength="500" ng-disabled="!notification.interfaceWType" ng-model="notification.interfaceWTypeText" ng-if="notification.basedOn == 2"  id="tagging" class="form-control" rows="5" cols="10"></textarea>
+                            <div id="messagecounter" style="text-align: right;">{{500 - notification.interfaceWTypeText.length}} {{ entity + "characters left" | translate }}</div>
+                        </div>
+                    </div>
+                    <!--                    <div class="form-group">
+                                            <div class="col-md-3 col-xs-4">
+                                                <div class="pull-right">
+                                                    <input type="checkbox" name="interfaceType" value="S" ng-model="notification.interfaceSType"/><label class="control-label">{{ entity + 'SMS Interface' | translate}}</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-7 col-xs-8">
+                                                <textarea ng-disabled="!notification.interfaceSType" ng-model="notification.interfaceSTypeText" id="tagging2" class="tagging form-control" rows="5" cols="10"></textarea>
+                                            </div>
+                                        </div>-->
+                    <div class="form-group">
+                        <div class="col-md-3 col-xs-4">
+                            <div class="pull-right">
+                                <input type="checkbox" name="interfaceType" value="E" ng-model="notification.interfaceEType"/>&nbsp;<label class="control-label">{{ entity + 'Email Interface' | translate}}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-7 col-xs-8">
+                            <textarea ng-trim="false" maxlength="500" ng-disabled="!notification.interfaceEType" ng-model="notification.interfaceETypeText" ng-if="notification.basedOn == 1" id="tagging3" class="tagging form-control" rows="5" cols="10"></textarea>
+                            <div ng-if="notification.basedOn == 1" class="text text-right" style="color: gray"><span>{{entity +"$ to add placeholder"| translate}}</span></div>
+                            <textarea ng-trim="false" maxlength="500" ng-disabled="!notification.interfaceEType" ng-model="notification.interfaceETypeText" ng-if="notification.basedOn == 2" id="tagging3" class="form-control" rows="5" cols="10"></textarea>
+                            <div id="messagecounter1" style="text-align: right;">{{500 - notification.interfaceETypeText.length}} {{ entity + "characters left" | translate }}</div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-md-3 col-xs-4">
+                            <div>
+                                <label for="invitees" class="pull-right control-label">{{entity + 'Send To'| translate }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-7 col-xs-8" ng-class="{'has-error': notificationForm.invitees.$invalid && (notificationForm.invitees.$dirty || submitted)}">
+                            <div class="input-group">
+                                <input type="text" class="col-md-12 hkg-nopadding" id="invitees" name="invitees" ui-select2="autoCompleteInvitees" ng-model="notification.taskRecipients" required ng-required='true'/>
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                            </div>
+                            <div class="error,help-block" ng-show="(notificationForm.invitees.$dirty || submitted) && notificationForm.invitees.$invalid">
+                                <span class="help-block" ng-show="notificationForm.invitees.$error.required">{{entity + 'Select invitees'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="operationFlag == 'add'">
+                        <dynamic-form  input-css ="col-md-7 col-xs-8" label-css="col-md-3 col-xs-4 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="generalNotificationTemplate" ng-model="dynamicNotificationData" ng-if="generalNotificationTemplate" submit-flag-name="submitted" edit-flag="false">
+                        </dynamic-form>
+                    </div>
+                    <div ng-if="operationFlag == 'edit'">
+                        <dynamic-form  input-css ="col-md-7 col-xs-8" label-css="col-md-3 col-xs-4 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="generalNotificationTemplate" ng-model="dynamicNotificationData" ng-if="generalNotificationTemplate" submit-flag-name="submitted" edit-flag="true">
+                        </dynamic-form>
+                    </div>
+                    <div class="form-group" >
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> 
+                                    <button class="btn btn-link" ng-click="cancelNotification()">{{entity + "Cancel"| translate}}</button>&nbsp;
+                                    <button type="button"  class="btn btn-hkg" ng-show="operationFlag == 'add'" ng-click="saveNotification(notificationForm)">{{entity + "Add Notification"| translate}}</button>
+                                    <button type="button"  class="btn btn-hkg" ng-show="operationFlag == 'edit'" ng-click="saveNotification(notificationForm)">{{entity + "Save"| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="col-xs-12" ng-show="operationFlag == 'view'">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="viewListData">
+                    <thead>
+                        <tr>
+                            <th class="text-center">{{entity + 'Sr No'|translate}}</th>
+                            <th class="text-center">{{entity + 'Name'|translate}}</th>
+                            <th class="text-center">{{entity + 'Interface'|translate}}</th>
+                            <th class="text-center">{{entity + 'Action'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody ng-if="!!viewListData">
+                        <tr ng-repeat="notif in viewListData" dt-rows>                            
+                            <td class="text-center"><span class="wordRap">{{$index + 1}}</span></td>
+                            <td class="text-center"><span class="wordRap" ng-bind="notif.name"></span></td>
+                            <td class="text-center"><span class="wordRap" ng-bind="notif.typeString"></span></td>
+                            <td class="text-center" align="center"><a><span  class="glyphicon glyphicon-edit" ng-click="editNotification(notif)" title="Edit"></span></a></td>
+                        </tr>
+                    </tbody>
+                    <tbody ng-if="viewListData.length < 1">
+                        <tr>                            
+                            <td colspan="4" class="text-center"><span class="wordRap">{{entity + "No notification for selected type"| translate}}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/>
+                <hr>
+                <div class="col-md-9 pull-right text-right">
+                    <button class="btn btn-hkg pull-right" ng-click="addClick()"><span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Back</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xs-3 tree-bg ">
+            <div  class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + "Existing notifications"| translate}}</strong></span>
+                <hr class="margin-md"/>
+                <div ng-click='selectCategory()' 
+                     data-angular-treeview="true"
+                     data-tree-id="selectedCategory"
+                     ag-treemodel="categoryList" display-count="true" entity-name="ASTCTG_NM.">
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>

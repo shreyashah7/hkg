@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<style>
+    .table > thead > tr > th {
+        vertical-align: top;
+        border-bottom: 2px solid #ddd;
+    }
+</style>
+<div ng-init="retrieveLanguages()">
+    <div class="pull-right">
+        <input class="" type="checkbox" ng-model="changeAutomaticLabelFlag" ng-change="setCreateLabelAutomatically()">Add label automatically</input>
+        <a href="#createlabel">{{ i18Int + 'Add Label' | translate }}</a>
+    </div>
+    <div class="row">&nbsp;</div>
+    <div class="hkg-fieldset-min">
+        <div ag-alert entity="i18Int"></div>
+        <form role="form" name="label_list_form">
+            <div class="row">&nbsp;</div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{i18Int+ 'Language'| translate}}&nbsp;&nbsp;&nbsp;
+                    <div class="btn-group">
+                        <select class="form-control" name="languageCombo" required id="input_category" ng-click="setLanguage()" ng-model="selectedLanguageObj" ng-options="lang as lang.name for lang in languageDetails"> 
+                            <!--<option value="">Select</option>-->
+                        </select>  
+
+                        <!--                <button data-toggle="dropdown" class="btn dropdown-toggle" >{{selectedLanguage}}<span class="caret"></span></button>
+                                        <ul class="dropdown-menu" >
+                                            <li ng-repeat="lang in languageDetails" ng-click="setLanguage(lang)"><a href="">{{lang.name}}</a></li>
+                                        </ul>-->
+                    </div>
+                    </th>
+                    <th>&nbsp;&nbsp;{{ i18Int + 'Type:' | translate }}&nbsp;&nbsp;&nbsp;
+                    <div class="btn-group">
+                        <select class="form-control" name="typeCombo" required id="input_category" ng-click="setSelectedTypeAll()" ng-model="selectedLabelTypeForAll" ng-options="key as value for (key , value) in labelTypes"> 
+                            <!--<option value="">Select</option>-->
+                        </select>  
+
+                        <!--                <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelTypes[selectedLabelTypeForAll]}} <span class="caret"></span></button>
+                                        <ul class="dropdown-menu" >
+                                            <li ng-repeat="(typekey,typeval) in labelTypes" ng-click="setSelectedTypeAll(typekey)" ><a href="">{{typeval}}</a></li>
+                                        </ul>-->
+                    </div>
+                    </th>
+                    <th>&nbsp;&nbsp;{{ i18Int + 'Environment:' | translate }}&nbsp;&nbsp;&nbsp;
+                    <div class="btn-group">
+                        <select class="form-control" name="environmentCombo" required id="input_category" ng-click="setSelectedEnvironmentAll()" ng-model="selectedLabelEnvironmentForAll" ng-options="key as value for (key , value) in labelEnvironments"> 
+                            <!--<option value="">Select</option>-->
+                        </select>
+
+                        <!--                <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelEnvironments[selectedLabelEnvironmentForAll]}} <span class="caret"></span></button>
+                                        <ul class="dropdown-menu" >
+                                            <li ng-repeat="(environmentkey,environmentval) in labelEnvironments" ng-click="setSelectedEnvironmentAll(environmentkey)"><a href="">{{environmentval}}</a></li>
+                                        </ul>-->
+                    </div>
+                    </th>
+                    <th>
+                        &nbsp;&nbsp;{{ i18Int + 'Entity:' | translate }}&nbsp;&nbsp;&nbsp;
+                    <div class="btn-group">
+                        <select class="form-control" name="entityCombo" required id="input_category" ng-click="setSelectedEntityAll()" ng-model="selectedLabelEntityForAll" ng-options="entity for entity in labelEntitys"> 
+                            <!--<option value="">Select</option>-->
+                        </select>
+
+                        <!--                <button data-toggle="dropdown" class="btn dropdown-toggle">{{selectedLabelEntityForAll}} <span class="caret"></span></button>
+                                        <ul class="dropdown-menu" >
+                                            <li ng-repeat="entity in labelEntitys" ng-click="setSelectedEntityAll(entity)"><a href="">{{entity}}</a></li>
+                                        </ul>-->
+                    </div>
+                    </th>
+                    <th>
+                    <div>&nbsp;&nbsp;&nbsp;
+                        <button class="btn btn-primary" ng-click="applyFilter()" ng-show="isDisable">{{ i18Int + 'Apply' | translate }}</button>
+                    </div>
+                    </th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </form>
+
+        <div>
+            <br/>
+            <b>{{ i18Int + 'Filter By :' | translate }} </b> &nbsp; {{selectedLetter}}
+            <div class="table-responsive">
+
+                <table width="100%">
+                    <tr>
+                        <td>
+                            <a href="" ng-click="setLetter('pending')">{{ i18Int + 'Pending' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('A')">{{ i18Int + 'A' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('B')">{{ i18Int + 'B' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('C')">{{ i18Int + 'C' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('D')">{{ i18Int + 'D' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+
+                            <a href="" ng-click="setLetter('E')">{{ i18Int + 'E' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('F')">{{ i18Int + 'F' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('G')">{{ i18Int + 'G' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('H')">{{ i18Int + 'H' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('I')">{{ i18Int + 'I' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('J')">{{ i18Int + 'J' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('K')">{{ i18Int + 'K' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('L')">{{ i18Int + 'L' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('M')">{{ i18Int + 'M' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('N')">{{ i18Int + 'N' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('O')">{{ i18Int + 'O' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('P')">{{ i18Int + 'P' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('Q')">{{ i18Int + 'Q' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('R')">{{ i18Int + 'R' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('S')">{{ i18Int + 'S' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('T')">{{ i18Int + 'T' | translate }}</a>&nbsp;&nbsp;
+
+
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('U')">{{ i18Int + 'U' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('V')">{{ i18Int + 'V' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('W')">{{ i18Int + 'W' | translate }}</a>&nbsp;&nbsp;
+
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('X')">{{ i18Int + 'X' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('Y')">{{ i18Int + 'Y' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('Z')">{{ i18Int + 'Z' | translate }}</a>&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <a href="" ng-click="setLetter('all')">{{ i18Int + 'All' | translate }}</a>
+                        </td>
+                        <td width="20%">
+
+                        </td>
+                        <td>
+                            <div >
+                                <input class="form-control" ng-model="filter.text" type="search" placeholder="Search"/>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+            <br/>
+        </div>
+
+        <form role="form" name="updatelabelform" novalidate>
+            <div ng-show='(translationPendingLabelList|filter:filters | filter:alphabetCustomFilter | filter:filter.text).length ==0'>
+                <div class="col-lg-12 col-md-12 col-xs-12">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                <p style="color:green;">{{ i18Int + 'No labels Available' | translate }}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table" ng-show='(translationPendingLabelList|filter:filters | filter:alphabetCustomFilter | filter:filter.text).length > 0'>
+                    <thead >
+                        <tr>
+                            <th>{{ i18Int + 'Entity' | translate }}</th>
+                    <th>{{ i18Int + 'Text' | translate }}
+                    <img src="/images/sort-icon.png" ng-click="sort('defaultText')"/>
+                    </th>
+                    <th>{{ i18Int + 'Translation text' | translate }}
+                    <img src="/images/sort-icon.png" ng-click="sort('text')"/>
+                    </th>
+                    <th>{{ i18Int + 'Environment' | translate }}</th>
+                    <th>{{ i18Int + 'Type' | translate }}</th>
+                    <th>{{ i18Int + 'Is pending' | translate }}</th>
+                    <th colspan="2">{{ i18Int + 'Action' | translate }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="labelList in translationPendingLabelList| filter:filters | filter:alphabetCustomFilter | filter:filter.text | orderBy:orderProp:direction"  ng-init="showLabelDialog(labelList)">
+                            <td>
+                                <input type='text' class='form-control' id='labelEntity' ng-model="labelList.entity" disabled/>
+                            </td>
+                            <td> 
+                                <input type='text' class='form-control' id='labelText' ng-model="labelList.defaultText" disabled/>
+                            </td>
+                            <td>
+                                <div ng-class="{'has-error': updatelabelform.translationTextVal.$invalid}">                    
+                                    <input type='text' required name="translationTextVal" class='form-control' id='textTranslation' ng-model="labelList.text"/>
+                                    <!--<input required ng-model="newFeatureName" name="newFeatureName" type="text" class="form-control" placeholder="Enter feature name"/>-->
+                                    <div class="error,help-block" ng-show="(updatelabelform.translationTextVal.$dirty || labelsubmitted) && updatelabelform.translationTextVal.$invalid">
+                                        <span class="help-block" ng-show="updatelabelform.translationTextVal.$error.required">Enter Translation Text</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <select class="form-control" name="environmentUpdateCombo" required id="input_category" ng-model="labelList.environment" ng-options="key as value for (key , value) in labelEnvironments"> 
+                                        <!--<option value="">Select</option>-->
+                                    </select>
+                                    <!--                            <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelEnvironments[labelList.environment]}} <span class="caret"></span></button>
+                                                                <ul class="dropdown-menu" >
+                                                                    <li ng-repeat="(environmentkey,environmentval) in labelEnvironments" ng-click="setSelectedEnvironment(environmentkey, labelList)"><a href="">{{environmentval}}</a></li>
+                                                                </ul>-->
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <select class="form-control" name="typeUpdateCombo" required id="input_category" ng-model="labelList.type" ng-options="key as value for (key , value) in labelTypes"> 
+                                        <!--<option value="">Select</option>-->
+                                    </select>  
+                                    <!--                            <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelTypes[labelList.type]}} <span class="caret"></span></button>
+                                                                <ul class="dropdown-menu" >
+                                                                    <li ng-repeat="(typekey,typeval) in labelTypes" ng-click="setSelectedType(typekey, labelList)" ><a href="">{{typeval}}</a></li>
+                                                                </ul>-->
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group" >
+                                    <input type="checkbox" class='btn-control' id='translationFlag' ng-checked="labelList.translationPending" ng-click="setTranslationPending(labelList.translationPending, labelList)"/>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary" ng-click="updateLabel(labelList)">{{ i18Int + 'Update' | translate }}</button>
+                            </td>
+                            <td>
+                                <button class="btn btn-primary" ng-click="deleteLabel(labelList)">{{ i18Int + 'Delete' | translate }}</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+                <!--        </span>-->
+        </form>
+    </div>
+</div>

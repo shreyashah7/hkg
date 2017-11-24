@@ -1,0 +1,530 @@
+
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div id='pageTop'></div>
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>
+                    <li >{{ entity + 'Settings' | translate}}</li>
+                    <li ng-show="configureWorkFlow">{{ entity + 'Configure Workflow' | translate}}</li>
+                    <li ng-show="configureDefaultShift">{{ entity + 'Configure Default Shift' | translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <!--breadcrumb-->
+        <div class="col-xs-10 new-panel" ng-show="!configureDefaultShift && !configureWorkFlow" id="mainPanel">
+
+            <div class="row">
+                <div class="col-xs-12 col-lg-12">
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-md-12">
+                    <form method="POST" class="form-horizontal" name="configFranchiseForm" novalidate>
+                        <div id="messaging" ng-init="registerLocationChangeEvent(configFranchiseForm);
+                                initConfigureFranchise(configFranchiseForm)"></div>
+                        <h4>
+                            {{ entity + 'Messaging' | translate}}
+                        </h4>
+                        <div class='form-group required'>
+                            <label for="maxMsgs"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Maximum Messages To Save' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-8" ng-class="{'has-error': configFranchiseForm.maxMsgs.$invalid && (configFranchiseForm.maxMsgs.$dirty || submitted)}"> 
+                                <div class="row">
+                                    <div class="col-sm-6 col-lg-3">
+                                        <input type='text' ng-model="franchiseConfig[configKeyNames.msgsPerUser]" id="maxMsgs" name="maxMsgs" class="form-control" required maxlength="3" numbers-only="true" ng-change="checkMaxLimit(configFranchiseForm.maxMsgs, franchiseConfig[configKeyNames.msgsPerUser], 'maxLimit')"/>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <p class="form-control-static">{{ entity + 'per user' | translate}}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="error,help-block col-lg-6" ng-show="(configFranchiseForm.maxMsgs.$dirty || submitted) && configFranchiseForm.maxMsgs.$invalid">
+                                        <span class="help-block" ng-show="configFranchiseForm.maxMsgs.$error.required">{{ entity + 'Maximum number of messages to save not entered' | translate}}</span>
+                                        <span class="help-block" ng-show="configFranchiseForm.maxMsgs.$error.maxLimit">{{ entity + 'Maximum number of messages to save is 100' | translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="masters"  data-expand></div>
+                        <h4>
+                            {{ entity + 'Masters' | translate}}
+                        </h4>
+                        <div class='form-group'>
+                            <div class="col-xs-12 col-lg-12" ng-show="configExist && !resetPwd">
+                                <a href="" ng-click="resetPassword();">{{entity + "Reset authorization password"|translate}}</a>
+                            </div>
+                            <div class="col-xs-12 col-lg-12" ng-show="configExist && resetPwd">
+                                <a href="" ng-click="cancelResetPassword()">{{entity + "Cancel reset password"|translate}}</a>
+                            </div>
+                        </div>
+
+                        <div class='form-group required' ng-if="resetPwd">
+                            <label for="oldPwd"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Old Password' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.oldPwd.$invalid && (configFranchiseForm.oldPwd.$dirty || submitted)}"> 
+                                <input type='password' ng-model="pwd.oldPassword" id="oldPwd" name="oldPwd" class="form-control" required ng-blur="checkOldPassword(configFranchiseForm)" ng-change="configFranchiseForm.oldPwd.$setValidity('invalid', true);"/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.oldPwd.$dirty || submitted) && configFranchiseForm.oldPwd.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.oldPwd.$error.required">{{ entity + 'Old password not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="configFranchiseForm.oldPwd.$error.invalid">{{ entity + oldPwdMsg | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='form-group required' >
+                            <label for="authPwd"  class="col-sm-4 col-lg-3 control-label" ng-if="resetPwd">
+                                {{ entity + 'New Password' | translate}}
+                            </label>
+                            <label for="authPwd"  class="col-sm-4 col-lg-3 control-label" ng-if="!configExist">
+                                {{ entity + 'Authorization Password' | translate}}
+                            </label>
+                            <div ng-if="resetPwd || !configExist" class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.authPwd.$invalid && (configFranchiseForm.authPwd.$dirty || submitted)}"> 
+                                <input type='password' ng-model="franchiseConfig[configKeyNames.mstAuthPwd]" ng-minlength="8" maxlength="50" id="authPwd" name="authPwd" class="form-control" required ng-blur="confirmPasswordValidation(configFranchiseForm);
+                                       pwdBlur = true"/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.authPwd.$dirty || submitted) && configFranchiseForm.authPwd.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.authPwd.$error.required">{{ entity + 'Authorization password not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="pwdBlur && configFranchiseForm.authPwd.$error.minlength">{{ entity + "Password must be atleast 8 characters" | translate }}</span>  
+                                </div>
+                            </div>
+                        </div>
+                        <div class='form-group required' ng-if="!configExist || resetPwd">
+                            <label for="confPwd"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Retype Password' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.confPwd.$invalid && (configFranchiseForm.confPwd.$dirty || submitted)}"> 
+                                <input type='password' ng-model="pwd.confirmPassword" id="confPwd" name="confPwd" class="form-control" required ng-blur="confirmPasswordValidation(configFranchiseForm);
+                                       confPwdBlur = true" ng-change="configFranchiseForm.confPwd.$setValidity('pwdMismatch', true)"/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.confPwd.$dirty || submitted) && configFranchiseForm.confPwd.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.confPwd.$error.required">{{ entity + 'Confirmation password not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="!configFranchiseForm.confPwd.$error.required && configFranchiseForm.confPwd.$error.pwdMismatch && confPwdBlur">{{ entity + "Password mismatch, please try again" | translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="workflow" ></div>
+                        <h4>
+                            {{ entity + 'Workflow' | translate}}
+                        </h4>
+                        <div class='form-group'>
+                            <div class="col-xs-12 col-lg-12">
+                                <a href="" ng-click="setConfigureWorkFlow(true)">{{entity + "Configure default workflow"|translate}}</a>
+                            </div>
+                        </div>
+                        <div id="shift" ></div>
+                        <h4>
+                            {{ entity + 'Shift' | translate}}
+                        </h4>
+                        <div class='form-group'>
+                            <div class="col-xs-12 col-lg-12">
+                                <a ng-click="setConfigureDefaultShift(true)">{{entity + "Create default shift"|translate}}</a>
+                            </div>
+                        </div>
+                        <div class='form-group required'>
+                            <label for="shiftReminderDays"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Shift Reminder Period' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-8" ng-class="{'has-error': configFranchiseForm.shiftReminderDays.$invalid && (configFranchiseForm.shiftReminderDays.$dirty || submitted)}"> 
+                                <div class="row">
+                                    <div class="col-sm-6 col-lg-3">
+                                        <input type='text' ng-model="franchiseConfig[configKeyNames.shiftReminderPeriod]" id="shiftReminderDays" name="shiftReminderDays" class="form-control" required numbers-only="true"/>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <p class="form-control-static">{{ entity + 'days before' | translate}}</p>
+                                    </div>
+                                </div>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.shiftReminderDays.$dirty || submitted) && configFranchiseForm.shiftReminderDays.$invalid" >
+                                    <span class="help-block" ng-show="configFranchiseForm.shiftReminderDays.$error.required">{{ entity + 'Shift reminder period not entered' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="task" ></div>
+                        <h4>
+                            {{ entity + 'Task' | translate}}
+                        </h4>
+                        <div class="form-group">
+                            <label for="taskStatusUpdate"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Task status update' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" > 
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="taskStatusUpdate" ng-model="franchiseConfig[configKeyNames.taskStatusUpdate]" ng-true-value="true" ng-false-value="false">{{ entity + 'Force task status update on login' | translate}}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="maxMsgs"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Archive Period' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" ng-class="{'has-error': configFranchiseForm.archivePeriod.$invalid && (configFranchiseForm.archivePeriod.$dirty || submitted)}"> 
+                                <div class="row">
+                                    <div class="col-sm-6 col-lg-4">
+                                        <input type='text' ng-model="franchiseConfig[configKeyNames.taskArchivePeriod]" id="archivePeriod" name="archivePeriod" class="form-control" required maxlength="3" numbers-only="true"/>
+                                    </div>
+                                    <div class="col-sm-6 col-lg-3">
+                                        <p class="form-control-static">{{ entity + 'days' | translate}}</p>
+                                    </div>
+                                </div>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.archivePeriod.$dirty || submitted) && configFranchiseForm.archivePeriod.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.archivePeriod.$error.required">{{ entity + 'Archive period not entered' | translate}}</span>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div id="employee" ></div>
+                        <h4>
+                            {{ entity + 'Employee' | translate}}
+                        </h4>
+                        <div class="form-group">
+                            <label for="sysMailTo"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Send Mail To' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-5" > 
+                                <label class="radio-inline">
+                                    <input type="radio" name="sysMailTo" ng-model="franchiseConfig[configKeyNames.empSendMailTo]" value="work">{{ entity + 'Work Email Id' | translate}}
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="sysMailTo" ng-model="franchiseConfig[configKeyNames.empSendMailTo]" value="personal">{{ entity + 'Personal Email id' | translate}}
+                                </label>
+                            </div>
+
+                            <div class="col-sm-12 col-sm-offset-4 col-lg-offset-0 col-lg-4">
+                                <p class="form-control-static">({{ entity + 'For System Generated Mails' | translate}})</p>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="sysMailTo"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Series Of ID\'s' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6"> 
+                                <div class='form-control-static' ng-if='responseComplete && employeeTypes.length === 0'>
+                                    {{entity + "No employee types available."|translate}}
+                                </div>
+                                <div class="form-group" ng-repeat="employee in employeeTypes" ng-form='emptypeform' ng-if='responseComplete && employeeTypes.length > 0'>
+                                    <div class="col-sm-6 col-lg-6 form-control-static">
+                                        {{employee.type}}
+                                    </div>
+                                    <div class="col-sm-6 col-lg-6" ng-class="{'has-error': emptypeform.idSeries.$invalid && (emptypeform.idSeries.$dirty || submitted)}">
+                                        <input type="text" class="form-control" ng-model="franchiseConfig[employee.key]" required name='idSeries'/>
+                                        <div class="error,help-block" ng-show="(emptypeform.idSeries.$dirty || submitted) && emptypeform.idSeries.$invalid">
+                                            <span class="help-block" ng-show="emptypeform.idSeries.$error.required">{{ entity + 'Series of id not entered' | translate}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="minAge"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Age Limit' | translate}}
+                            </label>
+                            <div class="col-sm-3 col-lg-2" ng-class="{'has-error': configFranchiseForm.minAge.$invalid && (configFranchiseForm.minAge.$dirty || submitted)}"> 
+                                <input type='text' ng-model="franchiseConfig[configKeyNames.empMinAge]" id="minAge" name="minAge" class="form-control" required maxlength="3" numbers-only="true"  placeholder="{{entity + 'Minimum'|translate}}" ng-blur="checkAgeLimitValidation(configFranchiseForm, configFranchiseForm.minAge, 'minAgeLimit')" ng-change='configFranchiseForm.minAge.$setValidity("minAgeLimit", true);
+                                        checkMaxLimit(configFranchiseForm.minAge, franchiseConfig[configKeyNames.empMinAge], "maxLimit")'/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.minAge.$dirty || submitted) && configFranchiseForm.minAge.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.minAge.$error.required">{{ entity + 'Minimum age not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="!configFranchiseForm.minAge.$error.maxLimit && configFranchiseForm.minAge.$error.minAgeLimit">{{ entity + 'Minimum age must be less than maximum age' | translate}}</span>
+                                    <span class="help-block" ng-show="configFranchiseForm.minAge.$error.maxLimit">{{ entity + 'Minimum age must be < 100' | translate}}</span>
+
+                                </div>
+                            </div>
+                            <div class="col-sm-1 col-lg-1"><span class="form-control-static">{{entity + "to"|translate}}</span></div>
+                            <div class="col-sm-3 col-lg-2" ng-class="{'has-error': configFranchiseForm.maxAge.$invalid && (configFranchiseForm.maxAge.$dirty || submitted)}"> 
+                                <input type='text' ng-model="franchiseConfig[configKeyNames.empMaxAge]" id="maxAge" name="maxAge" class="form-control" required maxlength="3" numbers-only="true" placeholder="{{entity + 'Maximum'|translate}}" ng-blur="checkAgeLimitValidation(configFranchiseForm, configFranchiseForm.maxAge, 'maxAgeLimit')" ng-change='configFranchiseForm.maxAge.$setValidity("maxAgeLimit", true);
+                                        checkMaxLimit(configFranchiseForm.maxAge, franchiseConfig[configKeyNames.empMaxAge], "maxLimit")'/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.maxAge.$dirty || submitted) && configFranchiseForm.maxAge.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.maxAge.$error.required">{{ entity + 'Maximum age not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="!configFranchiseForm.maxAge.$error.maxLimit && configFranchiseForm.maxAge.$error.maxAgeLimit">{{ entity + 'Maximum age must be greater than minimum age' | translate}}</span>
+                                    <span class="help-block" ng-show="configFranchiseForm.maxAge.$error.maxLimit">{{ entity + 'Maximum age must be < 100' | translate}}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-8 col-sm-offset-4 col-lg-offset-0 col-lg-3">
+                                <p class="form-control-static">{{ entity + 'years to join organization' | translate}}</p>
+                            </div>
+                        </div>
+
+                        <div flow-init="uploadFile" flow-file-added="avtarFileAdded($file, $flow)" flow-file-success="avtarFileUploaded($file,$flow,configFranchiseForm,$message)" flow-files-submitted="$flow.upload()">
+                            <div class='form-group'>
+                                <label for="avtarImage"  class="col-sm-4 col-lg-3 control-label">
+                                    {{ entity + 'Default Avtar' | translate}}
+                                </label>
+
+                                <div class="col-sm-8 col-lg-6" name='avtarImage'>
+                                    <div class='row'>
+                                        <div class='col-md-6'>
+                                            <div ng-show="franchiseConfig.EMP_DEFAULT_IMAGE.length > 0">
+                                                <img ng-src="{{displayAvatar(false)}}" height="130" width="130" ng-click="displayAvatar(true)"/>
+                                                <span class="glyphicon glyphicon-remove pull-right text-danger" ng-click="$flow.files.splice($index, 1);
+                                                    avtarFileRemove()">
+                                                </span>
+                                            </div>
+                                            <div ng-show="franchiseConfig.EMP_DEFAULT_IMAGE.length > 0">
+                                                <br/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class='row'>
+                                        <div class='col-sm-6 col-lg-6'>
+                                            <button class="btn btn-hkg" flow-btn>{{entity + 'Choose File'|translate}}</button>                        
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <ul class="list-group" ng-show="avtarImg.invalidFileFlag || avtarImg.invalidFileSizeFlag">    
+                                        <li class="list-group-item" ng-show="avtarImg.invalidFileFlag">
+                                            <span class="text-danger"> {{avtarImg.fileName}} {{entity + 'Not image file'| translate}} </span>
+                                            <span class="glyphicon glyphicon-remove pull-right" ng-click="avtarImg.invalidFileFlag = false"></span>
+                                        </li>
+                                        <li class="list-group-item" ng-show="avtarImg.invalidFileSizeFlag">
+                                            <span class="text-danger"> {{entity + 'File size too large'| translate}} </span>
+                                            <span class="glyphicon glyphicon-remove pull-right" ng-click="avtarImg.invalidFileSizeFlag = false"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!--</div>-->
+
+                        <div id="leave" ></div>
+                        <h4>
+                            {{ entity + 'Leave' | translate}}
+                        </h4>
+                        <div class='form-group required'>
+                            <label for="yearlyLeaves"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Number Of Yearly Leaves' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" ng-class="{'has-error': configFranchiseForm.yearlyLeaves.$invalid && (configFranchiseForm.yearlyLeaves.$dirty || submitted)}"> 
+                                <div class="row">
+                                    <div class="col-sm-4 col-lg-4">
+                                        <input type='text' ng-model="franchiseConfig[configKeyNames.leaveMaxYearlyLeaves]" id="yearlyLeaves" max="99" maxlength="2" name="yearlyLeaves" class="form-control" required numbers-only="true"/>
+                                    </div>
+                                    <div class="col-sm-2 col-lg-2">
+                                        <p class="form-control-static">{{ entity + 'days' | translate}}</p>
+                                    </div>
+                                </div>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.yearlyLeaves.$dirty || submitted) && configFranchiseForm.yearlyLeaves.$invalid" >
+                                    <span class="help-block" ng-show="configFranchiseForm.yearlyLeaves.$error.required">{{ entity + 'Yearly leaves not entered' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="leaveBeyondLimit"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Leave Beyond Limit' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" > 
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="leaveBeyondLimit" ng-model="franchiseConfig[configKeyNames.leaveBeyondLimit]" ng-true-value="true" ng-false-value="false">{{ entity + 'Allow' | translate}}
+                                </label>
+                            </div>
+                        </div>                        
+                        <div id="visibility" ></div>
+                        <h4>
+                            {{ entity + 'Invoice Visibility' | translate}}
+                        </h4>
+                        <div class='form-group'>
+                            <label class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Current Visibility Status' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" ng-class="{'has-error': configFranchiseForm.yearlyLeaves.$invalid && (configFranchiseForm.yearlyLeaves.$dirty || submitted)}"> 
+                                <div class="row">
+                                    <div class="col-sm-4 col-lg-4">
+                                        <div class="btn-group">
+                                            <button type="button" name="orderValue" class="btn btn-default btn-sm" ng-model="franchiseConfig[configKeyNames.currentVisibilityStatus]" btn-radio="'on'">{{entity + "ON"| translate}}</button>
+                                            <button type="button" name="orderValue" class="btn btn-default btn-sm" ng-model="franchiseConfig[configKeyNames.currentVisibilityStatus]" btn-radio="'off'">{{entity + "OFF"| translate}}</button>
+                                        </div>
+                                    </div>                                  
+                                </div>                                
+                            </div>
+                        </div> 
+                        <div id="stockconfiguration" ></div>
+                        <h4>
+                            {{ entity + 'Stock Configuration' | translate}}
+                        </h4>
+                        <div class='form-group required'>
+                            <label class="col-sm-4 col-lg-2 control-label">
+                                {{ entity + 'No Of SnapIds ' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.noOfSnapids.$invalid && (configFranchiseForm.noOfSnapids.$dirty || submitted)}" > 
+                                <input type='text' maxlength="3" ng-model="franchiseConfig[configKeyNames.noOfSnapids]" id="noOfSnapids" name="noOfSnapids" class="form-control" required  numbers-only="true" />
+                                <div class="error,help-block" ng-show="(configFranchiseForm.noOfSnapids.$dirty || submitted) && configFranchiseForm.noOfSnapids.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.noOfSnapids.$error.required">{{ entity + 'No of snapIds not entered' | translate}}</span>
+                                </div>
+                            </div>
+                            
+                            <label class="col-sm-4 col-lg-2 control-label">
+                                {{ entity + 'Allow Carate Variation' | translate}}
+                            </label><!-- ng-pattern="/^([0-9]{0,2})([.][0-9]{0,2})?$/" -->
+                            <div class="col-sm-7 col-lg-3" ng-class="{'has-error': configFranchiseForm.allowCarateVariation.$invalid && (configFranchiseForm.allowCarateVariation.$dirty || submitted)}"> 
+                                <input type='text' ng-pattern="/^([0-9]{0,2})([.][0-9]{0,2})?$/" ng-model="franchiseConfig[configKeyNames.allowCarateVariation]" id="allowCarateVariation" name="allowCarateVariation" class="form-control" required only-digits allow-decimal="true" placeholder="##.##"/>
+                                <div class="error,help-block" ng-show="(configFranchiseForm.allowCarateVariation.$dirty || submitted) && configFranchiseForm.allowCarateVariation.$invalid">
+                                    <span class="help-block" ng-show="configFranchiseForm.allowCarateVariation.$error.required">{{ entity + 'Carate variation not entered' | translate}}</span>
+                                    <span class="help-block" ng-show="configFranchiseForm.allowCarateVariation.$error.pattern">{{ entity + 'Invalid pattern' | translate}}</span>
+                                </div>
+                            </div>
+                            <div class="col-sm-1 col-lg-1" style="padding-left: 0px;">
+                                %
+                            </div>
+                        </div>
+                        <div id="analytics_engine"></div>
+                        <h4>
+                            {{ entity + 'Analytics Engine Credential' | translate}}
+                        </h4>
+                        <div class="form-group" ng-if="analytics.analyticConfig === false">
+                            <label for="isAnalytics"  class="col-sm-4 col-lg-3 control-label">
+                                {{ entity + 'Has Analytics Engine Credential' | translate}}
+                            </label>
+                            <div class="col-sm-8 col-lg-6" > 
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="isAnalytics" name="isAnalytics" ng-model="analytics.isAnalytics" ng-true-value="true" ng-false-value="false">
+                                </label>
+                            </div>
+                        </div>
+                        <div class='form-group' ng-if="analytics.analyticConfig === true">
+                            <div class="col-xs-12 col-lg-12" ng-show="!analytics.resetAnalyticConfig">
+                                <a href="" ng-click="analytics.resetAnalyticConfig = true;">{{entity + "Reset analytics credential"|translate}}</a>
+                            </div>
+                            <div class="col-xs-12 col-lg-12" ng-show="analytics.resetAnalyticConfig">
+                                <a href="" ng-click="analytics.resetAnalyticConfig = false;">{{entity + "Cancel reset analytics credential"|translate}}</a>
+                            </div>
+                        </div>
+                        <div ng-if="analytics.isAnalytics || analytics.resetAnalyticConfig">
+                            <div class='form-group required' >
+                                <label for="analyticUsername"  class="col-sm-4 col-lg-3 control-label">
+                                    {{ entity + 'Username' | translate}}
+                                </label>
+                                <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.analyticUsername.$invalid && (configFranchiseForm.analyticUsername.$dirty || submitted)}"> 
+                                    <input autocomplete="off" ng-model="franchiseConfig[configKeyNames.analyticEngineUsername]" maxlength="50" id="analyticUsername" name="analyticUsername" class="form-control" required placeholder="username"/>
+                                    <div class="error,help-block" ng-show="(configFranchiseForm.analyticUsername.$dirty || submitted) && configFranchiseForm.analyticUsername.$invalid">
+                                        <span class="help-block" ng-show="configFranchiseForm.analyticUsername.$error.required">{{ entity + 'Aunalytics username not entered' | translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- prevent from autofill in chrome -->
+                            <input type="password" name="password" id="password_fake" class="hidden" autocomplete="off" style="display: none;">
+                            <div class='form-group required' >
+                                <label for="analyticAuthPwd"  class="col-sm-4 col-lg-3 control-label">
+                                    {{ entity + 'Password' | translate}}
+                                </label>
+                                <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.analyticAuthPwd.$invalid && (configFranchiseForm.analyticAuthPwd.$dirty || submitted)}"> 
+                                    <input autocomplete="off" type='password' ng-model="franchiseConfig[configKeyNames.analyticEnginePwd]" id="analyticAuthPwd" name="analyticAuthPwd" class="form-control" required placeholder="password"/>
+                                    <div class="error,help-block" ng-show="(configFranchiseForm.analyticAuthPwd.$dirty || submitted) && configFranchiseForm.analyticAuthPwd.$invalid">
+                                        <span class="help-block" ng-show="configFranchiseForm.analyticAuthPwd.$error.required">{{ entity + 'Authorization password not entered' | translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class='form-group required' >
+                                <label for="analyticServerUrl"  class="col-sm-4 col-lg-3 control-label">
+                                    {{ entity + 'Server Url' | translate}}
+                                </label>
+                                <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.analyticServerUrl.$invalid && (configFranchiseForm.analyticServerUrl.$dirty || submitted)}"> 
+                                    <input autocomplete="off" ng-model="franchiseConfig[configKeyNames.analyticServerUrl]" id="analyticServerUrl" name="analyticServerUrl" class="form-control" required placeholder="server url"/>
+                                    <div class="error,help-block" ng-show="(configFranchiseForm.analyticServerUrl.$dirty || submitted) && configFranchiseForm.analyticServerUrl.$invalid">
+                                        <span class="help-block" ng-show="configFranchiseForm.analyticServerUrl.$error.required">{{ entity + 'Analytic Server url not entered' | translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-if="isHkadmin">
+                            <div id="syncconfiguration" ></div>
+                            <h4>
+                                {{ entity + 'Sync Configuration' | translate}}
+                            </h4>
+                            <div class='form-group required'>
+                                <label class="col-sm-4 col-lg-2 control-label">
+                                    {{ entity + 'Xmpp Rceiver Email' | translate}}
+                                </label>
+                                <div class="col-sm-8 col-lg-4" ng-class="{'has-error': configFranchiseForm.email.$invalid && (configFranchiseForm.email.$dirty || submitted)}" > 
+                                    <input type='email' ng-model="franchiseConfig[configKeyNames.email]" id="email" name="email" class="form-control" required  />
+                                    <div class="error,help-block" ng-show="(configFranchiseForm.email.$dirty || submitted) && configFranchiseForm.email.$invalid">
+                                        <span class="help-block" ng-show="configFranchiseForm.email.$error.required">{{ entity + 'Email address not entered' | translate}}</span>
+                                        <span class="help-block" ng-show="(!configFranchiseForm.email.$error.required) && configFranchiseForm.email.$error">{{ entity + 'Invalied Email address' | translate}}</span>
+                                    </div>
+                                </div>
+                            </div>  
+                        </div>
+                        <div class="col-sm-12 col-lg-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-sm-12 pull-right text-right"> 
+                                    <!--                                    <a href="" ng-click="resetConfigurationForm(configFranchiseForm)">
+                                                                            {{ entity + 'Cancel' | translate}}
+                                                                        </a>&nbsp;-->
+                                    <a  href="#dashboard" >{{entity + 'Cancel '| translate }}</a>
+                                    <button class="btn btn-hkg" ng-click="saveConfiguration(configFranchiseForm)">
+                                        <span ng-bind="entity + 'Save Configuration' | translate" ></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-10 col-lg-10" ng-if="configureWorkFlow" id="workflowPanel">
+            <div class="row" ng-include src="'views/secure/manageleaveworkflow.html'" ng-controller="LeaveWorkflowController"></div>
+        </div>
+        <div class="col-xs-10 col-lg-10" ng-if="configureDefaultShift" id="shiftPanel">
+            <div class="row" ng-include src="'views/secure/manageshift.html'" ng-controller="ShiftController"></div>
+        </div>
+        <div class="col-xs-2 col-lg-2 tree-bg" id="sidemenu" ng-init="heightInit()" ng-show="!configureWorkFlow && !configureDefaultShift">
+            <div class="row affix fit-content" id="myNav">
+                <ul class="nav nav-stacked" >
+                    <li><a href="" ng-click="scrollTo('messaging')">{{entity + "Messaging"|translate}}</a></li>
+                    <!--<li><a ng-click="scrollTo('asset')">{{entity + "Asset"|translate}}</a></li>-->
+                    <li><a ng-click="scrollTo('masters')">{{entity + "Masters"|translate}}</a></li>
+                    <li><a ng-click="scrollTo('workflow')">{{entity + "Workflow"|translate}}</a></li>
+                    <li><a ng-click="scrollTo('shift')">{{entity + "Shift"|translate}}</a></li>
+                    <li><a ng-click="scrollTo('task')">{{entity + "Task"|translate}}</a></li>
+                    <li><a ng-click="scrollTo('employee')">{{entity + "Employee"|translate}}</a></li>
+                    <li><a ng-click="scrollTo('leave')">{{entity + "Leave"|translate}}</a></li>
+                    <!--<li><a ng-click="scrollTo('diamondIds')">{{entity + "Stock ID Configuration"|translate}}</a></li>-->
+                    <li><a ng-click="scrollTo('visibility')">{{ entity + 'Invoice Visibility' | translate}}</a></li>
+                    <li><a ng-click="scrollTo('stockconfiguration')">{{ entity + 'Stock Configuration' | translate}}</a></li>
+                    <li><a ng-click="scrollTo('analytics_engine')">{{ entity + 'Analytics Engine' | translate}}</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" role="dialog" id="avtarImagePopup" tabindex="-1" aria-hidden="true" >
+    <div class="modal-dialog">
+
+        <img ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name=' + selectedAvtarImageName)}}" height="400px" width="560px" ng-if="selectedAvtarImageName !== undefined"/>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="confirmResetPopUp" tabindex="-1" aria-hidden="true" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="closeResetPopUp()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "Confirm Reset" | translate }}</span>
+                </h4>
+            </div>
+            <form  class="form-horizontal" name="addNewVersionForm" role='form' novalidate >
+                <div class="modal-body" >                
+                    <div class="form-group">
+                        <label class="col-md-12">
+                            <span>{{entity + 'Reset will re-initialize the IDs to the starting index. It will not change IDs already generated. Do you want to continue?'|translate}}</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="closeResetPopUp()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="continueWithThis()">
+                            {{ entity + "Continue" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

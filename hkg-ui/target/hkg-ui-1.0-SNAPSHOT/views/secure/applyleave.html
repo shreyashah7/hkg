@@ -1,0 +1,139 @@
+<div ng-if="canAccess('applyLeave')">
+    <div class="row">
+        <div class="col-xs-12"> 
+            <!--breadcrumb-->
+            <div class="col-xs-12 breadcrumb-bg" >
+                <div class="col-xs-12 col-lg-8">
+                    <ol class="breadcrumb">
+                        <li>{{ entity + 'You are here' | translate}}</li>
+                        <li>{{ entity + 'Manage' | translate}}</li>
+                        <li >{{ entity + 'Leaves' | translate}}</li>                                                                    
+                        <li class="active" ng-if="leaveOperation == 'addLeave'">{{ entity + 'Apply Leave'|translate}}</li>
+                    </ol>
+                </div>
+                <div class="col-xs-12 col-lg-4 text-right context-menu"  ng-if="leaveOperation != 'addLeave'"> 
+                    <span class="glyphicon glyphicon-plus-sign text-primary">
+                    </span>
+                    &nbsp;<a class="pull-right" href=""  ng-click="setLeaveOperation('addLeave')">
+                        {{ entity + "Apply Leave" | translate}}
+                    </a>
+                </div>
+            </div>
+
+
+
+            <hr class="margin-md" />
+            <div ng-class="{'col-xs-9' : leaveOperation === 'addLeave','col-xs-12' : leaveOperation !== 'addLeave'}" class=" new-panel">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="col-xs-12 col-lg-12 well well-sm">
+                            <div class="input-group ">
+                                <div id="scrollable-dropdown-menu">
+                                    <input class="typeahead" type="text" placeholder="Search leave by reason,date.." 
+                                           ag-search="{{centerapipath}}leave/searchLeave"
+                                           result-format="requestFrom,reason,fromDate" 
+                                           on-select="redirectToEdit" 
+                                           on-enter="redirectToSearchedPage"
+                                           search-list-array='applyLeaveSearchedList'
+                                           id="scrollable-dropdown-menu"/>
+
+                                </div>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-hkg" type="button" ng-click="redirectToSearchedPage(applyLeaveSearchedList)"><span class="glyphicon glyphicon-search"></span></button>
+                                </span>
+                            </div>
+                            <!-- input-group --> 
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <div id="messages" ng-include src="'templates/messages.html'">
+
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-show="leaveOperation === 'applyLeave' && !(records.length > 0)">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{ entity + 'No leave applied  yet' | translate }}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-xs-12 col-lg-12" ng-show="leaveOperation === 'applyLeave' && records.length > 0">
+
+                        <table class="table" ag-data-table="records" ng-show="records.length > 0">
+
+                            <thead ng-show="records.length > 0">
+                                <tr>
+                                    <th>{{ entity + 'From Date' | translate}}</th>
+                                    <th>{{ entity + 'To Date' | translate}}</th>
+                                    <th  style=" white-space: nowrap;">{{ entity + 'Request Type' | translate}}</th>
+                                    <th>{{ entity + 'Description' | translate}}</th>
+                                    <th  style=" white-space: nowrap;">{{ entity + 'Leave Days' | translate}}</th>
+                                    <th>{{ entity + 'Status' | translate}}</th>
+                                    <th>{{ entity + 'Action' | translate}}</th>
+                                </tr>
+                            </thead>
+                            <tbody ng-show="records.length > 0">
+                                <tr ng-repeat="record in records" dt-rows>
+                                    <td>{{record.fromDate| date:" dd/MM/yyyy hh:mm a"}}</td>
+                                    <td>{{record.toDate| date:" dd/MM/yyyy hh:mm a"}}</td>
+                                    <td>{{record.requestType}}</td>
+                                    <td><span class="wordRap" ng-bind="record.description"></span></td>
+                                    <td>{{record.totalDays === '' ? '-' : record.totalDays}}</td>
+                                    <td>{{record.status}}</td>
+                                    <td align="center" style="padding-right: 25px;" >
+
+                                        <a href="" title="{{entity + 'Edit Leave'|translate}}" ng-show="{{record.edit}}" class="col-md-offset-1" ng-click="setEditLeave(record)">
+                                            <i class="glyphicon glyphicon-edit"></i>
+                                        </a>
+                                        <div ng-show="{{!record.edit}}">
+                                            <a href=""  title="{{entity + 'Archive Leave'|translate}}" ng-click="archiveLeave(record)"><span class="text-danger glyphicon glyphicon-remove"></span></a>
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div ng-if="leaveOperation === 'addLeave'">
+                        <div ng-include src="'views/secure/addleave.html'"></div>
+                    </div>
+                    <div ng-if="leaveOperation === 'searchedLeave'">
+                        <div ng-include src="'views/secure/searchedapplyleave.html'"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 tree-bg " ng-if="leaveOperation === 'addLeave'">
+                <div  class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + "Pending stock"| translate}}</strong></span>
+                    <hr class="margin-md"/>
+                    <div class="col-xs-12">
+                        <div class="input-group">
+                            <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                            <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                        </div>
+                    </div>
+                    <!--Tree component starts-->
+                    <div class="col-xs-12 hkg-nopadding">
+                        <br/>
+                        <div ng-show="pendingStockList.length > 0"
+                             data-angular-treeview="true"
+                             data-tree-id="selectedDesignation"
+                             ag-treemodel="stockList" entity-name="APPLYLEAVE."
+                             data-search-query='treeSearchQuery'>
+                        </div>
+                    </div>
+                    <!--Tree component ends--> 
+                    <div ng-show="pendingStockList.length === 0">
+                        No pending stock
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div ng-if="!canAccess('applyLeave')">
+    {{ entity + 'you have no authorization for this page.' | translate}} 
+</div>

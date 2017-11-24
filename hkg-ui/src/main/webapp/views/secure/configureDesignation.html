@@ -1,0 +1,91 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'|translate}} </li>
+                    <li>{{entity + 'Manage'|translate}} </li>
+                    <li class="active">
+                        {{entity + 'Designation Configurator'|translate}}
+                    </li>
+                </ol>
+            </div>
+        </div>
+        <hr class="margin-md" />
+        <div class="clearfix"></div>
+        <form class="form-horizontal" role="form"  name="configDesignForm" novalidate id="configDesignForm">
+            <div class="new-panel col-xs-9" id="left-column">
+                <div class="col-xs-12 col-lg-12 well well-sm">
+                    <div class="input-group ">
+                        <div id="scrollable-dropdown-menu">
+                            <input class="typeahead" type="text"  placeholder="Search for designation by name,department" 
+                                   ag-search="{{apipath}}configdesign/searchdesignation" 
+                                   result-format="displayName,departmentName" 
+                                   on-select="editDesignationFromSearchBox" 
+                                   on-enter="getSearchedDesignationRecords"
+                                   search-list-array='searchedList'
+                                   id="scrollable-dropdown-menu"/>
+                        </div>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-hkg" ng-click="getSearchedDepartmentRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="clearfix"></div> 
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+
+                <div ng-if="designation !== undefined && designation != null">
+                    <div class="col-md-12 hkg-nopadding">
+                        <h4>{{entity + designation.name| translate }}</h4>
+                    </div><br/><br/>
+                    <designation-template diamond-system-feature-list="diamondSysFeatures" group-feature-map="groupFeatureMap" system-features-list="nonDiamondSysFeatures" unique-index="{{$index}}" feature-field-map="designation.featureFieldMap" designation-id="{{designation.id}}" feature-modifier-map="designation.featureModifierMap"></designation-template>
+                </div>
+                <div ng-if="designation === undefined || designation == null">  
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Select or Search a designation to continue'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-md-12 pull-right text-right" ng-if="designation !== undefined && designation != null">
+                    <a href="" ng-click="initializePage();">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+                    <button ng-if="isDepartmentSelected !== true" class="btn btn-hkg" disabled="">{{ entity + "Save" | translate }}</button>
+                    <button ng-if="isDepartmentSelected === true" class="btn btn-hkg" ng-click="checkParameters(configDesignForm)">{{ entity + "Save" | translate }}</button>
+
+                </div>
+            </div>
+
+            <div class="col-xs-3 tree-bg" id="right-column" >
+                <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING DESIGNATIONS'|translate}}</strong></span>
+                    <hr class="margin-md"/>
+                    <div class="col-xs-12">
+                        <div class="input-group">
+                            <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                            <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                        </div>
+                    </div>
+                    <!--Tree component starts-->
+                    <div class="col-xs-12 hkg-nopadding">
+                        <br/>
+                        <div style="max-height: 400px;overflow: auto;" ng-show="designationList.length > 0">
+                            <div ng-click='configureDesignation(selectedDesign)'
+                                 data-angular-treeview="true"
+                                 node-children="designationDataBeans"
+                                 data-tree-id="selectedDesign"
+                                 ag-treemodel="designationList"
+                                 data-search-query='treeSearchQuery'>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="designationList.length === 0">
+                        {{entity + 'No designations are available.'|translate}} 
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </form>
+    </div>
+</div>

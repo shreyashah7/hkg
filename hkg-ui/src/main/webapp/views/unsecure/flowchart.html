@@ -1,0 +1,122 @@
+
+
+<!--<div class="col-md-3 new-panel">
+    <textarea cols="30"
+              rows="40"
+              chart-json-edit
+              view-model="chartViewModel"
+              >
+    </textarea>
+</div>
+<style type="text/css">
+    .draggable
+    {
+        filter: alpha(opacity=60);
+        opacity: 0.6;
+    }
+    .dropped
+    {
+        position: static !important;
+    }
+    #dvSource, #dvDest
+    {
+        border: 5px solid #ccc;
+        padding: 5px;
+        min-height: 100px;
+        width: 430px;
+    }
+</style>
+<script type="text/javascript">
+    $(function() {
+        $("#dvSource img").draggable({
+            revert: "invalid",
+            refreshPositions: true,
+            drag: function(event, ui) {
+                ui.helper.addClass("draggable");
+            },
+            stop: function(event, ui) {
+                ui.helper.removeClass("draggable");
+                var image = this.src.split("/")[this.src.split("/").length - 1];
+                if ($.ui.ddmanager.drop(ui.helper.data("draggable"), event)) {
+                    alert(image + " dropped.");
+                }
+                else {
+                    alert(image + " not dropped.");
+                }
+            }
+        });
+        $("#dvDest").droppable({
+            drop: function(event, ui) {
+                if ($("#dvDest img").length == 0) {
+                    $("#dvDest").html("");
+                }
+                ui.draggable.addClass("dropped");
+                $("#dvDest").append(ui.draggable);
+            }
+        });
+    });
+</script>
+<div class="col-md-9 new-panel">        
+        <div style="position: fixed">
+    <div>
+        <button
+            ng-click="addNewGroup()"
+            title="Add a new node to the chart"
+            >
+            Add Activity
+        </button>
+        <button
+            ng-click="addNewNode()"
+            title="Add a new node to the chart"
+            >
+            Add Node
+        </button>
+        <button
+            ng-click="addNewInputConnector()"
+            ng-disabled="chartViewModel.getSelectedNodes().length == 0"
+            title="Add a new input connector to the selected node"
+            >
+            Add Input Connector
+        </button>
+        <button
+            ng-click="addNewOutputConnector()"
+            ng-disabled="chartViewModel.getSelectedNodes().length == 0"
+            title="Add a new output connector to the selected node"
+            >
+            Add Output Connector
+        </button>
+        <button
+            ng-click="deleteSelected()"
+            ng-disabled="chartViewModel.getSelectedNodes().length == 0 && chartViewModel.getSelectedConnections().length == 0"
+            title="Delete selected nodes and connections"
+            >
+            Delete Selected
+        </button>
+    </div>
+    
+    This custom element defines the flowchart.
+    
+
+    <div id="dvSource">
+        <img alt="" src="images/activity.png" />
+                <img alt="" src="images/chat.png" />
+
+    </div>
+    <hr />
+    <div id="dvDest">
+        Drop here
+    </div>
+        <div class="scroll">
+            <flow-chart chart="chartViewModel" id="containerDiv">                
+            </flow-chart>                 
+        </div>
+</div>-->
+<div class="draggable">DRAG ME</div>
+<div class="draggable" id="dragActivity">DRAG ME ALSO!</div>
+<script type="text/javascript">
+    $('.draggable').draggable({helper: "clone"});
+    $('.draggable').bind('dragstop', function(event, ui) {
+        $(this).after($(ui.helper).clone().draggable());
+    });
+
+</script>

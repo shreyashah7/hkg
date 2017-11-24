@@ -1,0 +1,99 @@
+<style>
+    /*    .ui-grid-cell { display : table-cell; height: auto !important; overflow:visible; position: static; }
+        .ui-grid-row { display : table-row; height: auto !important; overflow:visible; position: static; }
+        .ui-grid-cell-contents{ height: auto !important; white-space: normal; overflow:visible; position: static; } */
+</style>
+<div class="col-xs-12 col-md-12 col-lg-12">
+    <form name="transactionLogForm" id="transactionLogForm">
+        <div class="col-xs-12 col-md-6 col-lg-6">
+
+            <label for="status" class="col-xs-3 col-md-2 col-lg-2 control-label" >{{entity + "Status"| translate}}</label>
+
+            <div class="col-xs-6 col-md-2 col-lg-4">
+                <select name="status" id="status" class="form-control" ng-model="transactionlog.status" >
+                    <option value="">Select Status</option>
+                    <option ng-repeat="s in statusList">{{s}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-xs-12 col-md-6 col-lg-6">
+
+            <label for="company" class="col-xs-3 col-md-2 col-lg-2 control-label" >{{entity + "Franchise"| translate}}</label>
+
+            <div class="col-xs-6 col-md-4 col-lg-4">
+                <select name="company" id="company" class="form-control"  ng-model="transactionlog.franchise" >
+                    <option value="">Select Franchise</option>
+                    <option ng-repeat="franchise in franchiseList">{{franchise}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-xs-12 col-md-12 col-lg-12">
+            &nbsp;
+        </div>
+
+        <div class="col-xs-12 col-md-9 col-lg-9">
+            <label class="col-xs-2 col-md-1 col-lg-1 control-label">{{ entity + 'From   '| translate}}</label>
+            <ag-datetime-picker input-class="col-md-3 col-lg-3 col-sm-8" submitted="submitted" defaultDate="true" 
+                                 defaultStartTime="00.00 AM" defaultEndTime="11.59 PM"
+                                form="transactionLogForm" 
+                                type="datetimerange" from-model="fromdate" to-model="todate"
+                                label-class="col-xs-1 col-md-1 col-lg-1 control-label" from-label="From" to-label="To" allow="past">
+
+            </ag-datetime-picker> 
+        </div>
+        <div class="col-xs-12 col-md-9 col-lg-9">
+            <input type="button" class="btn btn-hkg pull-right" value="Search" ng-click="filterTransactionLog()">
+        </div>
+    </form>
+    <div class="col-xs-12 col-md-12 col-lg-12">
+        &nbsp;
+    </div>
+    <div ng-hide="isEmptyRecordSet">
+        <div class="col-xs-12 col-md-12 col-lg-12"  ui-grid="gridOptions" ui-grid-feature1 ui-grid-feature2 ui-grid-pinning ui-grid-selection ui-grid-expandable ui-grid-pagination ui-grid-auto-resize></div>
+        <div class=" col-xs-12 col-md-12 col-lg-12">
+
+            <div class="row">
+                <hr/>
+                <div class="col-xs-6 pull-right text-right" >
+                    <button class="btn btn-hkg" ng-click="execute()">{{entity + 'Execute'| translate}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div ng-show="(isEmptyRecordSet) && (init == false)">
+        <div class="col-xs-12 col-lg-12">
+            <table class="table  table-bordered" >
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + 'No matching results found'| translate}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <!--    <table class="table table-striped">
+            <tr>
+                <th >{{entity+"Transaction Id" | translate}}</th>
+                <th >{{entity+"Sender" | translate}}</th>
+                <th >{{entity+"Receiver" | translate}}</th>
+                <th >{{entity+"Sent Time" | translate}}</th>
+                <th >{{entity+"Retries" | translate}}</th>
+                <th >{{entity+"Status" | translate}}</th>
+            </tr>
+            <tr ng-show="isEmptyRecordSet">
+                <td>{{entity+ "No recors found." | translate}}</td>
+            </tr>
+            <tr ng-repeat="log in logRecords" dt-rows>
+                
+                <td>
+                    {{log.transactionId}}
+                </td>
+                <td>{{log.senderJid}}</td>
+                <td>{{log.receiverJid}}</td>
+                <td>{{log.sentDate | date}}</td>
+                <td>{{log.noOfRetry}}</td>
+                <td>{{log.status}}</td>
+            </tr>
+        </table>-->
+</div>

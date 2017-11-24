@@ -1,0 +1,208 @@
+<form method="POST" class="form-horizontal"  novalidate>
+    <div ng-show="dataRetrieved" ng-form="editParcelForm" >
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Edit Parcel'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel" ng-init="registerLocationChangeEvent(editParcelForm);
+                initEditParcelForm(editParcelForm)">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && flag.searchFieldNotAvailable===true">
+                <table class="table table-bordered">
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the search field'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate && !flag.showUpdatePage">
+                <h4>{{entity + 'Search Parcel'| translate}}</h4>
+            </div>
+            <div ng-if="!flag.showAddPage && !flag.showUpdatePage">
+                <div ng-if="searchResetFlag">
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate" is-diamond ="true">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch(editParcelForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(editParcelForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="selectOneParameter">
+                    <div class="col-xs-12">&nbsp;</div>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Please select at least one field to search'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div ng-show="(!searchedData.length > 0 && listFilled)">
+                    <h4>{{entity + 'Searched Parcel'| translate}}</h4>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'No matching results found'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="searchedData && (searchedData.length) > 0">
+                    <div><h4>{{entity + 'Searched Parcels'| translate}}</h4></div>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-pinning ui-grid-selection ui-grid-auto-resize></div>
+                            <!--                            <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData" >
+                                                            <thead>
+                                                                <tr>
+                                                                    <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                                                    <th>{{ entity + 'Action' | translate }}</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr ng-repeat="searchDataObj in searchedData" dt-rows>
+                                                                    <td ng-repeat="key in modelAndHeaderList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                                                    <td><a ng-click="editParcel(searchDataObj)"><i class="glyphicon glyphicon-edit " title="{{ entity + 'Edit Parcel' | translate }}"></i></a></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="gridOptions.data &&gridOptions.data.length > 0 ">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-disabled="!selectedParcel || selectedParcel.length === 0" ng-click="editParcel()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.showUpdatePage">
+                <div ng-if="!flag.showAddPage && updateParcelTemplate.length === 0">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'First configure the parcel field to update'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="clearfix"></div>
+                <div ng-if="updateInvoiceTemplate && updateInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                    <!--<h4 ng-if="updateInvoiceTemplate">Invoice Detail</h4>-->
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceTemplate" 
+                                   ng-model="invoiceCustom" ng-if="updateInvoiceTemplate && invoiceCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}"  view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+                <div ng-if="updateParcelParentTemplate && updateParcelParentTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>
+                    <!--<h4 ng-if="updateParcelParentTemplate">Parcel Detail</h4>-->    
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbTypeParent" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateParcelParentTemplate" 
+                                   ng-model="parcelParentCustom" ng-if="updateParcelParentTemplate && parcelParentCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+
+                <div ng-if="parcelAddShow">
+                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                        <h4 ng-if="updateParcelTemplate">Update Parcel</h4>
+                    </div>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateParcelTemplate" 
+                                   ng-model="parcelCustom" ng-if="updateParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" edit-flag="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a  ng-click="onCanel(editParcelForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button ng-if="flag.customFieldGenerated && updateParcelTemplate.length > 0" 
+                                class="btn btn-hkg" ng-click="saveParcel(editParcelForm)">{{entity + 'Update Parcel'| translate}}</button>
+                            <button ng-if="flag.customFieldGenerated && canAccess('parcelDelete')" class="btn btn-hkg" ng-click="deleteParcel()">{{entity + 'Delete Parcel'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deletePopUp" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/addlot" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Parcel'| translate }}</h4>
+            </div>
+            <form  class="form-horizontal" name="deletePopUp" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete parcel?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteLot()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" role="dialog" id="deleteParcelPopUp" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hideParcelPopUp()">&times;</a>
+                <h4 class="modal-title" id="myParcelModalLabel">{{entity + 'Delete Parcel'| translate }}</h4>
+            </div>
+            <form  class="form-horizontal" name="deleteParcelPopUp" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete parcel?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hideParcelPopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteParcelFromPopup()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

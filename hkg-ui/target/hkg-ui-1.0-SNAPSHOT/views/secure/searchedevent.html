@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+    <!--<div class="col-xs-12">-->
+        <div ng-show="!searchEventRecords || searchEventRecords.length == 0">
+            {{ entity + "No matching results found" | translate }}
+        </div>
+        <h4 ng-if="searchEventRecords.length > 0">{{entity + 'Searched Event'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="(searchEventRecords.length) > 0">
+                <table class="table table-striped" cellspacing="0" width="100%" ag-data-table="searchEventRecords">
+                    <thead>
+                        <tr>
+                            <th class="col-md-1">
+                                {{ entity + 'No' | translate}}
+                            </th>
+                            <th class="col-md-3">
+                                {{ entity + 'Event Title' | translate}}
+                            </th>
+                            <th class="col-md-3">
+                                {{ entity + 'Start Date' | translate}}
+                            </th>
+                            <th class="col-md-3">
+                                {{ entity + 'Status' | translate}}
+                            </th>
+                            <th class="col-md-1" ng-if="canAccess('eventsAddEdit')">
+                                {{ entity + 'Action' | translate}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="event in searchEventRecords" dt-rows>
+                            <td class=" col-md-1" align="center"><span  ng-bind="{{$index + 1}}"></span></td>
+                            <td class="col-md-3"><span ng-bind="event.eventTitle"></span></td>
+                            <td class="col-md-3"><span ng-bind="ConvertTimeStamptodate(event.fromDate)"></span></td>
+                            <td class="col-md-3"><span ng-bind="event.status"></span></td>
+                            <td class='text-center col-md-1' ng-if="canAccess('eventsAddEdit')"><a><span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="editEvent(event.id)"></span></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <!--</div>-->

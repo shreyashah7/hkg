@@ -1,0 +1,383 @@
+<form method="POST" class="form-horizontal" name="writeForm" novalidate>
+    <div ng-show="dataRetrieved && !flag.showUpdatePage" ng-init="registerLocationChangeEvent(writeForm);
+            initWriteForm(writeForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Write'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate.length === 0">
+                <table class="table  table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the search field'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-xs-12" ng-show="!flag.showAddPage && nodeDetailsInfo.length > 1">
+                <div class="col-md-2">
+                    <label for="nodeId" class="control-label">{{entity + 'Select Node'| translate}}</label>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="nodeId" name="nodeId" ng-model="currentActivityNode" ng-change="updateStockAccordingToNode(currentActivityNode)" ng-options="node.nodeId as (node.nodeId +' - '+ node.groupName) for node in nodeDetailsInfo">
+                    </select>
+                </div>
+            </div>
+            <div ng-show="!flag.showAddPage">
+                <div class="clearfix">
+                    <div id='masterDetail' ng-if="listFilled && generalSearchTemplate.length>0">
+                        <h4>{{entity + 'Searched Stock'| translate}}</h4>
+                        <div class="form-group">
+                            <div  class="col-md-12" ng-if="listFilled && issuedStock.data && issuedStock.data.length>0">
+                                <div id="gridTable" ui-grid="issuedStock" ui-grid-selection  ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                            <div  class="col-md-12" ng-if="(listFilled && issuedStock.data.length=== 0)||!issuedStock">
+                                <br/>
+                                <table class="table  table-bordered" >
+                                    <tr>
+                                        <td class="col-md-12">
+                                            {{entity + 'No matching results found'| translate}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="issuedStock.data && issuedStock.data.length > 0 ">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-disabled="!selectedStock || selectedStock.length === 0" ng-click="addPlan()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="flag.showAddPage">
+                <div ng-if="flag.customFieldGenerated && generaInvoiceTemplate && generaInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                   ng-model="invoiceCustom" ng-if="generaInvoiceTemplate && invoiceCustom"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+
+                <div ng-if="flag.customFieldGenerated && generaParcelTemplate && generaParcelTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                   ng-model="parcelCustom" ng-if="generaParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+                <div ng-if="flag.customFieldGenerated && generalLotTemplate && generalLotTemplate.length > 0" id="lotParent" title="Lot Details" accordion-collapse>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                   ng-model="lotCustom" ng-if="generalLotTemplate && lotCustom"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+                <div ng-if="flag.customFieldGenerated && generalPacketTemplate && generalPacketTemplate.length > 0" id="packetParent" title="Packet Details" accordion-collapse>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketTemplate" 
+                                   ng-model="packetCustom" ng-if="generalPacketTemplate && packetCustom"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" view-only="true" is-diamond="true" >
+                    </dynamic-form>
+                </div>
+                <div>
+                    <div title="Existing Plans" ng-if="submittedPlan && (submittedPlan.length) > 0" accordion-collapse>
+                        <div class="form-group">                        
+                            <div  class="col-md-12" ng-if="planSubmit">
+                                <div id="gridTable" ui-grid="gridOptionForSubmit" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="flag.masterValueNotExist">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'First configure the master value'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="panel-heading"><h4>{{entity + modifyName | translate}}</h4></div>
+                    <div class="form-group panel-heading" ng-show="!flag.masterEmpty && flag.masterValueNotExist === false">
+                        <label for="noOfTag" class="col-md-2">{{entity + 'Add Tags'| translate }}</label>
+                        <div class="col-md-2 " ng-class="{'has-error': (writeForm.tag.$dirty || writeForm.tag.$error.exists) && writeForm.tag.$invalid}">
+                            <input type="text" class="form-control"  id ="tag" name="tag"  ng-model="tag" required  maxlength="3" min="1" ng-blur="numberOfTagChanged(tag)"/>
+                            <div ng-show="(writeForm.tag.$dirty || writeForm.tag.$error.exists) && writeForm.tag.$invalid">
+                                <span ng-show="(writeForm.tag.$error.required)" class="text-danger">{{entity + 'Tag value not entered'| translate }}</span>
+                            </div>
+                            <!--                            <select class="form-control" name="noOfTag" ng-options="no.title as no.title for no in numberOfTags" ng-model="tag" ng-change="numberOfTagChanged(tag)">
+                                                            <option value="" ng-show="listToShowBegin.length === 0">{{entity + 'Select'| translate }}</option>
+                                                        </select>-->
+                        </div>
+
+                    </div>
+                    <div class="form-group panel-heading">
+                        <!--<div class="container">-->
+                        <!--                            <div class="row">
+                                                        <div class="col-md-12">-->
+                        <div ng-if="flag.masterEmpty">
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'First configure values of Cut,Color,Clarity and Fluorescence from master'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <tabset style="overflow: hidden" ng-show="!flag.masterEmpty && tagList && tagList.length > 0">
+                            <tab ng-repeat="tab in tabManager.tagList" heading="{{tab.code}}" active="tab.active" disabled="tab.disabled" ng-click="tabChanged(tab.code)">                          
+                                <ng-form name="editMaster1">
+                                    <div class="form-group">
+                                        <div  class="col-md-12 table-responsive">    
+                                            <!--<div class="table-responsive">-->
+                                            <table class="table table-bordered " cellspacing="0" width="100%">
+                                                <tbody ng-form="editMaster1" novalidate>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Color'| translate }}</label>
+                                                                    <div ng-repeat="temp in tab.colorRadioList" class="col-md-1">
+                                                                        <input id="color" type="radio" class="hkg-dynamic-radio" ng-model="tab.selectColor" value="{{temp.color}}"  name="{{tab.colorGroup}}color"/>  
+                                                                        <label for="color">{{temp.name}}</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Clarity'| translate }}</label>
+                                                                    <div ng-repeat="temp in tab.clarity" class="col-md-1">
+                                                                        <input id="clarity" type="radio" class="radio radio-inline hkg-dynamic-radio" ng-model="tab.selectClarity" value="{{temp.clarity}}" name="{{tab.clarityGroup}}clarity"/>
+                                                                        <label for="clarity">{{temp.name}}</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Cut'| translate }}</label>
+                                                                    <div ng-repeat="temp in tab.cut" class="col-md-1">
+                                                                        <input id="cut" type="radio" class="radio radio-inline hkg-dynamic-radio" ng-model="tab.selectCut" value="{{temp.cut}}" name="{{tab.cutGroup}}cut"/>  
+                                                                        <label for="cut">{{temp.name}}</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Fluorescence'| translate }}</label>
+                                                                    <div ng-repeat="temp in tab.fluorescence" class="col-md-1">
+                                                                        <input id="fluorescence" type="radio" class="radio radio-inline hkg-dynamic-radio" ng-model="tab.selectFluorescence" value="{{temp.fluorescence}}" name="{{tab.fluorescenceGroup}}flo"/>  
+                                                                        <label for="fluorescence">{{temp.name}}</label>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Breakage'| translate }}</label>
+                                                                    <input id="breakage" type="checkbox" ng-model="tab.breakage" />  
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none" ng-init="getReference(editMaster1)">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Carat'| translate }}</label>
+                                                                    <div ng-class="{'has-error': (editMaster1.carat.$dirty || editMaster1.carat.$error.exists || submitted) && editMaster1.carat.$invalid}" class="col-md-1">
+                                                                        <input type="text" class="form-control"  id ="carat" name="carat"  ng-model="tab.carat"  maxlength="2" required numbers-only="numbers-only" ng-blur="caratChange(tab.carat, editMaster1, $index,tab.code)"/>
+                                                                        <div ng-show="(editMaster1.carat.$dirty || submitted) && editMaster1.carat.$invalid">
+                                                                            <span ng-show="(editMaster1.carat.$error.required)" class="text-danger">{{entity + 'Carat not entered'| translate }}</span>
+                                                                        </div>
+                                                                        <span ng-show="editMaster1.carat.$error.exists" class="text-danger">{{entity + 'Carat not entered'| translate }}</span>
+                                                                    </div>
+                                                                    <div class="col-md-1 pull-left">
+                                                                        <span>{{entity + 'Cent'| translate }}</span>
+                                                                    </div>
+                                                                    <div ng-class="{'has-error': (editMaster1.cents.$dirty || editMaster1.cents.$error.exists || submitted) && editMaster1.cents.$invalid}" class="col-md-1">
+                                                                        <input type="text" class="form-control"  id ="cents" name="cents"  ng-model="tab.cents" ng-blur="centChange(tab.cents, editMaster1, $index,tab.code)"  maxlength="2" required numbers-only="numbers-only"/>
+                                                                        <div ng-show="(editMaster1.cents.$dirty || submitted) && editMaster1.cents.$invalid">
+                                                                            <span ng-show="(editMaster1.cents.$error.required)" class="text-danger">{{entity + 'Cent not entered'| translate }}</span>
+                                                                        </div>
+                                                                        <span ng-show="editMaster1.cents.$error.exists" class="text-danger">{{entity + row.value + ' already entered'| translate }}</span>
+                                                                    </div>
+                                                                    <div class="col-md-2 pull-left">
+                                                                        <a ng-click="calculatePrice(tab.code)">{{entity + 'Calculate'| translate }}</a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                        </td>
+                                                    </tr>
+                                                    <tr ng-if="hasPriceCalculatorRight">
+                                                        <td style="border: none">
+                                                            <div class="form-group">
+                                                                <div class="col-md-12" style="padding-left:0px;padding-right:0px ">
+                                                                    <label class="col-md-2 control-label">{{entity + 'Price'| translate }}</label>
+                                                                    <div ng-class="{'has-error': (editMaster1.carat.$dirty || editMaster1.carat.$error.exists || submitted) && editMaster1.carat.$invalid}" class="col-md-2">
+                                                                        <select class="form-control" name="noOfTag" ng-options="no.currency as no.currency for no in currencyCodeList" ng-model="tab.currencyCode">
+                                                                        </select>
+                                                                    </div>
+                                                                    <div ng-class="{'has-error': (editMaster1.price.$dirty || submitted) && editMaster1.price.$invalid}" class="col-md-1">
+                                                                        <input type="text" class="form-control"  id ="price" name="price" ng-disabled="true" ng-model="tab.price" required />
+                                                                        <div ng-show="(editMaster1.price.$dirty || submitted) && editMaster1.price.$invalid">
+                                                                            <span ng-show="(editMaster1.price.$error.required)" class="text-danger">{{entity + 'Price not calculated'| translate }}</span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="border: none">
+                                                            <div ng-if="fieldNotConfigured">
+                                                                <table class="table table-bordered">
+                                                                    <tr>
+                                                                        <td class="col-md-12">
+                                                                            {{entity + 'Mandatory fields are not configured for your designation, Please contact administrator'| translate}}
+                                                                        </td>
+                                                                    </tr>
+                                                                </table>
+                                                            </div>
+                                                            <div ng-if="(writeAddFlag && flag.customFieldGenerated && hasPriceCalculatorRight)||(hasPriceCalculatorRight===false && fieldNotConfigured===false)">
+                                                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="writeDbType" 
+                                                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalWriteTemplate" 
+                                                                               ng-model="categoryCustom" ng-if="generalWriteTemplate && writeAddFlag"  invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" lot-id="{{lotIdForConstraint}}" is-diamond="true" edit-flag="false">
+                                                                </dynamic-form>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <!--                                            <tr>
+                                                                                                    <td ng-init="getReference(editMaster1)">
+                                                                                                        <label class="col-md-1 control-label">{{entity + 'Price'| translate }}</label>
+                                                                                                        <div ng-class="{'has-error': (editMaster1.carat.$dirty || editMaster1.carat.$error.exists || submitted) && editMaster1.carat.$invalid}" class="col-md-1">
+                                                                                                            <input type="text" class="form-control"  id ="carat" name="carat"  ng-model="tab.carat"  maxlength="2" required numbers-only="numbers-only" ng-blur="caratChange(tab.carat, editMaster1, $index,tab.code)"/>
+                                                                                                            <div ng-show="(editMaster1.carat.$dirty || submitted) && editMaster1.carat.$invalid">
+                                                                                                                <span ng-show="(editMaster1.carat.$error.required)" class="text-danger">{{entity + 'Value not entered'| translate }}</span>
+                                                                                                            </div>
+                                                                                                            <span ng-show="editMaster1.carat.$error.exists" class="text-danger">{{entity + row.value + ' already entered'| translate }}</span>
+                                                                                                        </div>
+                                                                                                    </td>
+                                                                                                </tr>-->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </ng-form>
+                            </tab>
+                        </tabset>
+                        <!--</scrollable-tabset>-->
+                        <!--                                </div>
+                                                    </div>-->
+                        <!--</div>-->
+                        <!--</div>-->
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="flag.customFieldGenerated">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a ng-click="onCancel(writeForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button ng-if="!flag.editMode" class="btn btn-hkg" ng-disabled="flag.masterEmpty || ((hasPriceCalculatorRight === false && fieldNotConfigured === true))" ng-click="savePlan(writeForm)">{{entity + 'Save'| translate}}</button>
+                            <button ng-if="flag.editMode" class="btn btn-hkg" ng-click="saveEditedPlan(writeForm)">{{entity + 'Save'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' class="panel-heading" ng-if="enteredPlan && enteredPlan.length > 0">
+                    <div><h4>{{entity + 'Plans Entered'| translate}}</h4></div>
+                    <div class="row" ng-if="canAccess('viewPreviousPriceList')">
+                        <div class="col-md-2">{{entity + "View Previous Price" | translate}}</div>
+                        <div class="col-md-3">
+                            <select id="pricelist" class="form-control" ng-change="retrievePreviousValue()" name="pricelist" ng-model="flag.pricelist" ng-options="key as value for (key , value) in pricelistDtl">
+                                <option value="">{{entity + "--Select--" | translate}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="planSelect">
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-selection  ui-grid-pinning ui-grid-auto-resize></div>
+                            <!--                            <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData" >
+                                                            <thead>
+                                                                <tr>
+                                                                    <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                                                    <th>{{ entity + 'Action' | translate }}</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr ng-repeat="searchDataObj in searchedData" dt-rows>
+                                                                    <td ng-repeat="key in modelAndHeaderList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                                                    <td><a ng-click="editLot(searchDataObj)"><i class="glyphicon glyphicon-edit " title="{{ entity + 'Edit Lot' | translate }}"></i></a></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="enteredPlan.length > 0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <!--<button  class="btn btn-hkg" ng-disabled="((!selectedLotOrPacket || selectedLotOrPacket.length === 0) ||selectedLotOrPacket[0].tag!=='A')" ng-click="submitPlan(writeForm)">{{entity + 'Submit'| translate}}</button>-->
+                            <button  class="btn btn-hkg" ng-disabled="(numberOfMainTag.length < plansToBeSubmitted)" ng-click="submitPlan(writeForm)">{{entity + 'Submit'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deleteDialog" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Plan'| translate }}</h4>
+            </div>
+            <form  class="form-horizontal" name="deleteDialog" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete plan?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deletePlan()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

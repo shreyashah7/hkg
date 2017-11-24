@@ -1,0 +1,63 @@
+<form method="POST" class="form-horizontal" name="generateSlipForm" novalidate>
+    <div class="row" ng-init="initializeData();
+            initializeFinalData();
+            initGenerateSlipForm(generateSlipForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Generate Slip'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div>
+                <div class="col-xs-12">
+                    <table class="table table-bordered" ng-if="generalSearchTemplate && generalSearchTemplate.length === 0 && flag.configSearchFlag === true ">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Configure search fields to generate slip'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table table-bordered" ng-if="(generalSearchTemplate && generalSearchTemplate.length > 0 && !generateSlipList.length > 0 && flag.configSearchFlag === false)">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'No Lots/packets found to generate slip'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-xs-12" ng-show="nodeDetailsInfo.length > 1">
+                    <div class="col-md-2">
+                        <label for="nodeId" class="control-label">{{entity + 'Select Node'| translate}}</label>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="nodeId" name="nodeId" ng-model="currentActivityNode" ng-change="updateStockAccordingToNode(currentActivityNode)" ng-options="node.nodeId as (node.nodeId +' - '+ node.groupName) for node in nodeDetailsInfo">
+                        </select>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="(generateSlipList.length) > 0">
+                    <div><h4>{{entity + 'Searched Lots/Packets'| translate}}</h4></div>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                    </div>  
+                </div>
+                <div class="col-xs-12" ng-if="(generateSlipList.length) > 0 && flag.rowSelectedflag">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCancelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="generateSlip()">{{entity + 'Generate'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

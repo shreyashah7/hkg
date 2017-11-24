@@ -1,0 +1,43 @@
+<div class="form-group">
+    <div class="col-xs-12">        
+        <div ng-show="!searchRecords || searchRecords.length == 0">
+            {{ entity + "No matching results found" | translate }}
+        </div>
+        <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Messages'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchRecords && (searchRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>{{entity + 'Message'|translate}}</th>
+                            <th>{{entity + 'Sender'|translate}}</th>
+                            <th>{{entity + 'Receiver'|translate}}</th>
+                            <!--<th>{{entity + 'Action On'|translate}}</th>-->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="message in searchRecords" dt-rows>
+                            <td class="col-md-1">
+                                 <div class="col-xs-2">
+                                    <span class="hkg-input-img glyphicon glyphicon-star" tooltip-html-unsafe="{{hasprioritytooltip}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom" ng-if="message.hasPriority"></span>                                      
+                                </div>
+                            </td>
+                            <td>
+                                [{{message.messageType}}]
+                                <span ng-show="message.messageBody.length <= 25">{{message.messageBody}}</span>
+                                <span ng-show="message.messageBody.length > 25" tooltip="{{message.messageBody}}" tooltip-trigger="mouseenter" tooltip-placement="right">{{message.shortMessage}}...</span>
+                            </td>
+                            <td class="col-md-3">{{message.createdBy}}</td>
+                            <td>
+                                <span ng-show="message.fullname == null">{{message.nameRecipient}}</span>
+                                <span ng-show="message.fullname.length > 0" tooltip="{{message.fullname}}" tooltip-trigger="mouseenter" tooltip-placement="right">{{message.nameRecipient}}...</span>
+                            </td>
+                            <!--<td><span class="glyphicon glyphicon-edit" title="{{entity + 'Copy'|translate}}" ng-click="setMessageForEdit(message.id)"></span></td>-->
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>        
+    </div>
+</div>

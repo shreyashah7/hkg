@@ -1,0 +1,163 @@
+<div>
+    <form method="POST" class="form-horizontal" name="currencyForm" novalidate>
+        <div class="form-group required" ng-init="registerLocationChangeEvent(currencyForm);
+                initCurrencyForm(currencyForm)">
+            <label for="currencyCode"  class="col-md-2 control-label">
+                <span>{{ entity + 'Currency Code' | translate}}</span>
+            </label>
+            <div class="col-xs-8 col-lg-4" ng-class="{
+                    'has-error'
+                    : selectedEventCategoryDropdown.currentNode.id === 'D' && (currencyForm.eventCategory.$dirty || submitted)}"> 
+                <div>
+                    <div class="dropdown" >
+                        <button ng-disabled="currencyMasterDataBean.id !== undefined" class="dropdown-toggle hkg-scrollableDropDown-menu form-control" data-toggle="dropdown">
+                            <span class="pull-left" ng-bind="selectedEventCategoryDropdown.currentNode.displayName"></span><span class="caret pull-right no-margin"></span>
+                        </button>
+                        <div class="dropdown-menu col-xs-12 hkg-scrollableDropDown-menu hkg-scrollableDropDown-tree">
+                            <div ng-click='currencyDropdownClick(selectedEventCategoryDropdown, currencyForm);'
+                                 data-angular-treeview="true"
+                                 data-tree-id="selectedEventCategoryDropdown"
+                                 ag-treemodel="eventCategoryListDropdown" search-id="eventCategoryId">
+                            </div>
+
+                        </div>
+                        <div class="error,help-block" ng-show="(currencyForm.eventCategory.$dirty || submitted)">
+                            <span class="help-block" ng-show="selectedEventCategoryDropdown.currentNode.id === 'D'">{{ entity + 'Currency code not selected' | translate}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='form-group required'>
+            <label for="symbolPosition"  class="col-md-2 control-label">
+                {{ entity + 'Symbol Position' | translate}}
+            </label>
+            <div class="col-md-4"> 
+                <label class="radio-inline">
+                    <span ng-show="eventCategoryId && eventCategoryId.length > 0 && eventCategoryId !== 'D'">######</span>
+                    <input type="radio" name="radio_Active" ng-value="true" ng-model="currencyMasterDataBean.symbolPosition" />{{ entity + 'Prefix' | translate}}
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="radio_Active" ng-value="false" ng-model="currencyMasterDataBean.symbolPosition"/>{{ entity + 'Suffix' | translate}}
+                    <span ng-show="eventCategoryId && eventCategoryId.length > 0 && eventCategoryId !== 'D'">######</span>
+                </label>
+            </div>
+        </div>
+        <div class='form-group required'>
+            <label for="displayFormat"  class="col-md-2 control-label">
+                {{ entity + 'Display Format' | translate}}
+            </label>
+            <div class="col-md-4" ng-class="{
+                    'has-error'
+                    : currencyForm.displayFormat.$invalid && (currencyForm.displayFormat.$dirty || submitted)}"> 
+                <input type='text' id="format" whitespace="whitespace" placeholder="only # , . are allowed" ng-model="currencyMasterDataBean.format" id="displayFormat" name="displayFormat" class="form-control" required maxlength="100" ng-change="checkPattern(currencyMasterDataBean.format)" ng-pattern="/^[#.,]*$/"/>
+                <div class="error,help-block" ng-show="(currencyForm.displayFormat.$dirty || submitted) && currencyForm.displayFormat.$invalid">
+                    <span class="help-block" ng-show="currencyForm.displayFormat.$error">{{ entity + 'Display format is not valid' | translate}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class='form-group required'>
+            <label for="referenceRate"  class="col-md-2 control-label">
+                {{ entity + 'Reference Rate' | translate}}
+            </label>
+            <div class="col-md-4" ng-class="{
+                    'has-error'
+                    : currencyForm.referenceRate.$invalid && (currencyForm.referenceRate.$dirty || submitted)}">
+                <input id="referenceRate" type='text' whitespace="whitespace" placeholder="######.###" required ng-model="currencyMasterDataBean.lastReferenceRate" id="referenceRate" name="referenceRate" class="form-control" maxlength="100"  ng-disabled="currencyMasterDataBean.id !== undefined || eventCategoryId === 'INR'" ng-pattern="/^[0-9]*\.{0,1}[0-9]{1,3}$/"/>
+                <div class="error,help-block" ng-show="(currencyForm.referenceRate.$dirty || submitted) && currencyForm.referenceRate.$invalid">
+                    <span class="help-block" ng-show="currencyForm.referenceRate.$error">{{ entity + 'Reference rate format is not valid' | translate}}</span>
+                </div>
+            </div>
+            <div class="col-md-3 pull-left text-left" style="margin-top:5px;">
+                <span>INR</span>&nbsp;&nbsp;&nbsp;
+                <span class="glyphicon glyphicon-plus-sign text-primary" ng-show="currencyMasterDataBean.id !== undefined"></span>&nbsp;<a ng-show="currencyMasterDataBean.id !== undefined" ng-click="showPopUp(currencyForm)">{{entity + 'Update reference rate'| translate }}</a>
+            </div>
+        </div>
+        <!--        <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" db-map="dbType" 
+                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalEventTemplate" 
+                               ng-model="addEventData" ng-if="generalEventTemplate">
+                </dynamic-form>      -->
+
+        <div class="col-md-6">
+            <div class="row">
+                <hr/>
+                <div class="col-md-5 text-right pull-right"> 
+                    <a href="" ng-click="onCanel(currencyForm)">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="createCurrency(currencyForm)">
+                        <span ng-bind="entity + 'Save' | translate"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div id='masterDetail' ng-show="currencyList && (currencyList.length) > 0 && listFilled">
+            <div class="form-group">
+                <br/><br/>
+                <div  class="col-md-12" ng-if="listFilled">
+                    <table class="table" cellspacing="0" width="100%" ag-data-table="currencyList" >
+                        <thead>
+                            <tr>
+                                <th>{{entity + "Sr.No."|translate}}</th>
+                                <th>{{entity + "Currency Code"|translate}}</th>
+                                <th>{{entity + "Symbol Position"|translate}}</th>
+                                <th>{{entity + "Format"|translate}}</th>
+                                <th>{{entity + "Reference Rate(INR)" | translate}}</th>
+                                <th>{{entity + "Updated On"|translate}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="row in currencyList" dt-rows>
+                                <td>{{$index + 1}}</td>
+                                <td><span>
+                                        <a class="wordRap" ng-click="editCurrency(row)" title="{{entity + 'Click to edit'|translate}}">{{row.code}} ({{(row.currencyName)}})</a>
+                                    </span>
+                                </td>
+                                <td ng-if="row.symbolPosition === 'S'">###### {{row.code}}</td>
+                                <td ng-if="row.symbolPosition === 'P'">{{(row.code)}} ######</td>
+                                <td class="wordRap">{{row.format}}</td>
+                                <td class="wordRap">{{row.lastReferenceRate}}</td>
+                                <td>{{row.lastModifiedOn|date:"d MMM y"}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" data-backdrop="static" data-keyboard="false" role="dialog" id="confirmationPopUp" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" href="#/managereferencerate" ng-click="hideConfirmationPopUp()">&times;</a>
+                        <h4 class="modal-title" id="myModalLabel">{{entity + 'Update Currency'| translate }}</h4>
+                    </div >
+                    <form  class="form-horizontal" name="overridePopUp" role='form'>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    {{entity + "Do you want to save changes before proceeding further?"| translate }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-12 pull-right text-right"><a ng-click="hideConfirmationPopUp()">No</a>&nbsp;
+                                            <button class="btn btn-hkg " ng-click="updateCurrency(currencyForm)">{{ entity + "Yes" | translate }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+

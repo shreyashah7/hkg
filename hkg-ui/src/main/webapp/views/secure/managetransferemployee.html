@@ -1,0 +1,220 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>
+                    <li>{{ entity + 'Manage' | translate}}</li>
+                    <li>{{ entity + 'Employee' | translate}}</li>
+                    <li class="active uppercase" >{{ entity + 'Transfer Employees' | translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="row">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div class="col-xs-12">              
+                    <form class="form-horizontal" role="form"  name="transferEmployeeForm" novalidate> 
+                        <div class="form-group required">
+                            <label for="selectDepartment" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'From Department'| translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8"  ng-class="{'has-error': transferEmployeeForm.selectDepartment.$invalid && (transferEmployeeForm.selectDepartment.$dirty || submitted)}">
+                                <input type="text" class="col-md-12 hkg-nopadding" ng-required='true' name="selectDepartment" id="selectDepartment" ui-select2="multiDepartments" ng-model="selectedDepartments"/>
+                                <div class="error,help-block" ng-show="(transferEmployeeForm.selectDepartment.$dirty || submitted) && transferEmployeeForm.selectDepartment.$invalid">
+                                    <span class="help-block" ng-show="transferEmployeeForm.selectDepartment.$error.required">{{entity + 'Select atleast 1 Department'| translate }}</span>
+                                </div> 
+                            </div>              
+                            <label for="selectShift" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'From Shift'| translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': transferEmployeeForm.selectShift.$invalid && (transferEmployeeForm.selectShift.$dirty || submitted)}">
+                                <input type="text" class="col-md-12 hkg-nopadding" ng-required='true' name="selectShift" id="selectShift" ui-select2="multiShifts" ng-model="selectedShifts"/>
+                                <div class="error,help-block" ng-show="(transferEmployeeForm.selectShift.$dirty || submitted) && transferEmployeeForm.selectShift.$invalid">
+                                    <span class="help-block" ng-show="transferEmployeeForm.selectShift.$error.required">{{entity + 'Select atleast 1 Shift'| translate }}</span>
+                                </div> 
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 pull-right text-right">
+                            <a href="" ng-click="cancelSelectedValues()">
+                                {{ entity + 'Cancel' | translate}}
+                            </a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveEmployeesByShiftAndByDept()">{{entity + "Submit"| translate}}</button>&nbsp;
+                        </div>
+                        <hr>
+                        <h4>{{entity + "Transfer Details"|translate}}</h4>
+                        <div class="form-group">
+                            <label for="selectToDepartment" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'To Department'| translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': transferEmployeeForm.selectToDepartment.$invalid}">
+                                <select class="form-control" name="selectToDepartment" ng-model="transfer.toDept" ng-change="changeShiftByToDept()">
+                                    <option value="" selected="">{{entity + '--Select-- '| translate}}</option>
+                                    <option ng-repeat="item in departmentList" value="{{item.id}}">{{item.text}}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="(transferEmployeeForm.selectToDepartment.$dirty || submitted) && transferEmployeeForm.selectToDepartment.$invalid">
+                                    <span class="help-block" ng-show="transferEmployeeForm.selectToDepartment.$error.required">{{entity + 'Select To Department'| translate }}</span>
+                                </div>   
+                            </div>
+
+                            <label for="selectToShift" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'To Shift'| translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': transferEmployeeForm.selectToShift.$invalid}">
+                                <select class="form-control" name="selectToShift" ng-model="transfer.toShift" ng-change="changeEmployeeShift()">
+                                    <option value="" selected="">{{entity + '--Select-- '| translate}}</option>
+                                    <option ng-repeat="item in toShiftList" value="{{item.id}}">{{item.text}}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="(transferEmployeeForm.selectToShift.$dirty || submitted) && transferEmployeeForm.selectToShift.$invalid">
+                                    <span class="help-block" ng-show="transferEmployeeForm.selectToShift.$error.required">{{entity + 'Select To Shift'| translate }}</span>
+                                </div>   
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="input_empReportsTo" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Reports To'|translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8">
+                                <div class="input-group">
+                                    <input type="text"  id="input_empReportsTo" name="input_empReportsTo" class="col-xs-12 hkg-nopadding" ui-select2="autoCompleteApprover" ng-model="transfer.reportsToId"/>
+                                    <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span>
+                                </div>
+                            </div>
+                            <label for="input_empstatus" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Employee Status'|translate}}</label>
+                            <div class="col-lg-4 col-md-4 col-sm-8">
+                                <select class="form-control"  id="input_empstatus" name="input_empstatus" ng-model="transfer.workstatus" ng-options="empstatus.value as empstatus.label for empstatus in statusList" ng-change="changeEmployeeStatus()">
+                                    <option value="">{{entity + '--Select-- '| translate}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" ng-form="resigned_form">
+                            <div  ng-show="transfer.workstatus === 3">
+                                <label for="input_resigned_date" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Relieving Date'|translate}}</label>
+                                <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': resigned_form.input_resigned_date.$error.required }"> 
+                                    <span class="input-group">
+                                        <input type="text" id="input_resigned_date" name="input_resigned_date" class="form-control" placeholder="{{format}}" datepicker-popup="{{format}}" ng-required="{{transfer.workstatus === 3}}" ng-model="transfer.relievingDate" is-open="opened_relieving_date" close-text="Close" min="minRelievedDate" ng-change="changeEmployeeRelievingDate()"/>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" ng-click="open($event);
+                                                opened_relieving_date = true;"><i class="glyphicon glyphicon-calendar"></i></button>
+                                        </span>
+                                    </span> 
+                                    <div class="error,help-block" ng-show="resigned_form.input_resigned_date.$invalid">
+                                        <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.required && !(holidayForm.holidayEndDate.$error.date || holidayForm.holidayEndDate.$error.min || holidayForm.holidayEndDate.$error.max)">
+                                            {{ entity + "Relieving date not selected" | translate }}</span>
+                                        <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                        <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                        <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <br>
+            <br>
+            <form class="form-horizontal" role="form"  name="employeeTableForm" novalidate> 
+                <div class="row">
+                    <div class="col-xs-12">  
+                        <div class="table-responsive">
+                            <div ng-if="newEmployeeList.length > 0">
+                                <table width="100%" class="table table-hover" ag-data-table="newEmployeeList" dt-options="empDtOptions">
+                                    <thead>
+                                        <tr>
+                                            <th class="sorting_asc_disabled col-md-1" style="width: 9.333333%;">
+                                                {{ entity + 'Select' | translate}}
+                                                <input name="selectAll" id="selectAll" ng-value="selectAll" type="checkbox" ng-model="transfer.selectAll" ng-change="selectDeselectEmployee()"/>
+                                            </th>
+                                            <th class="col-md-2">
+                                                {{ entity + 'Employee' | translate}}
+                                            </th>
+                                            <th class="col-md-2">
+                                                {{ entity + 'To Department' | translate}}
+                                            </th>
+                                            <th class="col-md-2">
+                                                {{ entity + 'To Shift' | translate}}
+                                            </th>
+                                            <th class="col-md-2">
+                                                {{ entity + 'Reports To' | translate}}
+                                            </th>
+                                            <th>
+                                                {{ entity + 'Employee Status' | translate}}
+                                            </th>
+                                            <th ng-if="(transfer.workstatus === 3 || count > 0)">
+                                                {{ entity + 'Relieving Date' | translate}}
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+                                    <tbody >
+                                        <tr ng-repeat="employee in newEmployeeList" dt-rows ng-form="employeeForm">
+                                            <td><input name="group" id="{{employee.id}}" ng-value="{{employee.id}}" type="checkbox" ng-model="employee.selected"/></td>
+                                            <td>
+                                                <span ng-bind="employee.empName"></span>
+                                            </td>
+                                            <td>
+                                                <select ng-disabled="!employee.selected" class="form-control" name="selectToDepartmentTable" ng-model="employee.departmentId" ng-change="changeEmployeeSiftDropdown($index)" ng-options="dept.id as dept.text for dept in employeeDepartment">
+                                                    <option value="" selected="">{{entity + '--Select-- '| translate}}</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select ng-disabled="!employee.selected" class="form-control" name="selectToShiftTable" ng-model="employee.workshift" ng-options="shift.id as shift.text for shift in employee.empShift">
+                                                    <option value="">{{entity + '--Select-- '| translate}}</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="input-group" ng-disabled="!employee.selected">
+                                                    <input ng-disabled="!employee.selected" type="text"  id="input_empReportsToTable{{employee.id}}" name="input_empReportsToTable" class="col-xs-12 hkg-nopadding" ui-select2="employee.select2Config" ng-model="employee.reportsToId"/>
+                                                    <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <!--<div class="row">-->
+                                                <select ng-disabled="!employee.selected" class="form-control"  id="input_empstatusTable" name="input_empstatusTable" ng-model="employee.workstatus" ng-options="empstatus.value as empstatus.label for empstatus in statusList" required ng-change="changeEmployeeRelievingTableDateOnStatus($index)">
+                                                    <option value="">{{entity + '--Select-- '| translate}}</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div ng-if="((transfer.workstatus === 3 && employee.workstatus === 3) || employee.workstatus === 3)" ng-class="{'has-error': employeeForm.table_input_resigned_date.$error.required}"> 
+                                                    <span class="input-group">
+                                                        <input  type="text" id="table_input_resigned_date{{employee.id}}" name="table_input_resigned_date"  placeholder="{{format}}" class="form-control" datepicker-popup="{{format}}" ng-required="employee.selected && ((transfer.workstatus === 3 && employee.workstatus === 3) || employee.workstatus === 3)" ng-model="employee.relievingDate" is-open="opened_relieving_date_table" close-text="Close" min="minRelievedDate"/>
+                                                        <span class="input-group-btn">
+                                                            <button ng-disabled="!employee.selected" class="btn btn-default" ng-click="open($event);
+                                                                    opened_relieving_date_table = true;"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                        </span>
+                                                    </span> 
+                                                    <div class="error,help-block" ng-show="employeeForm.table_input_resigned_date.$invalid">
+                                                        <span class="help-block" ng-show="employeeForm.table_input_resigned_date.$error.required && !(employeeForm.table_input_resigned_date.$error.date || employeeForm.table_input_resigned_date.$error.min || employeeForm.table_input_resigned_date.$error.max)">
+                                                            {{ entity + "Relieving date not selected" | translate }}</span>
+                                                        <span class="help-block" ng-show="employeeForm.table_input_resigned_date.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                        <span class="help-block" ng-show="employeeForm.table_input_resigned_date.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                        <span class="help-block" ng-show="employeeForm.table_input_resigned_date.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                    </div>
+                                                </div>
+                                                <!--</div>-->
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-lg-12 col-md-12 col-xs-12" ng-if="newEmployeeList.length === 0 || newEmployeeList === null">
+                                <table class="table table-bordered" >
+                                    <tr>
+                                        <td class="col-md-12">
+                                            <span ng-bind="entity + 'No Employee Found' | translate"></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>  
+                        </div>
+                        <div class="col-xs-12 pull-right text-right" ng-if="newEmployeeList.length > 0">
+                            <a href="" ng-click="cancelSelectedValues()">
+                                {{ entity + 'Cancel' | translate}}
+                            </a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="employeeTransfer()">{{entity + "Transfer"| translate}}</button>&nbsp;
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+</div>
+

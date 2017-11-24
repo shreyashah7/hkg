@@ -1,0 +1,28 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-show="!(searchedAssetRecords.length) > 0">
+                    {{ entity + "No matching results found" | translate }}
+                </div>
+        <h4 ng-if="searchedAssetRecords.length > 0">{{entity + 'Available Assets'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="(searchedAssetRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchedAssetRecords">
+                    <thead>
+                        <tr>
+                            <th>{{entity + 'Asset Name'|translate}}</th>
+                            <th>{{entity + 'Category'|translate}}</th>
+                            <th>{{entity + 'Action'|translate}} </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="asset in searchedAssetRecords" dt-rows>                            
+                            <td><span class="wordRap" ng-bind="asset.modelName"></span></td>
+                            <td><span class="wordRap" ng-bind="asset.parentCategory"></span></td>
+                            <td align="center"><a><span  class="glyphicon glyphicon-edit" ng-click="setAssetForEdit(asset.id);" title="Edit"></span></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

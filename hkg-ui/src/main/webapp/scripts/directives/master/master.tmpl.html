@@ -1,0 +1,224 @@
+<span id="passwordPopUp_A_{{masterCode}}_A_{{(modalName !== null ? modalName : '')}}" ng-show="canAccess('addMasterValueShortcut')">
+    <span class="glyphicon glyphicon-plus-sign text-info" style="cursor: pointer;vertical-align: bottom;" ng-click="initMasterChange();"></span>
+</span>
+<script type="text/ng-template" id="passwordPopUp.html">
+<div ng-show="showPopup">
+    <div class="modal-content">
+        <div class="modal-header">
+            <a class="close" ng-click="hideConfirmationPopup()">&times;</a>
+            <h4 class="modal-title" id="myModalLabel">{{ entity + 'Dual authentication' | translate}}</h4>
+        </div>
+        <div class="modal-body">
+            <div>
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        {{ entity + 'You require special permissions to add master value' | translate}}
+                    </div>
+                </div>
+                <div class="form-group required row">
+                    <div class="col-md-3">
+                        <label class="col-md-3 control-label" for="password">{{ entity + 'Password:' | translate}}</label>
+                    </div>
+                    <div class="col-md-4" ng-class="{'has-error': (flags.passwordEmpty || flags.invalidPassword)}">
+                        <input type="password" class="form-control" ng-change="passwordChange();" ng-model="$parent.password" id="password" name="password">
+                        <div ng-show="(flags.passwordEmpty || flags.invalidPassword)">
+                            <span ng-show="flags.invalidPassword" class="text-danger">{{entity + 'You have entered wrong password'| translate}}</span>
+                            <span ng-show="flags.passwordEmpty" class="text-danger">{{entity + 'Value not entered'| translate }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-group row">
+                <div class="col-xs-12 pull-right text-right">
+                    <a ng-click="hideConfirmationPopup();">{{entity + 'Cancel'| translate}}</a>
+                    &nbsp;
+                    <button id="passwordProceed" class="btn btn-hkg" ng-click="proceed()">{{ entity + "Proceed" | translate }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div ng-show="!showPopup">
+    <div class="modal-content">
+        <div class="modal-header">
+            <a class="close" ng-click="hideConfirmationPopup()">&times;</a>
+            <h4 class="modal-title" id="myModalLabel">{{masterName}}</h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form role="form" class="form-horizontal" novalidate name="forms.editMasterForm" method="POST">
+                        <div>
+                            <div>
+                                <div class="form-group row">
+                                    <div  class="col-xs-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered" cellspacing="0" width="100%" data-table="detailOfMaster">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Shortcut</th>
+                                                        <th>Value</th>
+                                                        <th>Often Used?</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr ng-form="editMaster1">
+                                                        <td>
+                                                            <div ng-class="{'has-error': (flags.shortcutExists)}">
+                                                                <input ng-form="shotcutCodeForm" type="text" class="form-control" name="shortcutCode" id="shortcutCode" ng-model="currentMaster.shortcutCode" ng-change="shortCutExists(currentMaster)" maxlength="2" numbers-only="numbers-only"/>
+                                                                <span ng-show="flags.shortcutExists" class="text-danger">{{entity + 'Shortcut already assigned'| translate }}</span>
+                                                            </div>
+                                                        </td>
+
+                                                        <td>
+                                                            <div ng-class="{'has-error': (editMaster1.masterValue.$dirty || editMaster1.masterValue.$error.exists || valueSubmitted) && editMaster1.masterValue.$invalid}">
+                                                                <input ng-pattern="/^[^.]+$/" type="text" class="form-control"  id ="masterValue" name="masterValue"  ng-model="currentMaster.value" ng-change="masterValueExists(currentMaster, $index)"  maxlength="100" required ng-required="true"/>
+                                                                <div ng-show="(editMaster1.masterValue.$dirty || valueSubmitted) && editMaster1.masterValue.$invalid">
+                                                                    <span ng-show="(editMaster1.masterValue.$error.required)" class="text-danger">{{entity + 'Value not entered'| translate }}</span>
+                                                                </div>
+                                                                <span ng-show="editMaster1.masterValue.$error.exists" class="text-danger">{{entity + currentMaster.value + ' already entered'| translate }}</span>
+                                                                <span class="help-block" ng-show="editMaster1.masterValue.$error.pattern">{{ entity + 'Value is invalid ' | translate}}</span>
+                                                            </div>
+
+                                                        </td>
+                                                        <td>
+                                                            <input type="checkbox" id="oftenUsed" class="checkbox checkbox-inline" ng-model="currentMaster.isOftenUsed" ng-checked="currentMaster.isOftenUsed" ng-true-value='true'/>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-5">
+                    <h4><span title="{{masterName}}">Add Exception - {{masterName.length > 50 ? masterName.substring(0, 50) + '...' : masterName}}</span></h4>
+                </div>
+                <div class="col-xs-12 form-group">
+                    <br/>
+                    <form role="form" class="form-horizontal" novalidate name="addExceptionForm" method="POST">
+                        <div ng-init="registerLocationChangeEvent(addExceptionForm);
+                                initAddExceptionForm(addExceptionForm)">
+                            <div class="form-group">
+                                <label for="forUser"  class="col-md-3 control-label">
+                                    {{ entity + 'For User' | translate}}
+                                </label>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="text" class="col-md-12 hkg-nopadding" name="forUser" id="forUser" ui-select2="autoCompleteUsers" ng-model="valueException.forUsers"/>
+                                        <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                    </div>
+                                </div>    
+                                <div class="col-md-1">
+                                </div>
+                            </div>
+                            <div class="form-group required">
+                                <label for="forValue"  class="col-md-3 control-label">
+                                    {{ entity + 'For Value' | translate}}
+                                </label>
+                                <div class="col-md-6" ng-if="valueList.length > 0">
+                                    <div ng-class="{'has-error': addExceptionForm.forValue.$invalid && (addExceptionForm.forValue.$dirty || submitted)}"> 
+                                        <input type="text" class="col-md-12 hkg-nopadding" ng-required='true' required name="forValue" id="forValue" ui-select2="multiValues" ng-model="valueException.forValue"/>
+                                        <div class="error,help-block" ng-show="(addExceptionForm.forValue.$dirty || submitted) && addExceptionForm.forValue.$invalid">
+                                            <span class="help-block" ng-show="addExceptionForm.forValue.$error.required">{{entity + 'Select values'| translate }}</span>
+                                        </div>
+                                    </div>
+                                </div>    
+                                <div class="col-md-1">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dependentOnField"  class="col-md-3 control-label">
+                                    {{ entity + 'Dependent On' | translate}}
+                                </label>
+                                <div class="col-md-7" ng-if="autoCompleteDependentOnFields != undefined">
+                                    <div>
+                                        <input type="text" class="col-md-5 hkg-nopadding"  name="dependentOnField" id="dependentOnField" ui-select2="autoCompleteDependentOnFields" ng-model="valueException.dependentOnField" />
+                                        <div ng-if="fieldValueList !== undefined && fieldValueList.length > 0" class="col-md-6" ng-class="{'has-error': addExceptionForm.dependentOnFieldValues.$invalid && (addExceptionForm.dependentOnFieldValues.$dirty || submitted)}">
+                                            <input type="text" style="position: relative;float: left;  width: 92%;min-height: 1px;padding-left: 0px;padding-right: 0px;" class="hkg-nopadding" name="dependentOnFieldValues" ng-required="valueException.dependentOnField !== true" id="dependentOnFieldValues" ui-select2="multiDependentValueList" ng-model="valueException.dependentOnFieldValues"/>
+                                            <div class="col-md-12 error,help-block" ng-show="(addExceptionForm.dependentOnFieldValues.$dirty || submitted) && addExceptionForm.dependentOnFieldValues.$invalid">
+                                                <span class="help-block" ng-show="addExceptionForm.dependentOnFieldValues.$error.required">{{entity + 'Select Dependent On Values'| translate }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div ng-if="fieldValueList === undefined || fieldValueList.length === 0" class="col-md-6">
+                                            <span>No Values available</span>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="col-md-7" ng-if="autoCompleteDependentOnFields == undefined">
+                                    <span>No Fields available</span>
+                                </div>
+                                <div class="col-md-1">
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right"> 
+                                        <a href="" ng-click="addExceptionForm.$setPristine();
+                                            cancelException()">
+                                            {{ entity + 'Cancel' | translate}}
+                                        </a>&nbsp;
+                                        <button class="btn btn-hkg">
+                                            <span ng-click="addException(addExceptionForm)" ng-bind="entity + 'Add Exception' | translate" ng-if="!editExceptionFlag"></span>
+                                            <span ng-click="updateException(addExceptionForm)" ng-bind="entity + 'Update Exception' | translate" ng-if="editExceptionFlag"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="form-group" id='masterDetail' ng-if="(exceptionList.length) > 0">
+                    <div class="form-group">
+                        <div  class="col-md-12" ng-if="exceptionList">
+                            <table class="table" cellspacing="0" width="100%" ag-data-table="exceptionList" >
+                                <thead>
+                                    <tr>
+                                        <th class="col-md-1">{{entity + "Sr.No."|translate}}</th>
+                                        <th class="col-md-3">{{entity + "For User"|translate}}</th>
+                                        <th class="col-md-3">{{entity + "For Value"|translate}}</th>
+                                        <th class="col-md-3">{{entity + "Dependent On"|translate}}</th>
+                                        <th class="col-md-2">{{ entity + "Actions" | translate }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="exception in exceptionList" >
+                                        <td class="col-md-1">{{$index + 1}}</td>
+                                        <td class="col-md-3"><span title="{{exception.userToBeDisplay}}">{{(exception.userToBeDisplay !== null && exception.userToBeDisplay !== undefined) ? (exception.userToBeDisplay.length > 15 ? exception.userToBeDisplay.substring(0, 15) + '...' : exception.userToBeDisplay) : 'N/A'}}</span></td>
+                                        <td class="col-md-3"><span title="{{exception.valueToBeDisplay}}">{{(exception.valueToBeDisplay !== null && exception.valueToBeDisplay !== undefined) ? (exception.valueToBeDisplay.length > 15 ? exception.valueToBeDisplay.substring(0, 15) + '...' : exception.valueToBeDisplay) : 'N/A'}}</span></td>
+                                        <td class="col-md-3"><span title="{{exception.dependentOnFieldValuesToBeDisplay}}">{{(exception.dependentOnFieldValuesToBeDisplay !== null && exception.dependentOnFieldValuesToBeDisplay !== undefined) ? (exception.dependentOnFieldValuesToBeDisplay.length > 15 ? exception.dependentOnFieldValuesToBeDisplay.substring(0, 15) + '...' : exception.dependentOnFieldValuesToBeDisplay) : 'N/A'}}</span></td>
+                                        <td class="col-md-2">
+                                            <button ng-disabled="exception.isArchive === true"  ng-click="retrieveExceptionForUpdate(exception)" title="{{entity + 'Click to edit'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-edit btn btn-link"></button>&nbsp;&nbsp;
+                                            <button ng-disabled="exception.isUpdated === true" ng-if="exception.isArchive === false" ng-click="removeException(exception)" title="{{entity + 'Remove Exception'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-remove btn btn-link"></button>
+                                            <button ng-disabled="exception.isUpdated === true" ng-if="exception.isArchive === true" ng-click="undoException(exception)" title="{{entity + 'Undo Exception'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-repeat  btn btn-link "></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="form-group row">
+                <div class="col-xs-12 pull-right text-right">
+                    <a ng-click="hideConfirmationPopup();">Cancel</a>&nbsp;
+                    <button id="valueProceed" class="btn btn-hkg" ng-click="saveMaster()">{{ entity + "Save Master" | translate }}</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</script>

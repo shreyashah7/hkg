@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<style type="text/css">
+    .popover-content{
+        padding: 0px 0px;
+    }
+</style>
+<div class="popover-content">
+    <div ng-repeat="message in alerts" ng-if="alerts.length != 0" style="cursor: pointer">
+        <a class="list-group-item"  style="width: 100%" ng-click="setAlert(message,$index)" ng-show="message.messageBody.length > message.shortMessage.length"  tooltip="{{message.messageBody}}"  tooltip-trigger="mouseenter" tooltip-placement="top" ng-class="{active : $index==selectedIndex}">
+            <p class="list-group-item-text" ><NOBR>{{message.shortMessage}}...</NOBR></p>
+        </a>
+        <a class="list-group-item"  style="width: 100%" ng-click="setAlert(message,$index)" ng-show="message.messageBody.length <= message.shortMessage.length"  ng-class="{active : $index==selectedIndex}">
+            <p class="list-group-item-text" ><NOBR>{{message.shortMessage}}</NOBR></p>
+        </a>
+    </div>
+    <div class="list-group-item" style="cursor: pointer" style="width: 100%" ng-if="alerts.length == 0">
+        <p class="list-group-item-text"><NOBR>No notification exists &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</NOBR></p>
+    </div>
+</div>

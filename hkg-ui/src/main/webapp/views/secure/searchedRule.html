@@ -1,0 +1,46 @@
+<div class="form-group">
+    <div class="col-xs-12">
+         <div  ng-show="!searchRecords || searchRecords.length == 0">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                              {{ entity + "No matching results found" | translate }}
+                            </td>
+                        </tr>
+                    </table>
+                </div> 
+        
+        
+        <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Fields'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchRecords && (searchRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords">
+                    <thead>
+                        <tr>
+                            <th>{{entity + 'Rule Name'|translate}}</th>
+
+                            <th>{{entity + 'Rule Number'|translate}}</th>
+                            <th>{{entity + 'Category'|translate}}</th>
+                           
+                            <th>{{entity + 'Action'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                        
+                        <tr ng-repeat="ruleObject in searchRecords track by $index " dt-rows>
+                            <td class="wordRap">{{ruleObject.ruleName}}</td>
+                            <td class="">{{ruleObject.id}}</td>
+                            <td >{{ruleObject.category}}</td>
+                            <td>
+                                <a><span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="editRuleFromSearch(ruleObject.id);
+                                    ;"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+              
+            </div>
+        </div>
+    </div>
+</div>

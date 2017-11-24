@@ -1,0 +1,834 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>                    
+                    <li>{{ entity + 'Reports' | translate}}</li>
+                    <li class="active"><span>
+                            {{ 'Menu.' + displayName | translate:{displayName:(displayName | translate)} }}</span></li>                    
+                </ol>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="new-panel">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+        </div>
+    </div>
+    <div ng-if="isPreview && !isScheduler && !isExternalReport">
+        <form name="filterForm" novalidate>
+            <!--<div class="row">-->
+            <!--<div class="col-md-8">-->
+            <h3>
+                <span class="wordRap">{{ 'Menu.' + displayName | translate:{displayName:(displayName | translate)} }}</span>
+                <!--<span>{{ entity + " : Preview" | translate}}</span>-->
+            </h3>
+            <!--</div>-->
+            <!--</div>-->
+            <div>
+                <div class="row">
+
+                    <div class="col-md-2 text-right">
+                        <h5>{{ entity + "Add Filter : " | translate}}</h5>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control" ng-model="filterColumn" ng-change="updateFilter(filterColumn)" ng-options="filterColumn as filterColumn.label for filterColumn in filterColumns" name="filterColumn" data-placeholder="{{entity + 'Select Column'| translate}}">
+                            <option value="">Select Column</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 pull-right text-center"> 
+                        <button class="btn-link" ng-click="showSchedulerMode()"><span><img title="Configure Scheduler" src="images/wallclock.png" alt="schedule" style="height: 25px;width: 25px"/></span></button>
+                        <button class="btn-link" ng-click="generateFilteredPdf()"><span><img title="Pdf Download" src="images/pdf-icon.jpg" alt="pdf" style="height: 25px;width: 25px"/></span></button>
+                        <button class="btn-link" ng-click="generateFilteredXls()"><span><img title="Excel Download" src="images/excel-icon.jpg" alt="excel" style="height: 25px;width: 25px"/></span></button>
+                        <button class="btn-link" ng-click="generateFilteredXml()"><span><img title="Xml Download" src="images/xml-icon.jpg" alt="xml" style="height: 25px;width: 25px"/></span></button>
+
+                    </div>
+                    <div class="col-md-4 pull-right">
+                        <div ng-show="isHKAdmin">
+                            <div class="col-md-6 text-right">
+                                <h5>{{ entity + "Select Franchise : " | translate}}</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <select id="selectFranchise" class="form-control" ng-model="franchise" ng-options="existingFranchise.id as existingFranchise.displayName for existingFranchise in existingFranchiseList" name="franchiseName" ng-change="repopulateData(franchise)">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                            <br/>
+<!--                            <div class="row" ng-if="isHKAdmin">
+                                <div class="col-md-8"></div>
+                                <div class="col-md-2 text-right">
+                                    <h5>{{ entity + "Select Franchise : " | translate}}</h5>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" ng-model="franchise" ui-select2="franchiseSelectCombo" class="col-md-12 hkg-nopadding" name="franchiseName"/>
+                                </div>
+                            </div>-->
+                            <!--<br/>-->
+                <div class="row" ng-if="filterAttributes.length > 0">
+                    <div class="col-md-8 col-md-offset-2">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-2">{{entity + "Column Name"| translate}}</th>
+                                    <th class="col-md-3">{{entity + "Filter Operator"| translate}}</th>
+                                    <th class="col-md-4">{{entity + "Filter Value"| translate}}</th>
+                                    <th class="col-md-2">{{entity + "Hide Column"| translate}}</th>
+                                    <th class="col-md-1">{{entity + "Action"| translate}}</th>
+                                </tr>
+                            </thead>
+                            <tr ng-repeat="filter in filterAttributes" ng-form="filterAttributeForm">
+                                <td><label>{{filter.label}}</label></td>
+                                <td>
+                                    <div ng-class="{'has-error': (filterAttributeForm.filterType.$dirty || subbmited) && filterAttributeForm.filterType.$invalid}">
+                                        <select class="form-control" ng-model="filter.operator" ng-change="updateColumnFilter(filterColumnIndex)" ng-options="filterType.id as filterType.text for filterType in filter.filters" name="filterType" required>
+                                            <option value="">Select Filter</option>
+                                        </select>
+                                        <div class="error,help-block" ng-show="(filterAttributeForm.filterType.$dirty || subbmited) && filterAttributeForm.filterType.$invalid">
+                                            <span class="help-block" ng-show="filterAttributeForm.filterType.$error.required">{{entity + "Enter filter Type"| translate}}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div ng-if="filter.operator !== undefined && filter.operator !== 'is null' && filter.operator !== 'is not null'">
+                                        <div>
+                                            <!--First Value-->
+                                            <!--String Value-->
+                                            <div ng-if="filter.type === 'varchar' && filter.operator === '='" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" ui-select2="filter.availableFilterValueSelectEqual" class="col-md-12 hkg-nopadding" name="filterValFirst" required/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div ng-if="filter.type === 'varchar' && filter.operator === '!='" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" ui-select2="filter.availableFilterValueSelectNotEqual" class="col-md-12 hkg-nopadding" name="filterValFirst" required ng-minlength="1"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.minlength">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div ng-if="filter.type === 'varchar' && filter.operator === 'in'" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" ui-select2="filter.availableFilterValueSelectIn" class="col-md-12 hkg-nopadding" name="filterValFirst" required ng-minlength="1"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.minlength">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div ng-if="filter.type === 'varchar' && filter.operator === 'not in'" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" ui-select2="filter.availableFilterValueSelectNotIn" class="col-md-12 hkg-nopadding" name="filterValFirst" required ng-minlength="1"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.minlength">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <div ng-if="filter.type === 'varchar' && filter.operator === 'like'" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" class="form-control" name="filterValFirst" required placeholder="{{entity + 'Filter Value'| translate}}"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Int or Long Value-->
+                                            <div ng-if="filter.type === 'int8' && filter.operator !== undefined" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" class="form-control" numbers-only="numbers-only" placeholder="{{entity + 'Filter Value'| translate}}" name="filterValFirst" required/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Double Value-->
+                                            <div ng-if="filter.type === 'double precision' && filter.operator !== undefined" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <input type="text" ng-model="filter.filterValue" class="form-control" numbers-only="numbers-only" decimalallowed ="true" placeholder="{{entity + 'Filter Value'| translate}}" name="filterValFirst" required/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Boolean Value-->
+                                            <div ng-if="filter.type === 'boolean' && filter.operator !== undefined" ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}">
+                                                <label class="radio-inline">
+                                                    <input type="radio" name="filterValFirst{{$index}}" value="true" ng-model="filter.filterValue" required>
+                                                    {{entity + 'True'| translate}} 
+                                                </label>
+                                                <label class="radio-inline">
+
+                                                    <input type="radio" name="filterValFirst{{$index}}" value="false" ng-model="filter.filterValue" required>
+                                                    {{entity + 'False'| translate}}
+                                                </label>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Date Value-->
+                                            <div ng-class="{'has-error': (filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid}" ng-if="filter.type === 'timestamp' && filter.operator !== undefined">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" name="filterValFirst" required ng-model="filter.filterValue" is-open="filter.first_dt_inp_opnd" datepicker-options="dateOptions" ng-required="true" close-text="Close"/>
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" ng-click="open($event, 'first_dt_inp_opnd', filter)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                    </span>
+                                                </div>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValFirst.$dirty || subbmited) && filterAttributeForm.filterValFirst.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.required && !(filterAttributeForm.filterValFirst.$error.date || filterAttributeForm.filterValFirst.$error.min || filterAttributeForm.filterValFirst.$error.max)">
+                                                        {{ entity + "Enter filter value" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValFirst.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                </div>
+                                            </div> 
+                                        </div>
+                                        <div ng-if="filter.operator === 'between'" class="text-center">
+                                            &nbsp;To&nbsp;<br/>
+                                        </div>
+                                        <div>
+                                            <!--Second value-->
+                                            <!--Int or Long Value-->
+                                            <div ng-if="filter.operator === 'between' && filter.type === 'int8'" ng-class="{'has-error': (filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid}">
+                                                <input type="text" ng-model="filter.filterValueSecond" class="form-control" numbers-only="numbers-only" placeholder="{{entity + 'Filter Value'| translate}}" required name="filterValSecond"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Double Value-->
+                                            <div ng-if="filter.operator === 'between' && filter.type === 'double precision'" ng-class="{'has-error': (filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid}">
+                                                <input type="text" ng-model="filter.filterValueSecond" class="form-control" numbers-only="numbers-only" decimalallowed ="true" placeholder="{{entity + 'Filter Value'| translate}}" required name="filterValSecond"/>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                </div>
+                                            </div>
+                                            <!--Date Value-->
+                                            <div ng-class="{'has-error': (filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid}" ng-if="filter.operator === 'between' && filter.type === 'timestamp'">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" name="filterValSecond" required ng-model="filter.filterValueSecond" is-open="filter.second_dt_inp_opnd" datepicker-options="dateOptions" ng-required="true" close-text="Close"/>
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" ng-click="open($event, 'second_dt_inp_opnd', filter)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                    </span>
+                                                </div>
+                                                <div class="error,help-block" ng-show="(filterAttributeForm.filterValSecond.$dirty || subbmited) && filterAttributeForm.filterValSecond.$invalid">
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.required && !(filterAttributeForm.filterValSecond.$error.date || filterAttributeForm.filterValSecond.$error.min || filterAttributeForm.filterValSecond.$error.max)">
+                                                        {{ entity + "Enter filter value" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                    <span class="help-block" ng-show="filterAttributeForm.filterValSecond.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <input type="checkbox" ng-model="filter.hideColumn" name="hideColumn"/>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <a class="close pull-right" href="" ng-click="removeFilterByColumn($index, filterForm)" title="Remove Filter">&times;</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div ng-if="filterAttributes.length > 0" class="row">
+                    <div class="col-xs-12 pull-right text-right"> 
+                        <button class="btn btn-hkg" ng-click="applyAll(filterForm)">
+                            <span ng-bind="entity + 'Apply' | translate"></span>
+                        </button>
+                    </div>
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-md-2 text-right">
+                        <h5>{{ entity + "Color Combination: " | translate}}</h5>
+                    </div>
+                </div>
+                <div ng-if="colorConfigData.length > 0">
+                    <div class="row" ng-repeat="colorCombination in colorConfigData" ng-form="colorCombinationForm">
+                        <div class="col-md-8 col-md-offset-2">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <select class="form-control" ng-model="colorCombination.combinationType" ng-options="combinationType.id as combinationType.text for combinationType in colorCombination.combinationTypes" name="colorCombination" data-placeholder="{{entity + 'Select Combination'| translate}}">
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-control" ng-change="updateColorColumnFilter(colorCombination.currentColumn, $index)" ng-model="colorCombination.currentColumn" ng-options="colorColumn as colorColumn.label for colorColumn in colorCombination.colorColumns" name="colorColumn" data-placeholder="{{entity + 'Select Column'| translate}}">
+                                                <option value="">Select Column</option>
+                                            </select>
+                                        </div>
+                                        <!--                                        <div class="col-md-1" ng-if="colorConfig.currentColumn !== undefined">
+                                                                                    <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a class="pull-right" ></a>
+                                                                                </div>-->
+                                        <div class="col-md-4" ng-class="{'has-error': colorCombinationForm.colorName.$invalid}">
+                                            <input colorpicker colorpicker-position="bottom" ng-style="{'background-color' : (colorCombination.colorName === undefined ? 'white' : colorCombination.colorName)}" type="text" ng-model="colorCombination.colorName" class="form-control" placeholder="{{entity + 'Color Name'| translate}}" ng-required="colorCombination.columns.length > 0" name="colorName"/>
+                                            <div class="error,help-block" ng-show="colorCombinationForm.colorName.$invalid">
+                                                <span class="help-block" ng-show="colorCombinationForm.colorName.$error.required">{{entity + "Enter color name"| translate}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <a class="close pull-right" href="" ng-click="removeColorCombination($index)" title="Remove All Filters">&times;</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body">
+                                    <div ng-if="colorCombination.columns.length > 0">
+                                        <div>
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="col-md-3">{{entity + "Column Name"| translate}}</th>
+                                                        <th class="col-md-4">{{entity + "Selection Operator"| translate}}</th>
+                                                        <th class="col-md-4">{{entity + "Selection Value"| translate}}</th>
+                                                        <th class="col-md-1">{{entity + "Action"| translate}}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tr ng-repeat="colorConfig in colorCombination.columns" ng-form="colorForm">
+                                                    <td>{{colorConfig.label}}</td>
+                                                    <td>
+                                                        <div ng-class="{'has-error': colorForm.colorFilterOperator.$invalid}">
+                                                            <select class="form-control" ng-model="colorConfig.operator" ng-options="colorFilterOperator.id as colorFilterOperator.text for colorFilterOperator in colorConfig.filters" name="colorFilterOperator" data-placeholder="{{entity + 'Select Operator'| translate}}" required>
+                                                                <option value="">Select Operator</option>
+                                                            </select>
+                                                            <div class="error,help-block" ng-show="colorForm.colorFilterOperator.$invalid">
+                                                                <span class="help-block" ng-show="colorForm.colorFilterOperator.$error.required">{{entity + "Enter selection operator"| translate}}</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div ng-if="colorConfig.operator !== undefined && colorConfig.operator !== 'is null' && colorConfig.operator !== 'is not null'">
+                                                            <!--First Value-->
+                                                            <!--String Value-->
+                                                            <div ng-if="colorConfig.type === 'varchar' && colorConfig.operator === '='" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" ui-select2="colorConfig.availableFilterValueSelectEqual" class="col-md-12 hkg-nopadding" name="filterValFirst" required/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div ng-if="colorConfig.type === 'varchar' && colorConfig.operator === '!='" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" ui-select2="colorConfig.availableFilterValueSelectNotEqual" class="col-md-12 hkg-nopadding" name="filterValFirst" required/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div ng-if="colorConfig.type === 'varchar' && colorConfig.operator === 'in'" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" ui-select2="colorConfig.availableFilterValueSelectIn" class="col-md-12 hkg-nopadding" name="filterValFirst" required/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div ng-if="colorConfig.type === 'varchar' && colorConfig.operator === 'not in'" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" ui-select2="colorConfig.availableFilterValueSelectNotIn" class="col-md-12 hkg-nopadding" name="filterValFirst" required/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div ng-if="colorConfig.type === 'varchar' && colorConfig.operator === 'like'" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" class="form-control" name="filterValFirst" required placeholder="{{entity + 'Filter Value'| translate}}"/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Int or Long Value-->
+                                                            <div ng-if="colorConfig.type === 'int8' && colorConfig.operator !== undefined" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" class="form-control" numbers-only="numbers-only" placeholder="{{entity + 'Filter Value'| translate}}" name="filterValFirst" required ng-change="checkValidColorRange('between', 'int8', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Double Value-->
+                                                            <div ng-if="colorConfig.type === 'double precision' && colorConfig.operator !== undefined" ng-class="{'has-error': colorForm.filterValFirst.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValue" class="form-control" numbers-only="numbers-only" decimalallowed ="true" placeholder="{{entity + 'Filter Value'| translate}}" name="filterValFirst" required ng-change="checkValidColorRange('between', 'double precision', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Boolean Value-->
+                                                            <div ng-if="colorConfig.type === 'boolean'" ng-class="{'has-error': colorForm.colorFilterValFirst{{$index}}.$invalid}">
+                                                                <label class="radio-inline">
+                                                                    <input type="radio" name="colorFilterValFirst{{$index}}" value="true" ng-model="colorConfig.filterValue">
+                                                                    {{entity + 'True'| translate}} 
+                                                                </label>
+                                                                <label class="radio-inline">
+
+                                                                    <input type="radio" name="colorFilterValFirst{{$index}}" value="false" ng-model="colorConfig.filterValue">
+                                                                    {{entity + 'False'| translate}}
+                                                                </label>
+                                                                <div class="error,help-block" ng-show="colorForm.colorFilterValFirst{{$index}}.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.colorFilterValFirst{{$index}}.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Date Value-->
+                                                            <div ng-class="{'has-error': colorForm.filterValFirst.$invalid}" ng-if="colorConfig.type === 'timestamp' && colorConfig.operator !== undefined">
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" placeholder="{{format}}" datepicker-popup="{{format}}" id="filterValFirst" name="filterValFirst" required ng-model="colorConfig.filterValue" is-open="colorConfig.first_dt_inp_opnd" datepicker-options="dateOptions" close-text="Close"ng-change="checkValidColorRange('between', 'timestamp', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                    <span class="input-group-btn">
+                                                                        <button class="btn btn-default" ng-click="open($event, 'first_dt_inp_opnd', colorConfig)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValFirst.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.required && !(colorForm.filterValFirst.$error.date || colorForm.filterValFirst.$error.min || colorForm.filterValFirst.$error.max)">
+                                                                        {{ entity + "Enter filter value" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValFirst.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div ng-if="colorConfig.operator === 'between'" class="text-center">
+                                                            &nbsp;To&nbsp;<br/>
+                                                        </div>
+                                                        <div>
+                                                            <!--Second value-->
+                                                            <!--Int or Long Value-->
+                                                            <div ng-if="colorConfig.operator === 'between' && colorConfig.type === 'int8'" ng-class="{'has-error': colorForm.filterValSecond.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValueSecond" class="form-control" numbers-only="numbers-only" placeholder="{{entity + 'Filter Value'| translate}}" required name="filterValSecond" ng-change="checkValidColorRange('between', 'int8', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValSecond.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Double Value-->
+                                                            <div ng-if="colorConfig.operator === 'between' && colorConfig.type === 'double precision'" ng-class="{'has-error': colorForm.filterValSecond.$invalid}">
+                                                                <input type="text" ng-model="colorConfig.filterValueSecond" class="form-control" numbers-only="numbers-only" decimalallowed ="true" placeholder="{{entity + 'Filter Value'| translate}}" required name="filterValSecond" ng-change="checkValidColorRange('between', 'double precision', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValSecond.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.required">{{entity + "Enter filter value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                </div>
+                                                            </div>
+                                                            <!--Date Value-->
+                                                            <div ng-class="{'has-error': colorForm.filterValSecond.$invalid}" ng-if="colorConfig.operator === 'between' && colorConfig.type === 'timestamp'">
+                                                                <div class="input-group">
+                                                                    <input type="text" class="form-control" placeholder="{{format}}" datepicker-popup="{{format}}" id="filterValSecond" name="filterValSecond" required ng-model="colorConfig.filterValueSecond" is-open="colorConfig.second_dt_inp_opnd" datepicker-options="dateOptions" close-text="Close"ng-change="checkValidColorRange('between', 'timestamp', colorConfig.filterValue, colorConfig.filterValueSecond, colorForm.filterValFirst, colorForm.filterValSecond)"/>
+                                                                    <span class="input-group-btn">
+                                                                        <button class="btn btn-default" ng-click="open($event, 'second_dt_inp_opnd', colorConfig)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                                    </span>
+                                                                </div>
+                                                                <div class="error,help-block" ng-show="colorForm.filterValSecond.$invalid">
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.required && !(colorForm.filterValSecond.$error.date || colorForm.filterValSecond.$error.min || colorForm.filterValSecond.$error.max)">
+                                                                        {{ entity + "Enter filter value" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.invalidRange">{{entity + "Invalid Range value"| translate}}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                                    <span class="help-block" ng-show="colorForm.filterValSecond.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <a class="close pull-right" href="" ng-click="removeColor($index, $parent.$index)" title="Remove Filter">&times;</a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div ng-if="colorCombination.columns.length === 0" class="text-center">
+                                        No columns are selected.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 col-md-offset-2 text-right">
+                            <a href="" class="glyphicon glyphicon-plus-sign text-primary" title="Add Color Combination" ng-click="addColorCombination()"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!--                <div ng-if="colorConfigData.length > 0" class="row">
+                                    <div class="col-xs-12 pull-right text-right"> 
+                                        <button class="btn btn-hkg" ng-click="applyColor(filterForm)">
+                                            <span ng-bind="entity + 'Apply Color' | translate"></span>
+                                        </button>
+                                    </div>
+                                </div>-->
+            </div>
+        </form>
+
+        <br/>
+        <div ng-if="(isAnyColumnHidden && filterAttributes.length > 0)">
+            <div class="row">
+                <div class="col-md-2 text-right">
+                    <h5>{{entity + 'Hidden Fields:'| translate}}</h5>
+                </div>
+                <div class="col-md-8">
+                    <table class="table table-bordered" ag-data-table="hiddenFieldDetail">
+                        <thead>
+                            <tr>
+                                <th class="col-md-3">{{entity + 'Field'| translate}}</th>
+                                <th class="col-md-9">{{entity + 'Values'| translate}}</th>
+                            </tr>
+                        </thead>
+                        <tr ng-repeat="hiddenField in hiddenFieldDetail" dt-rows>
+                            <td>
+                                <div style="word-break: break-all;">
+                                    <label>{{hiddenField.label}}</label>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="word-break: break-all;">
+                                    <span>{{hiddenField.value}}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <br/>
+        <div>
+            <div class="table-responsive" ng-if="false">
+                <table ag-data-table="previewData" class="table table-bordered">
+                    <!--                            <thead ng-if="isGroupByCheck">
+                                                    <tr>
+                                                        <th>Sr No.</th>
+                                                        <th ng-repeat='col in modifiedColumns'>
+                                                            <span ng-if="col.isGroup === undefined || col.isGroup === false">
+                                                                <span ng-if="col.alias !== undefined || col.alias !== ''">{{col.alias}}</span>
+                                                                <span ng-if="col.alias == undefined || col.alias == ''">{{col.fieldLabel}}</span>
+                                                            </span>
+                                                            <span ng-if="col.isGroup !== undefined && col.isGroup === true">
+                                                                {{col.groupName}}
+                                                            </span>
+                                                        </th>
+                                                    </tr>
+                                                </thead>-->
+                    <thead ng-if="isGroupByCheck && groupAttributes['groups'].length > 1">
+                        <tr>
+                            <th rowspan="2">Sr No.</th>
+                            <th ng-repeat='col in modifiedColumns' ng-show="(col.isHide === undefined || col.isHide === false)" class="text-center" rowspan="{{(col.isGroup === undefined|| col.isGroup === false)? 2 : 1}}" colspan="{{(col.isGroup !== undefined && col.isGroup === true) ? col.groupItems.length : 1}}">
+                                <span ng-if="col.isGroup === undefined || col.isGroup === false">
+                                    <span ng-if="col.alias !== undefined || col.alias !== ''">{{col.alias}}</span>
+                                    <span ng-if="col.alias == undefined || col.alias == ''">{{col.fieldLabel}}</span>
+                                </span>
+                                <span ng-if="col.isGroup !== undefined && col.isGroup === true">
+                                    {{col.groupName}}
+                                </span>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th ng-repeat="grpItem in groupItemListForPreviw">
+                                <span>{{grpItem}}</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <thead ng-if="!(isGroupByCheck && groupAttributes['groups'].length > 1)">
+                        <tr>
+                            <th>Sr No.</th>
+                            <th ng-repeat='col in columns' ng-show="(col.isHide === undefined || col.isHide === false)">
+                                <span ng-if="col.alias !== undefined || col.alias !== ''">{{col.fieldDisplayName}}</span>
+                                <span ng-if="col.alias == undefined || col.alias == ''">{{col.fieldLabel}}</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody ng-if="!isGroupByCheck">
+                        <tr ng-repeat="row in UIPreviewData">
+                            <td ng-style="{'background-color' : (row.rowColor === undefined ? 'white' : row.rowColor)}">{{((currentPage - 1) * 10) + ($index + 1)}}</td>
+                            <td ng-repeat="col in columns" ng-style="{'background-color': row[col.alias].color}" ng-show="(col.isHide === undefined || col.isHide === false)" ng-class="{'text-right': (col.dataType === 'int8' || col.dataType === 'double precision')}">
+                                <!--<span ng-if="(col.dataType !== 'timestamp' && col.componentType !== 'Percent' && col.componentType !== 'Angle' && col.componentType !== 'Currency')" title="{{row[col.alias].value === undefined || row[col.alias].value === null ? (row[col.fieldLabel].value === undefined ? '-' : row[col.fieldLabel].value) : row[col.alias].value}}">{{row[col.alias].value === undefined|| row[col.alias].value === null ? (row[col.fieldLabel].value === undefined || row[col.fieldLabel].value === null ? 'N/A' : row[col.fieldLabel].value.length > 20 ? row[col.fieldLabel].value.substring(0, 20) + '.' : row[col.fieldLabel].value) : row[col.alias].value.length > 20 ? row[col.alias].value.substring(0, 20) + '.' : row[col.alias].value}}</span>-->
+                                <span class="wordRap" ng-if="(col.dataType !== 'timestamp' && col.componentType !== 'Percent' && col.componentType !== 'Angle' && col.componentType !== 'Currency')">{{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value}}</span>
+                                <!--<span ng-if="(col.dbBaseType === 'MDB' && (col.sectionName !== 'General' && col.sectionName !== null )) && col.dataType !== 'timestamp' "> {{row[col.alias].value === undefined ? (row[col.colName] === undefined ? '-' : row[col.colName]) : row[col.alias].value}}</span>-->
+                                <span class="wordRap" ng-if="(col.dataType === 'timestamp')"> {{row[col.alias].value === undefined|| row[col.alias].value === null  ? 'N/A' : row[col.alias].value | date : 'dd/MM/yyyy'}}</span>
+                                <!--<span ng-if="(col.dbBaseType === 'MDB' && (col.sectionName !== 'General' && col.sectionName !== null )) && col.dataType === 'timestamp' "> {{row[col.alias].value === undefined ? (row[col.colName] === undefined ? '-' : row[col.colName]) : row[col.alias].value | date : 'yyyy-MM-dd'}}</span>-->
+                                <span class="wordRap" ng-if="(col.componentType === 'Percent')">{{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value | number:2}} %</span>
+                                <span class="wordRap" ng-if="(col.componentType === 'Angle')">{{row[col.alias].value === undefined|| row[col.alias].value === null? 'N/A' : row[col.alias].value | number:2}} °</span>
+                                <span class="wordRap" ng-if="(col.componentType === 'Currency')">{{row[col.alias].value === undefined|| row[col.alias].value === null? 'N/A' : row[col.alias].value | formatCurrency: col.format}}{{' ' + col.currencySymbol}}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center"></td>
+                            <td ng-repeat="col in columns" class="text-center" ng-show="(col.isHide === undefined || col.isHide === false)">
+                                <!--<span ng-if="col.showTotal === undefined || col.showTotal === false">N/A</span>-->
+                                <span ng-if="col.showTotal === true">Total: {{col.total|number:2}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                    <tbody ng-if="isGroupByCheck" ng-repeat="group in UIPreviewData">
+                        <tr ng-repeat="row in group.groupRows">
+                            <td ng-style="{'background-color' : (row.rowColor === undefined ? 'white' : row.rowColor)}" ng-if="$index === 0" style="vertical-align: middle" rowspan="{{group.rowCount}}">{{((currentPage - 1) * 10) + group.index}}</td>
+                            <td ng-repeat="col in columns" ng-show="(checkToRender(group, row, col.level, $parent.$index) && (col.isHide === undefined || col.isHide === false))" rowspan="{{checkRowSpan(group, row, col.level, $parent.$index)}}" style="vertical-align: middle" ng-style="{'background-color': row[col.alias].color}"
+                                ng-class="{'text-right': (col.dataType === 'int8' || col.dataType === 'double precision')}">
+                                <span>
+                                    <!--<span ng-if="(col.dataType !== 'timestamp' && col.componentType !== 'Percent' && col.componentType !== 'Angle' && col.componentType !== 'Currency')" title="{{row[col.alias].value === undefined || row[col.alias].value === null ? (row[col.fieldLabel].value === undefined || row[col.fieldLabel].value === null? '-' : row[col.fieldLabel].value) : row[col.alias].value}}">{{row[col.alias].value === undefined || row[col.alias].value === null ? (row[col.fieldLabel].value === undefined || row[col.fieldLabel].value === null? 'N/A' : row[col.fieldLabel].value.length > 20 ? row[col.fieldLabel].value.substring(0, 20) + '.' : row[col.fieldLabel].value) : row[col.alias].value.length > 20 ? row[col.alias].value.substring(0, 20) + '.' : row[col.alias].value}}</span>-->
+                                    <span class="wordRap" ng-if="(col.dataType !== 'timestamp' && col.componentType !== 'Percent' && col.componentType !== 'Angle' && col.componentType !== 'Currency')">{{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value}}</span>
+                                    <!--<span ng-if="(col.dbBaseType === 'MDB' && (col.sectionName !== 'General' && col.sectionName !== null )) && col.dataType !== 'timestamp' "> {{row[col.alias].value === undefined ? (row[col.colName] === undefined ? '-' : row[col.colName]) : row[col.alias].value}}</span>-->
+                                    <span class="wordRap" ng-if="(col.dataType === 'timestamp')"> {{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value | date : 'dd/MM/yyyy'}}</span>
+                                    <!--<span ng-if="(col.dbBaseType === 'MDB' && (col.sectionName !== 'General' && col.sectionName !== null )) && col.dataType === 'timestamp' "> {{row[col.alias].value === undefined ? (row[col.colName] === undefined ? '-' : row[col.colName]) : row[col.alias].value | date : 'yyyy-MM-dd'}}</span>-->
+                                    <span class="wordRap" ng-if="(col.componentType === 'Percent')">{{row[col.alias].value === undefined|| row[col.alias].value === null  ? 'N/A' : row[col.alias].value | number:2}} %</span>
+                                    <span class="wordRap" ng-if="(col.componentType === 'Angle')">{{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value | number:2}} °</span>
+                                    <span class="wordRap" ng-if="(col.componentType === 'Currency')">{{row[col.alias].value === undefined|| row[col.alias].value === null ? 'N/A' : row[col.alias].value | formatCurrency: col.format}}{{' ' + col.currencySymbol}}</span>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tbody ng-if="isGroupByCheck">
+                        <tr>
+                            <td class="text-center"></td>
+                            <td ng-repeat="col in columns" class="text-center" ng-show="(col.isHide === undefined || col.isHide === false)">
+                                <!--<span ng-if="col.showTotal === undefined || col.showTotal === false">N/A</span>-->
+                                <span ng-if="col.showTotal === true">Total: {{col.total|number:2}}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+
+                </table>
+                <div>
+                    <pagination class="pagination-sm" boundary-links="true" max-size="5" total-items="totalItems" ng-model="currentPage" ng-click="setPage(currentPage)"></pagination>
+                </div>
+            </div>
+            <div class="report-grid" ng-if="isAnyRecordsExist">
+                <div class="grid" ui-grid="gridOptions" ui-grid-pagination ui-grid-auto-resize></div>
+            </div>
+        </div>
+        <div ng-if="!isAnyRecordsExist">
+            <br/>
+            <div class="col-lg-12 col-md-12 col-xs-12">
+                <table class="table table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'No Report Data Available'|translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!--        <div class="row">
+                    <div class="col-xs-12 pull-right text-right"> 
+                                        <a href="" ng-click="cancelPreview()">
+                                            {{ entity + 'Cancel' | translate}}
+                                        </a>
+                        <button class="btn-link" ng-click="generateFilteredPdf()"><span><img title="Pdf Download" src="images/pdf-icon.jpg" alt="pdf" style="height: 25px;width: 25px"/></span></button>
+                        <button class="btn-link" ng-click="generateFilteredXls()"><span><img title="Excel Download" src="images/excel-icon.jpg" alt="excel" style="height: 25px;width: 25px"/></span></button>
+        
+                    </div>
+                </div>-->
+    </div>
+    <div ng-if="isScheduler" class="row">
+        <form role="form" class="form-horizontal" novalidate name="notificationForm">
+
+            <div class="col-xs-12"> 
+                <div class="form-group required">
+                    <div class="col-md-3 control-label" style="padding-top: 0px;">
+                        <label>
+                            {{entity + 'Attachment Required'| translate }}
+                        </label>
+                    </div>
+                    <div class="col-md-7 col-xs-8">
+                        <label class="">
+                            <span class="pull-left "><input type="checkbox" ng-model="notification.xlsAttachment"/>{{entity + 'Xls File'| translate }}</span>
+                        </label>&nbsp;&nbsp;
+                        <label class="">
+                            <span class="pull-left"><input type="checkbox" ng-model="notification.pdfAttachment"/>{{entity + 'Pdf File'| translate }}</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Time Based -->
+                <div class="form-group">
+                    <div class="col-md-3 col-xs-4">&nbsp;</div>
+                    <div class="col-md-7 " >
+                        <div>
+                            <div class="form-group" >
+                                <div class="col-md-12" ng-class="{'has-error': notificationForm.repeatTask.$invalid}" id="repeatTaskPeriod"> 
+                                    <div class="row">
+                                        <div class="col-md-3" ng-model="notification.atTime" >
+                                            {{entity + "At"|translate}}<timepicker hour-step="hstep" minute-step="mstep" id="stime" name="stime" show-meridian="ismeridian" ng-required="true"></timepicker>
+                                        </div>
+                                    </div>
+                                    <div class="row radio">
+                                        <label class="col-md-2">
+                                            <input type="radio" id="repeatTaskDaily" name="repeatativeMode" ng-model="notification.repeatativeMode" value="D">{{ entity + 'Daily' | translate}}
+                                        </label>
+                                    </div>
+                                    <div class="row radio">
+                                        <label class="col-md-2">
+                                            <input type="radio" id="repeatTaskWeekly" name="repeatativeMode" ng-model="notification.repeatativeMode" value="W">{{ entity + 'Weekly' | translate}}
+                                        </label>
+                                        <div class="col-md-10" ng-if="notification.repeatativeMode === 'W'">
+                                            <span ng-repeat="day in weekList" >
+                                                <div class="hkg-checkbox-button">
+                                                    <label>
+                                                        <input type="checkbox" hidden="true" ng-model="day.isChecked" ng-true-value='true' ng-disabled="disableWeeklyChecbox[$index]" ng-change="getSelectedWeekCount()"><span>{{day.code}}</span>
+                                                    </label>
+                                                </div>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="row radio">
+                                        <label class="col-md-2">
+                                            <input type="radio" id="repeatTaskMonthly" name="repeatativeMode" ng-model="notification.repeatativeMode" value="M">{{ entity + 'Monthly' | translate}}
+                                        </label>
+                                        <div class="col-md-10" ng-if="notification.repeatativeMode === 'M'">
+                                            {{ entity + 'On day' | translate}} 
+                                            <select class="input-sm" ng-model="notification.monthlyOnDay" ng-options="day as day for day in dayList">
+                                            </select>
+                                            {{ entity + 'of every month' | translate}} 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-md-2 control-label">{{ entity + 'End repeat' | translate}}</label>
+                                <div class="col-md-9" ng-class="{'has-error': notificationForm.endRepeat.$invalid}" id="endRepeat"> 
+                                    <div class="form-group required">
+                                        <div class="col-md-3 radio">
+                                            <label>
+                                                <input type="radio" name="endRepeat" ng-change="clearFromRadio()" ng-model="notification.endRepeatMode" value="OD">{{ entity + 'On Date' | translate}} 
+                                            </label>
+                                        </div>
+                                        <div class="col-md-6" ng-class="{'has-error': notificationForm.endRepeatDate.$invalid && notification.endRepeatMode === 'OD' && (notificationForm.endRepeatDate.$dirty || submitted)}"> 
+                                            <div class="input-group">
+                                                <input type="text" id="endRepeatDate" name="endRepeatDate" class="form-control input-sm" placeholder="{{format}}" datepicker-popup="{{format}}" ng-model="notification.endDate" is-open="datePicker.opened_end_repeat_date"  min="minEndRepeatDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="notification.endRepeatMode === 'OD'" close-text="Close" ng-disabled="notification.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()"/>
+                                                <span class="input-group-btn">
+                                                    <button class="form-control input-sm" ng-click="openDatePicker($event, 'opened_end_repeat_date')" ng-disabled="notification.endRepeatMode !== 'OD'" ng-click="setEditTaskEndRepeatMinDate()">
+                                                        <span class="glyphicon glyphicon-calendar"></span>
+                                                    </button>
+                                                </span>
+                                            </div>
+                                            <div class="error,help-block" ng-show="(notificationForm.endRepeatDate.$dirty || submitted) && notificationForm.endRepeatDate.$invalid && notification.endRepeatMode === 'OD'">
+
+                                                <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.required && !(notificationForm.endRepeatDate.$error.date || notificationForm.endRepeatDate.$error.min || notificationForm.endRepeatDate.$error.max)">
+                                                    {{ entity + "End repeat date not entered" | translate }}</span>
+                                                <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                <span class="help-block" ng-show="notificationForm.endRepeatDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group required">
+                                        <div class="col-md-3 radio">
+                                            <label>
+                                                <input type="radio" name="endRepeat" ng-change="clearFromRadio()" ng-model="notification.endRepeatMode" value="AD">{{ entity + 'After' | translate}}
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4" ng-class="{'has-error': notificationForm.endRepeatDays.$invalid && notification.endRepeatMode === 'AD' && (notificationForm.endRepeatDays.$dirty || submitted)}"> 
+                                            <input type="text" class="form-control" name="endRepeatDays" ng-model="endRepeat.afterDaysUnits" ng-disabled="notification.endRepeatMode !== 'AD'" ng-required="notification.endRepeatMode === 'AD'" numbers-only/>
+                                            <div class="error,help-block" ng-show="(notificationForm.endRepeatDays.$dirty || submitted) && notificationForm.endRepeatDays.$invalid && notification.endRepeatMode === 'AD'">
+                                                <span class="help-block" ng-show="notificationForm.endRepeatDays.$error.required">{{ entity + 'Days limit to end repeat not entered' | translate}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2"><p class="form-control-static">{{ entity + 'days' | translate}}</p></div>
+                                    </div>
+                                    <div class="form-group required">
+                                        <div class="col-md-3 radio">
+                                            <label>
+                                                <input type="radio" name="endRepeat" ng-change="clearFromRadio()" ng-model="notification.endRepeatMode" value="AR">{{ entity + 'After' | translate}}
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4" ng-class="{'has-error': notificationForm.endRepeatRepititions.$invalid && notification.endRepeatMode === 'AR' && (notificationForm.endRepeatRepititions.$dirty || submitted)}"> 
+                                            <input type="text" class="form-control" name="endRepeatRepititions" ng-model="endRepeat.afterRepititionsUnits" ng-disabled="notification.endRepeatMode !== 'AR'" ng-required="notification.endRepeatMode === 'AR'" numbers-only/>
+                                            <div class="error,help-block" ng-show="(notificationForm.endRepeatRepititions.$dirty || submitted) && notificationForm.endRepeatRepititions.$invalid && notification.endRepeatMode === 'AR'">
+                                                <span class="help-block" ng-show="notificationForm.endRepeatRepititions.$error.required">{{ entity + 'Repititions limit to end repeat not entered' | translate}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2"><p class="form-control-static">{{ entity + 'repititions' | translate}}</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Time Based Ends -->
+                <div class="form-group" >
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right"> 
+                                <button class="btn btn-link" ng-click="cancelNotification(notificationForm)">{{entity + "Cancel"| translate}}</button>&nbsp;
+                                <button type="button"  class="btn btn-hkg" ng-click="saveEmailConfiguration(notificationForm)">{{entity + "Save Configuration"| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div ng-if="isExternalReport">
+        <h3>
+            <span class="wordRap">{{ 'Menu.' + displayName | translate:{displayName:(displayName | translate)} }}</span>
+        </h3>
+        <div class="row">
+            <div class="form-group pull-right">
+                <label class="col-md-1">
+                    <input type="checkbox" ng-change="updateDashboardStatus();" id="isDashboard" name="isDashboard" ng-model="report.isDashboard">
+                </label>
+                <label for="isDashboard"  class="">
+                    {{ entity + 'Show in Dashboard' | translate}}
+                </label>
+
+            </div>
+        </div>
+        <div class="row" ng-if="invalidCredential !== true">
+            <div class="col-xs-12 text-center">
+                <!--<iframe id="reportPreviewiframe" ng-src="{{iframeUrl}}">-->
+                <iframe id="reportPreviewiframe" src="{{iframeUrl}}" style="width: 100%;height: 500px;"></iframe>
+                <!--<iframe ng-src="{{report.query}}" style="width: 90%;height: 450px;" ng-attr-onload="iframeLoaded()" ng-attr-onerror="iframeFailed()">-->
+            </div>
+        </div>
+        <div class="row" ng-if="invalidCredential === true">
+            <div class="col-xs-12 text-center">
+                <table class="table table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{ entity + "Invalid credentials for analytics server, Contact administrator" | translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!--<div class="modal fade " data-backdrop="static" data-keyboard="false" id="previewReportModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <div class="modal-header">
+                <button ng-click="hidePreviewModal()" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel"> {{entity + 'Preview Report'| translate }}</h4>
+            </div>
+            <div class="modal-body">
+                <div class='form-group required'>
+                    <div class="table-responsive" ng-show="previewData.length > 0">
+                        <table ng-table="previewTableParams" class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th>Sr No.</th>
+                                    <th ng-repeat='col in columns'>
+                                        <span ng-if="col.alias !== undefined || col.alias !== ''">{{col.alias}}</span>
+                                        <span ng-if="col.alias == undefined || col.alias == ''">{{col.fieldLabel}}</span>
+                                    </th>
+                                </tr>
+                                <tr ng-repeat="row in $data">
+                                    <td>{{$index + 1}}</td>
+                                    <td ng-repeat="col in columns">
+                                        <span ng-if="(filter.type !== 'timestamp')"> {{row[col.alias] === undefined ? (row[col.fieldLabel] === undefined ? '-' : row[col.fieldLabel]) : row[col.alias]}}</span>
+                                        <span ng-if="(filter.type === 'timestamp')"> {{row[col.alias] === undefined ? (row[col.fieldLabel] === undefined ? '-' : row[col.fieldLabel]) : row[col.alias] | date : 'yyyy-MM-dd'}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"></td>
+                                    <td ng-repeat="col in columns" class="text-center">
+                                        <span ng-if="col.showTotal === undefined || col.showTotal === false">N/A</span>
+                                        <span ng-if="col.showTotal === true">Total: {{col.total}}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-show="previewData.length === 0">
+                        <span>{{entity + 'No Report Data Available'|translate}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" >
+                <a href="" ng-click="hidePreviewModal()"> {{entity + 'Close'| translate }}</a>
+            </div>
+        </div>
+    </div>
+</div>-->

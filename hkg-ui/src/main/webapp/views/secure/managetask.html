@@ -1,0 +1,144 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>
+                    <li>{{ entity + 'Manage' | translate}}</li>
+                    <li >{{ entity + 'Tasks' | translate}}</li>                    
+                    <li class="active uppercase" ng-show="taskOperation !== 'addTask' && taskOperation !== 'editTask'">{{ entity + 'View Tasks' | translate}}</li>
+                    <li class="active uppercase" ng-show="taskOperation === 'addTask'">{{ entity + 'Add Task' | translate}}</li>
+                    <li class="active uppercase" ng-show="taskOperation === 'editTask'">{{ entity + 'Edit Task' | translate}}</li>
+                </ol>
+
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="(canAccess('tasksAssignToAll') || canAccess('tasksAssignToSelf')) && (taskOperation !== 'addTask')"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a class="pull-right" ng-click="setTaskOperation('addTask')">{{ entity + 'Add Task' | translate}}</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+        <div class="col-xs-9 new-panel">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-xs-12 col-lg-12 well well-sm" ng-if="!configureWorkFlow">
+                        <div class="input-group">
+                            <div id="scrollable-dropdown-menu">
+                                <input class="typeahead" type="text" ng-model="searchtext" placeholder="Search by task names, dues dates, assigned to" 
+                                       ag-search="{{apipath}}task/searchTask" 
+                                       result-format="taskName,dueDate,lastUpdate" 
+                                       on-select="openSearchedTask" 
+                                       on-enter="getSearchedTask"
+                                       search-list-array='searchedTaskList'
+                                       id="scrollable-dropdown-menu"/>
+                            </div>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-hkg" ng-click="getSearchedTask(searchedTaskList)"  type="button"><span class="glyphicon glyphicon-search"></span></button>
+                            </span>
+                        </div>  
+                        <span ng-show="isInValidSearch">{{i18EntityLeaveWorkflow + 'No matching results'| translate }}</span>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    <div ng-include src="'views/secure/searchedtask.html'" ng-if="displayTaskFlag === 'search'"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <form method="POST" class="form-horizontal" name="manageTaskForm" novalidate >
+                        <div ng-if="taskOperation === 'manageTask'" class="col-md-12">
+                            <!--Edit category form-->
+                            <div ng-if="editCategoryFlag && !displayTaskRepitition && !displayTaskDetails" class="row">
+                                <h4>
+                                    <span tooltip="{{selectedSmartList.currentNode.text}}" tooltip-placement="right" ng-bind="selectedSmartList.currentNode.text.length > 25 ? selectedSmartList.currentNode.text.substring(0, 25) + '...' : selectedSmartList.currentNode.text"></span>
+                                </h4>
+
+                                <div class="form-group required">
+                                    <br/>
+                                    <div class="col-md-1"></div>
+                                    <label for="categoryName"  class="col-md-2 ">
+                                        {{ entity + 'Category Name' | translate}}
+                                    </label>
+                                    <div class="col-md-6" ng-class="{'has-error': manageTaskForm.categoryName.$invalid}"> 
+                                        <input type="text" ng-model="category.text"  name="categoryName" id="categoryName" typeahead="category.text as category.text for category in taskCategories | filter:{text:$viewValue}" class="form-control" maxlength="100" required ng-change="manageTaskForm.categoryName.$setValidity('exists', true)">
+                                        <div class="error,help-block" ng-show="(manageTaskForm.categoryName.$dirty || categoryForm.submitted) && manageTaskForm.categoryName.$invalid">
+                                            <span class="help-block" ng-show="manageTaskForm.categoryName.$error.required">{{ entity + 'Category not entered' | translate}}</span>
+                                            <span class="help-block" ng-show="manageTaskForm.categoryName.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <br/>
+                                    <div class="col-md-1"></div>
+                                    <dynamic-form  input-css ="col-md-6" label-css="col-md-2" 
+                                                   db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" 
+                                                   template="categoryTemplate" ng-model="addCategoryData" ng-if="categoryTemplate" submit-flag-name="categoryForm.submitted">
+                                                       
+                                    </dynamic-form>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-md-1"></div>
+                                    <label for="categoryStatus"  class="col-md-2 ">
+                                        {{ entity + 'Status' | translate}}
+                                    </label>
+                                    <div class="col-md-6"> 
+                                        <label class="radio-inline">
+                                            <input type="radio" id="cancelTaskYes" name="categoryStatus" ng-model="category.status" value="Active">{{ entity + 'Available' | translate}}
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input type="radio" id="cancelTaskNo" name="categoryStatus" ng-model="category.status" value="Remove">{{ entity + 'Remove' | translate}}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--view tasks template-->
+                            <div ng-if="displayTaskFlag !== 'search'" ng-class="{'row':editCategoryFlag}">
+                                <div ng-include src="'views/secure/viewtasks.html'"></div>
+                            </div>
+                        </div>
+                        <!--Edit category buttons-->
+                        <div ng-if="editCategoryFlag && !displayTaskRepitition && !displayTaskDetails">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right"> 
+                                        <a href="" ng-click="initManageTask()">
+                                            {{ entity + 'Cancel' | translate}}
+                                        </a>&nbsp;
+                                        <button class="btn btn-hkg" ng-click="editTaskCategory(manageTaskForm)">{{ entity + 'Save Category' | translate}}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <!--Add Task Template-->
+                    <div ng-if="displayTaskFlag !== 'search' && (taskOperation === 'addTask' || taskOperation === 'editTask')">
+                        <div ng-include src="'views/secure/addtask.html'" ng-if="(canAccess('tasksAssignToAll') || canAccess('tasksAssignToSelf'))"></div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{ entity + 'EXISTING TASK CATEGORIES' | translate}}</strong></span>
+                <hr class="margin-md"/>
+                <!--Tree view component-->
+                <div>
+                    <div  ng-show="taskList.length > 0" ng-click='setTask()' 
+                          data-angular-treeview="true"
+                          data-tree-id="selectedSmartList"
+                          ag-treemodel="taskList" entity-name="TSKCTG_NM.">
+                    </div>
+                    <div ng-show="taskList.length <= 0">
+                        {{ entity + 'No tasks exist' | translate}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

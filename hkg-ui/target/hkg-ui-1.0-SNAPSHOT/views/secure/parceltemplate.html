@@ -1,0 +1,100 @@
+<div ng-controller="ParcelTemplateController" >
+    <h4>{{entity + 'Rough Stock'| translate}}</h4>
+    <div ng-if="showConfigMsg === true">  
+        <table class="table table-bordered">
+            <tr>
+                <td class="col-md-12">
+                    {{entity + 'Mandatory fields are not configured for your designation, Please contact administrator'| translate}}
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div ng-if="showConfigMsg === false">
+        <div ng-if="searchedDataFromDbForUiGrid.length > 0">
+            <div ui-grid="gridOptions" ui-grid-selection ui-grid-auto-resize class="grid"></div>
+        </div>
+        <div ng-if="searchedDataFromDbForUiGrid == undefined">
+            <div class="col-xs-12 col-lg-12">
+                <table class="table  table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'No results found'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <br/><br/>
+        <div>
+            <h4 ng-show="editableParcelRows && editableParcelRows.length > 0">{{entity + 'Available Stock'| translate}}</h4>
+            <form name="parcelForm">
+                <table class="table" ng-show="editableParcelRows && editableParcelRows.length > 0">
+                    <thead>
+                    <th>
+                        {{entity + 'Parcel ID'| translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Stock Carat' | translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Stock Pieces' | translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Rate$' | translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Amount$' | translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Exchange rate ' | translate}}
+                    </th>
+                    <th>
+                        {{ entity + 'Amount' | translate}}
+                    </th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="editableRow in editableParcelRows" ng-form="form{{$index}}">
+                            <td>{{editableRow["parcelId$AG$String"]}}</td>
+                            <td ng-class='{"has-error":(this["form" + $index].$invalid)}'>
+                                <input class="form-control" name="carat" type="text" numbers-only='true' decimalallowed="true" ng-model="editableRow['Stock Carat']" 
+                                       ng-change="calculateAmounts(editableRow,{{'form' + $index}})" required max="{{editableRow['oldCarat']}}" min="1">
+                                <span class="error help-block" ng-if="this['form' + $index].carat.$error.max">{{entityParcelTemplate + 'Please enter value between 1 to ' + editableRow.oldCarat| translate}}</span>
+                                <span class="error help-block" ng-if="this['form' + $index].carat.$error.min">{{entityParcelTemplate + 'Please enter value between 1 to ' + editableRow.oldCarat| translate}}</span>
+                                <span class="error help-block" ng-if="this['form' + $index].carat.$error.required">required</span>
+                                <span class="error help-block" ng-if="!this['form' + $index].carat.$error.required &&
+                                                !this['form' + $index].carat.$error.min &&
+                                                !this['form' + $index].carat.$error.max &&
+                                                this['form' + $index].carat.$error.caratpieces">{{entityParcelTemplate + 'Invalid carat or pieces value'| translate}}</span>
+                            </td>
+                            <td ng-class='{"has-error":(this["form" + $index].$invalid)}'>
+                                <input class="form-control" name="pieces" type="text" numbers-only='true'  ng-model="editableRow['Stock Pieces']" 
+                                       ng-change="calculateAmounts(editableRow,{{'form' + $index}})" required max="{{editableRow['oldPieces']}}" min="1">
+                                <span class="error help-block" ng-if="this['form' + $index].pieces.$error.max">{{entityParcelTemplate + 'Please enter value between 1 to ' + editableRow.oldPieces| translate}}</span>
+                                <span class="error help-block" ng-if="this['form' + $index].pieces.$error.min">{{entityParcelTemplate + 'Please enter value between 1 to ' + editableRow.oldPieces| translate}}</span>
+                                <span class="error help-block" ng-if="this['form' + $index].pieces.$error.required">required</span>
+                                <span class="error help-block" ng-if="!this['form' + $index].pieces.$error.max &&
+                                                !this['form' + $index].pieces.$error.min &&
+                                                !this['form' + $index].pieces.$error.required &&
+                                                this['form' + $index].pieces.$error.caratpieces">{{entityParcelTemplate + 'Invalid carat or pieces value'| translate}}</span>
+                            </td>
+                            <td>{{editableRow["origRateInDollar$NM$Double"]}}</td>
+                            <td>{{editableRow["origAmountInDollar$FRM$Double"]}}</td>
+                            <td><input class="form-control" type="text" ng-model="editableRow['exchangeRate']" 
+                                       ng-change="calculateAmounts(editableRow)" required></td>
+                            <td>{{editableRow["amountInRs"]}}</td>
+                        </tr>
+                        <tr style="background-color: lavender">
+                            <td>Total :</td>
+                            <td>{{tableFooterData["Stock Carat"]}}</td>
+                            <td>{{tableFooterData["Stock Pieces"]}}</td>
+                            <td>{{tableFooterData["origRateInDollar$NM$Double"]}}</td>
+                            <td>{{tableFooterData["origAmountInDollar$FRM$Double"]}}</td>
+                            <td>{{tableFooterData["exchangeRate"]}}</td>
+                            <td>{{tableFooterData["amountInRs"]}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>

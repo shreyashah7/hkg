@@ -1,0 +1,390 @@
+<form method="POST" class="form-horizontal" name="allot" novalidate>
+    <div class="row" ng-init="initializeData()">
+        <div class="col-xs-12"> 
+            <div class="col-xs-12 breadcrumb-bg">
+                <div class="col-xs-12 col-lg-8">
+                    <ol class="breadcrumb">
+                        <li>{{entity + 'You are here'| translate }}</li>
+                        <li>{{entity + 'Stock'| translate }}</li>
+                        <li class="active">{{entity + 'Allot'| translate }}</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="col-xs-12 new-panel">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div ng-show="!flag.showstockPage && !stockdataflag">
+                    <div class="col-xs-12">
+                        <table class="table table-bordered" ng-if="flag.configSearchFlag">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'First configure search fields for allot stock'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                        <table class="table table-bordered" ng-if="currentNodeStocks && (currentNodeStocks.length === 0) && !flag.configSearchFlag">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'No details found to allot stock'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-xs-12" ng-show="nodeDetailsInfo.length > 1">
+                        <div class="col-md-2">
+                            <label for="nodeId" class="control-label">{{entity + 'Select Node'| translate}}</label>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="nodeId" name="nodeId" ng-model="currentActivityNode" ng-change="updateStockAccordingToNode(currentActivityNode)" ng-options="node.nodeId as (node.nodeId +' - '+ node.groupName) for node in nodeDetailsInfo">
+                            </select>
+                        </div>
+                    </div>
+                    <div id='masterDetail' ng-if="(currentNodeStocks.length) > 0 && listFilled">
+                        <div><h4>{{entity + 'Stock details'| translate}}</h4></div>
+                        <div class="form-group">                        
+                            <div  class="col-md-12" ng-if="listFilled">
+                                <div id="gridTable" ui-grid="gridOptions" ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>  
+                    </div>
+                    <div class="col-xs-12" ng-show="(currentNodeStocks.length) > 0 && flag.rowSelectedflag">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onCanelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="allotStockNext()">{{entity + 'Next'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="flag.showstockPage && stockdataflag">
+                    <div ng-if="flag.multipleParents === false">
+                    <div ng-if="generalParentInvoiceTemplate">
+<!--                        <div ng-if="!flag.showParent" class="panel-heading"> class added to match parent collapse 
+                            <h4>{{entity + 'Invoice Details'| translate }}</h4>
+                        </div>
+                        <div class="col-md-12" ng-if="!flag.showParent">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        <span>{{entity + 'Not applicable - because there are multiple Invoices involved'|translate}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>-->
+                        <div class="col-md-12" id="invoiceParent" title="Invoice Details" accordion-collapse ng-if="!flag.multipleParents && parentInvoiceCustom && generalParentInvoiceTemplate.length > 0">
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentInvoiceTemplate" 
+                                       ng-model="parentInvoiceCustom" ng-if="generalParentInvoiceTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                            </dynamic-form>
+                        </div>
+                    </div>
+                    <div ng-if="generalParentParcelTemplate">
+<!--                        <div ng-if="!flag.showParent" class="panel-heading"> class added to match parent collapse 
+                            <h4>{{entity + 'Parcel Details'| translate }}</h4>  
+                        </div>
+                        <div class="col-md-12" ng-if="!flag.showParent">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        <span>{{entity + 'Not applicable - because there are multiple Parcels involved'|translate}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>-->
+                        <div class="col-md-12" id="parcelParent" title="Parcel Details" accordion-collapse ng-if="!flag.multipleParents && parentParcelCustom && generalParentParcelTemplate.length > 0">
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentParcelTemplate" 
+                                           ng-model="parentParcelCustom" ng-if="generalParentParcelTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                            </dynamic-form>
+                        </div>
+                    </div>
+                    <div ng-if="generalParentLotTemplate">
+<!--                        <div ng-if="!flag.showParent" class="panel-heading"> class added to match parent collapse 
+                            <h4>{{entity + 'Lot Details'| translate }}</h4>
+                        </div>
+                        <div class="col-md-12" ng-if="!flag.showParent">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        <span>{{entity + 'Not applicable - because there are multiple Lots involved'|translate}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>-->
+                        <div class="col-md-12" id="lotParent" title="Lot Details" accordion-collapse ng-if="!flag.multipleParents && parentLotCustom && generalParentLotTemplate.length > 0">
+                            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentLotTemplate" 
+                                           ng-model="parentLotCustom" ng-if="generalParentLotTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                            </dynamic-form>
+                        </div>
+                    </div>
+                    <div ng-if="!flag.displayEditLotflag && flag.displayEditPacketflag">
+                        <div ng-if="generalParentPacketTemplate">
+<!--                            <div ng-if="!flag.showParent" class="panel-heading"> class added to match parent collapse 
+                                <h4>{{entity + 'Packet Details'| translate }}</h4>
+                            </div>
+                            <div class="col-md-12" ng-if="!flag.showParent">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td class="col-md-12">
+                                            <span>{{entity + 'Not applicable - because there are multiple Packets involved'|translate}}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>-->
+                            <div class="col-md-12" id="packetParent" title="Packet Details" accordion-collapse ng-if="!flag.multipleParents && parentPacketCustom && generalParentPacketTemplate.length > 0">
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentPacketTemplate" 
+                                               ng-model="parentPacketCustom" ng-if="generalParentPacketTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                                </dynamic-form>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div ng-if="flag.multipleParents === true && flag.showstockPage === true">
+<!--                        <div class="col-md-12">
+                        <div class="panel-heading">
+                            <h4>{{entity + 'Parent Details'| translate }}</h4>  
+                        </div></div>-->
+                        <div>
+                            <div class="col-md-12" id="packetParent" title="Parent Details" accordion-collapse>
+                                <div id="parentGridTable" ui-grid="parentGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12" ng-if="typeOfAllocation === automaticAllocation">
+                        <div class="panel-heading">
+                            <h4>{{entity + 'Allotment Suggestions'| translate }}</h4>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-md-12">
+                                <div class="col-md-2 control-label">
+                                    <label>{{entity + 'Priority Of Parameter'| translate}}</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="priorityParameter" class="form-control" name="priorityParameter" ng-model="suggestionData.parameter" ng-change="updateSuggestionList()" ng-options="suggestion.id as suggestion.text for suggestion in suggestionParameters">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="suggestionList.length === 0">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No active suggestion(s) available' | translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div ng-if="suggestionList.length > 0">
+                            
+                            <div class="row form-group">
+                                <table class="table col-md-12">
+                                    <thead>
+                                        <tr>
+                                            <th>{{entity + 'Emp ID'| translate}}</th>
+                                            <th>{{entity + 'Employee Name'| translate}}</th>
+                                            <th>{{entity + 'Carat'| translate}}</th>
+                                            <th>{{entity + 'Cut'| translate}}</th>
+                                            <th>{{entity + 'Color'| translate}}</th>
+                                            <th>{{entity + 'Clarity'| translate}}</th>
+                                            <th>{{entity + 'Breakage'| translate}}</th>
+                                            <th>{{entity + 'Presence'| translate}}</th>
+                                            <th>{{entity + 'Workload'| translate}}</th>
+                                            <th>{{entity + 'Select'| translate}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tr ng-repeat="suggestion in suggestionList">
+                                        <td>{{suggestion.userCode}}</td>
+                                        <td>{{suggestion.employeeName}}</td>
+                                        <td>{{suggestion.carat}}</td>
+                                        <td>{{suggestion.cut}}</td>
+                                        <td>{{suggestion.color}}</td>
+                                        <td>{{suggestion.clarity}}</td>
+                                        <td>{{suggestion.breakage}}</td>
+                                        <td>
+                                            <a ng-class="{'text-danger':!suggestion.presence}" href="" ng-click="openAttendance(suggestion)">{{suggestion.presence ? 'Yes':'No'}}</a>
+                                        </td>
+                                        <td>{{suggestion.workLoad}}</td>
+                                        <td><input type="radio" name="selctSuggestion" ng-model="suggestion.isSelected" ng-click="updateAllotTo(suggestion.userId)"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="!flag.staticFieldMissing">
+                        <div ng-if="typeOfAllocation === manualAllocation">
+                            <ng-form class="form-horizontal" name="manualAllocateForm" novalidate>
+                                <div class="col-md-12" ng-if="flag.displayEditLotflag">
+                                    <table class="table table-bordered" ng-if="!generalLotEditTemplate">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'Configure fields to allot stock(s)' | translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                                        <h4 ng-if="generalLotEditTemplate">{{entity + 'Allot Lot'| translate }}</h4>
+                                    </div>
+
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotEditDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotEditTemplate" 
+                                                   ng-model="lotEditCustom" ng-if="generalLotEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" is-diamond="true" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-dynamic="true">
+                                    </dynamic-form>
+                                </div>
+                                <div class="col-md-12" ng-if="flag.displayEditPacketflag">
+                                    <table class="table table-bordered" ng-if="!generalPacketEditTemplate">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'Configure fields to allot packet(s)' | translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                                        <h4 ng-if="generalPacketEditTemplate">{{entity + 'Allot Packet'| translate }}</h4>
+                                    </div>
+
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetEditDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketEditTemplate" 
+                                                   ng-model="packetEditCustom" ng-if="generalPacketEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" is-diamond="true" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-dynamic="true">
+                                    </dynamic-form>
+                                </div>
+
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-6 pull-right text-right">
+                                            <a ng-click="onBack()">{{entity + 'Back'| translate}}</a>&nbsp;
+                                            <button class="btn btn-hkg" ng-show="(flag.displayEditLotflag && !!generalLotEditTemplate) || (flag.displayEditPacketflag && !!generalPacketEditTemplate)" ng-click="allotStock(manualAllocateForm)">{{entity + 'Save'| translate}}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-form>
+                        </div>
+                        <div ng-if="typeOfAllocation === automaticAllocation">
+                            <ng-form name="manualAllocateForm" novalidate>
+                                <div class="col-md-12" ng-if="flag.displayEditLotflag">
+                                    <table class="table table-bordered" ng-if="!generalLotEditTemplate">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'Configure fields to allot stock(s)' | translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                                        <h4 ng-if="generalLotEditTemplate">{{entity + 'Allot Lot'| translate }}</h4>
+                                    </div>
+
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotEditDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotEditTemplate" 
+                                                   ng-model="lotEditCustom" ng-if="generalLotEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" is-diamond="true" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-dynamic="true">
+                                    </dynamic-form>
+                                </div>
+                                <div class="col-md-12" ng-if="flag.displayEditPacketflag">
+                                    <table class="table table-bordered" ng-if="!generalPacketEditTemplate">
+                                        <tr>
+                                            <td class="col-md-12">
+                                                {{entity + 'Configure fields to allot packet(s)' | translate}}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                                        <h4 ng-if="generalPacketEditTemplate">{{entity + 'Allot Packet'| translate }}</h4>
+                                    </div>
+
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetEditDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketEditTemplate" 
+                                                   ng-model="packetEditCustom" ng-if="generalPacketEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" is-diamond="true" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-dynamic="true">
+                                    </dynamic-form>
+                                </div>
+
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-6 pull-right text-right">
+                                            <a ng-click="onBack()">{{entity + 'Back'| translate}}</a>&nbsp;
+                                            <button class="btn btn-hkg" ng-show="(flag.displayEditLotflag && !!generalLotEditTemplate) || (flag.displayEditPacketflag && !!generalPacketEditTemplate)" ng-click="allotStock(manualAllocateForm)">{{entity + 'Save'| translate}}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </ng-form>
+                        </div>
+                    </div>
+                    <div ng-if="flag.staticFieldMissing">
+                        <div class="col-xs-12">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'Mandatory fields are not configured'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-6 pull-right text-right">
+                                    <a ng-click="onBack()">{{entity + 'Back'| translate}}</a>&nbsp;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="attendanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="" ng-click="hideAttendancePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Employee Attendance Detail'| translate }}</h4>
+            </div >
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="row">
+                        <center>
+                            <div class="col-md-8 col-md-offset-2">
+                                <div class="row">
+                                    <label class="col-md-5 text-left">{{entity + 'Employee Name : '| translate }}</label>
+                                    <div class="col-md-7 text-left">{{userDetails.employeeName}}</div>
+                                </div>
+                                <div class="row">&nbsp;</div>
+                                <div class="row">
+                                    <table width="100%" class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-center">{{entity + 'Date'| translate }}</th>
+                                                <th class="text-center">{{entity + 'Leave Status'| translate }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tr ng-repeat="userLeave in userDetails.leaveDetails">
+                                            <td class="text-center">{{userLeave.id}}</td>
+                                            <td class="text-center">{{userLeave.status}}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </center>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="col-xs-12 pull-right text-right"> 
+                                <button class="btn btn-hkg " ng-click="hideAttendancePopUp()">{{ entity + "Ok" | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

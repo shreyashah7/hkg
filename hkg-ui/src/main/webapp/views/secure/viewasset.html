@@ -1,0 +1,171 @@
+<div>
+    <form method="POST" class="form-horizontal" name="editCatgoryForm" novalidate>
+        <div class="form-group">            
+            <label for="assetCategory" class="col-md-3 col-lg-3 col-xs-4 control-label">{{entity + 'Parent category'|translate}}</label>
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <div class="dropdown">
+                    <button class="form-control dropdown-toggle" id="assetCategory" data-toggle="dropdown">
+                        <span class="pull-left" ng-bind="category.parentName"></span><span class="caret pull-right no-margin"></span>
+                    </button>
+                    <ul ng-if="categoryDropdown" class="dropdown-menu col-xs-12" role="menu" aria-labelledby="assetCategory">
+                        <div ng-click='assetClick(selectedCategoryDropdown)'
+                             data-angular-treeview="true"
+                             data-tree-id="selectedCategoryDropdown"
+                             ag-treemodel="categoryDropdown" search-id="parentId">
+                        </div>
+                    </ul>
+                </div>
+            </div>          
+        </div>     
+        <div class="form-group">
+            <label for="categoryPrefix" class="col-md-3 col-lg-3 col-xs-4  control-label">{{entity + 'ID prefix'|translate}}</label>
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <input type="text" id="categoryPrefix" name="categoryPrefix" class="form-control input-md" ng-model="category.categoryPrefix" readonly="true"/>            
+            </div>
+        </div>
+        <div class="form-group required">
+            <label for="availabelAsset" class="col-md-3 col-lg-3 col-xs-4 control-label">{{entity + 'Title'|translate}}</label>            
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <div ng-class="{'has-error': editCatgoryForm.availabelAsset.$invalid}">  
+                    <input type="text" id="availabelAsset" name="availabelAsset" class="form-control input-md" ng-model="category.originalName" required ng-change="editCatgoryForm.availabelAsset.$setValidity('exists', true);" maxlength="100"/>
+                    <div class="error,help-block" ng-show="(editCatgoryForm.availabelAsset.$dirty || submitted) && editCatgoryForm.availabelAsset.$invalid">
+                        <span class="help-block" ng-show="editCatgoryForm.availabelAsset.$error.required">{{entity + 'Category name not entered'| translate }}</span>
+                        <span class="help-block" ng-show="editCatgoryForm.availabelAsset.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="remarks" class="col-md-3 col-lg-3 col-xs-4  control-label">{{entity + 'Description'|translate}}</label>
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <textarea id="remarks" rows="8" maxlength="500" ng-trim="false" class="form-control input-md" ng-model="category.description"></textarea>           
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-3 col-lg-3 col-xs-4">&nbsp;</div>
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <div class="pull-right" id="messagecounter">{{500 - category.description.length}}&nbsp;  {{entity + 'characters left'| translate }}</div> 
+            </div>
+        </div>
+        <div class="form-group required">
+            <label for="input_category" class="col-md-3 col-lg-3 col-xs-4 control-label">{{entity + 'Status'|translate}}</label>
+            <div class="col-lg-6 col-md-6 col-xs-8">
+                <select class="form-control" name="numberOfLabel" required id="input_category" ng-options="count for count in statusList" ng-model="category.status"> 
+                    <!--<option value="">Select</option>-->
+                </select>
+            </div>
+        </div>
+        <dynamic-form input-css ="col-lg-6 col-md-6 col-xs-8" label-css="col-md-3 col-lg-3 col-xs-4 control-label" db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" template="categoryTemplate" ng-model="categoryCustomData" ng-if="categoryTemplate" edit-flag="true">
+        </dynamic-form>
+        <div class="form-group">
+
+            <div class="col-xs-12">
+                <h4>{{entity + 'Available assets'|translate}}</h4>
+                <div class="table-responsive">
+
+                    <div ng-show="(assetList.length) > 0">
+                        <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="assetList">
+                            <thead>
+                                <tr>
+                                    <th>{{entity + 'Asset Name'|translate}}</th>
+                                    <th>{{entity + 'Type'|translate}}</th>
+                                    <th>{{entity + 'Status'|translate}}</th>
+                                    <th>{{entity + 'Action'|translate}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr  ng-repeat="asset in assetList" dt-rows>
+                                    <td> <span class="wordRap"  ng-bind="asset.modelName"></span></td>
+                                    <td ><span class="wordRap" ng-if="asset.assetType">{{entity + 'Managed'|translate}}</span>
+                                        <span ng-if="!asset.assetType" class="wordRap">{{entity + 'Nonmanaged'|translate}}</span></td>
+                                    <td class="wordRap"> <span class="wordRap" ng-bind="asset.statusString"></span></td>
+                                    <td align="center"><a ><span class="glyphicon glyphicon-edit" ng-click="retrieveAsset(asset);" title="{{entity + 'Edit'|translate}}"></span></a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-if="(assetList.length) === 0">
+            <a class="pull-right" ng-click="makeEditFlagFalse();
+                setViewFlag('create')" >{{entity + 'Add assets by clicking here..'|translate}}</a>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 text-right">
+                <hr/>
+                <a href="" ng-click="assetCancel(editCatgoryForm);">{{entity + 'Cancel'|translate}}</a>&nbsp;
+                <button class="btn btn-hkg" ng-click="updateCategory(editCatgoryForm)">{{entity + 'Edit Category'|translate}}</button>
+            </div>
+        </div>
+
+        <!--</div>-->
+    </form>
+</div>
+
+<div class="modal fade" id="removecategoryModal">
+    <form name="removeAssetForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideconformationForRemovecategory();">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Remove Category'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="assetCategory" class="col-md-12">
+                            <!--{{ entity + "removeMsg" | translate:{categoryName:(category.displayName | translate)} }}-->                            
+                            {{ entity + "Are you sure you want to remove \{\{categoryName\}\} ?" | translate:{categoryName:(category.displayName | translate)} }}  
+                            <!--{{entity + 'Are you sure you want to remove '|translate}}{{category.displayName}}-->
+                        </label>
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <div class="col-xs-12 text-right">
+                        <a href="" ng-click="hideconformationForRemovecategory();">{{entity + 'Cancel'|translate}}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="removeCategory();">{{entity + 'Remove'|translate}}</button>
+                    </div>               
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="messageModal">
+    <form name="messageModalForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="removeCanNotRemoveCategory();">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Can Not Remove Category'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="assetCategory" class="col-md-12">{{entity + 'This category is having active assets. Can not remove this category '|translate}}{{category.displayName}}</label>
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button class="btn btn-hkg" ng-click="removeCanNotRemoveCategory();">
+                                        {{entity + 'Ok'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

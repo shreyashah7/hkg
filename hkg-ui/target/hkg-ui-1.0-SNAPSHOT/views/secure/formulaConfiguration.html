@@ -1,0 +1,18 @@
+<form method="POST" class="form-horizontal" name="formulaConfigForm" novalidate>
+    <label for="input-sortable">Formula:</label>
+    <div class="form-group">
+        <div >
+            <input class="form-control" placeholder="Configure Formula..." name="formula" ng-model="formula" ag-selectize="selectizeOptions" options="options" ng-change="validateFormula()"/>
+        </div>
+        <div ng-class="{'has-error': formulaConfigForm.formula.$invalid}">
+            <div class="error,help-block" ng-show="(formulaConfigForm.formula.$dirty) && formulaConfigForm.formula.$invalid">
+                <span class="help-block" ng-show="formulaConfigForm.formula.$error.invalidFormula">
+                    Invalid Formula
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <button type="button" ng-click="saveFormula()"  class="btn btn-default">Save Formula</button>
+    </div>
+</form>

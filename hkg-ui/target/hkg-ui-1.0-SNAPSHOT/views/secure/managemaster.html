@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<div class="col-xs-12 breadcrumb-bg" >
+    <div class="col-xs-12 col-lg-8">
+        <ol class="breadcrumb">
+            <li>{{i18Locales + 'You are here'| translate}}</li>
+            <li>{{i18Locales + 'Manage'| translate}}</li>
+            <li >{{i18Locales + 'Master'| translate}}</li>
+            <li class="active" ng-show="!editMaster">{{i18Locales + 'View Master'| translate}}</li>            
+            <li class="active" ng-show="editMaster && !searchPage">{{i18Locales + 'Edit Master'| translate}}</li>            
+        </ol>
+    </div>
+    <div class="col-xs-12 col-lg-4 text-right context-menu" ng-show="editMaster || searchPage"> 
+        <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a class="pull-right" ng-click="cancel()">{{ entity + 'View Master' | translate}}</a>
+    </div>
+</div>
+<div ng-if="canAccess('customFieldAddEdit')">
+    <span ng-init="hasCustomMasterRigth(true)"></span>
+</div>
+<div ng-class="{'col-xs-12 new-panel':customMaster.length === 0,'col-xs-9 new-panel':customMaster.length !== 0}">
+    <form role="form" class="form-horizontal" novalidate name="masterForm">
+        <!--<div class="row">-->
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="col-xs-12 col-lg-12 well well-sm" >
+                    <div class="input-group">
+                        <div id="scrollable-dropdown-menu" >
+                            <input class="typeahead" type="text"  placeholder="Search masters by name" 
+                                   ag-search="{{apipath}}master/searchMaster" 
+                                   result-format="masterName,usedInFeature" 
+                                   on-select="setMasterForEdit" 
+                                   on-enter="setSearchflag"
+                                   search-list-array='searchedMasterList'
+                                   id="scrollable-dropdown-menu"/>
+
+                        </div>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-hkg" ng-click="setSearchflag(searchedMasterList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
+                    </div>
+                    <!--input-group-->  
+                </div>
+                <div class="clearfix"></div>
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+            </div>
+        </div>
+        <div class="form-group" ng-show="listFilled && masterList && !searchPage">
+            <div class="table-responsive col-lg-12 col-xs-12" ng-show="listFilled && masterList && !searchPage">
+                <table width="100%" >
+                    <tr>                        
+                        <td ng-repeat="letter in letterList"><a ng-class="{'hkg-bold':(selected === letter)}" ng-click="sort(letter)">{{letter}}</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="form-group" ng-show="searchPage && canAccess('mastersAddEdit')">
+            <div class="col-xs-12 new-panel">
+                <div class="col-lg-12 col-md-12 col-xs-12" ng-show="!(searchedMasterRecord.length) > 0">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                {{ entity + "No records exists.. " | translate }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <h4 ng-if="searchedMasterRecord.length > 0">{{entity + 'Available Master'|translate}}</h4>
+                <div class="table-responsive" ng-if="(searchedMasterRecord.length) > 0">
+                    <div >
+                        <table class="table table-striped table-responsive" cellspacing="0" width="100%" ng-if="(searchedMasterRecord.length) > 0" ag-data-table="searchedMasterRecord">
+                            <thead>
+                                <tr>
+                                    <th>{{entity + 'Master Name'|translate}}</th>
+                                    <th>{{entity + 'Action'|translate}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="master in searchedMasterRecord" dt-rows>
+                                    <td><span class="wordRap"ng-bind="master.masterName"></span></td>
+                                    <td align="center"><a><span class="glyphicon glyphicon-edit" ng-click="setMasterForEdit(master);" title="Edit"></span></a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" ng-show="!(listOfMaster.length) > 0">
+            <div class="col-md-12 col-xs-12 col-lg-12" ng-show="!(listOfMaster.length) > 0">
+                <table class="table table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{ entity + "No records exists.. " | translate }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id='masterDetail' ng-show="masterList && !searchPage && (listOfMaster.length) > 0 && listOfMasterFilled">
+            <div class="form-group">
+                <div  class="col-md-12" ng-if="listOfMasterFilled">
+                    <table class="table" cellspacing="0" width="100%" ag-data-table="listOfMaster" >
+                        <thead>
+                            <tr>
+                                <th>{{entity + "Sr.No."|translate}}</th>
+                                <th>{{entity + "Master Name"|translate}}</th>
+                                <th>{{entity + "Used In Feature"|translate}}</th>
+                                <th ng-if="canAccess('mastersAddEdit')">{{ entity + "Actions" | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="row in listOfMaster" >
+                                <td>{{$index + 1}}</td>
+                                <td>{{row.masterName}}</td>
+                                <td>{{row.usedInFeature}}</td>
+                                <td>
+                                    <span class="col-md-offset-2">
+                                        <a ng-click="showConfirmationPopup(row)" title="{{entity + 'Click to edit'|translate}}" class="glyphicon glyphicon-edit "></a>&nbsp;&nbsp;
+                                        <a ng-if="row.masterType === 'C'" ng-click="addExceptionPopup(row)" title="{{entity + 'Add Exception'|translate}}" class="glyphicon glyphicon-asterisk "></a>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="modal fade" role="dialog" id="passwordPopUp" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideConfirmationPopup()">&times;</a>
+                    <h4 class="modal-title" id="myModalLabel">{{ entity + 'Dual Authentication' | translate}}</h4>
+                </div>
+                <form  class="form-horizontal" name="passwordPopUpForm" role='form' novalidate method="POST">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                {{ entity + 'You require special permissions to edit the master.' | translate}}
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <div class="col-md-3">
+                                <label class="col-md-3 control-label" for="password">{{ entity + 'Password:' | translate}}</label>
+                            </div>
+                            <div class="col-md-4" ng-class="{'has-error': (passwordPopUpForm.password.$dirty || submitted) && (passwordPopUpForm.password.$invalid || inValidPassword)}">
+                                <input type="password" class="form-control" ng-change="passwordChange()" ng-model="password" required id="password" name="password" ng-blur="passwordPopUpForm.password.$dirty = true">
+                                <div ng-show="(passwordPopUpForm.password.$invalid || inValidPassword) && (passwordPopUpForm.password.$dirty || submitted)">
+                                    <span ng-show="inValidPassword" class="text-danger">{{entity + 'You have entered wrong password'| translate}}</span>
+                                    <span ng-show="(passwordPopUpForm.password.$error.required && passwordPopUpForm.password.$dirty) || submitted" class="text-danger">{{entity + 'Value not entered.'| translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-xs-12 pull-right text-right">
+                                <a ng-click="hideConfirmationPopup();">{{entity + 'Cancel'| translate}}</a>
+                                &nbsp;
+                                <button class="btn btn-hkg" ng-click="proceed(passwordPopUpForm)">{{ entity + "Proceed" | translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-12" ng-show="editMaster">
+
+        <!--<div class="form-group">-->
+        <div class="col-md-3">
+            <h4>{{masterName}}</h4>
+        </div>
+        <!--<br/>-->
+        <!--</div>-->
+        <div class="col-xs-12">
+            <form role="form" class="form-horizontal" novalidate name="editMasterForm" method="POST">
+                <div ng-init="registerLocationChangeEvent(editMasterForm);
+                        initMasterForm(editMasterForm)">
+                    <div  class="form-group required">
+                        <label class="form-control-static " ng-class="{'col-md-3':customMaster.length === 0,'col-md-4':customMaster.length !== 0}">{{ entity + 'Is Sensitive Master?' | translate}}</label>
+                        <div class="col-md-4" style="margin-left: -90px">
+                            <div ng-class="{'col-md-2':customMaster.length === 0,'col-md-4':customMaster.length !== 0}">
+                                <label class="radio-inline"><input type="radio" name="radio_isSensitive" ng-value="true" ng-model="isSensitiveMaster"/>{{ entity + 'Yes' | translate}}</label>
+                            </div>
+                            <div ng-class="{'col-md-2':customMaster.length === 0,'col-md-4':customMaster.length !== 0}">
+                                <label class="radio-inline"><input type="radio" name="radio_isSensitive" ng-value="false" ng-model="isSensitiveMaster"/>{{ entity + 'No' | translate}}</label>
+                            </div>
+                        </div>
+
+                        <!--            </div>
+                                    <div class="form-group">-->
+                        <div class="col-xs-3 pull-right text-right">
+                            <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a ng-click="addRow()">{{ entity + 'Add Value' | translate}}</a>
+                        </div>
+                    </div>
+                    <div class="form-group" >
+                        <div class="col-xs-12 col-lg-12" ng-if="editMaster && !(detailOfMaster.masterDataBeans.length) > 0">
+                            <table class="table table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{ entity + "No records exists.. " | translate }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div  class="col-xs-12" ng-show="(detailOfMaster.masterDataBeans.length) > 0" >
+                            <div class="table-responsive">
+                                <table class="table table-bordered" cellspacing="0" width="100%" data-table="detailOfMaster" ng-if="detailsFilled" >
+                                    <thead>
+                                        <tr>
+                                            <th>Shortcut</th>
+                                            <th>Value</th>
+                                            <th><select id="translateTo" class="form-control" name="translateTo" ng-change="languageChange(languageId)" ng-options="language.id as language.title for language in languageList" ng-model="languageId">
+                                                    <option value="">{{entity + 'Translate to'| translate }}</option>
+                                                </select>
+                                            </th>
+                                            <th>Often Used?</th>
+                                            <th>Archive?</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-form="editMaster1"  ng-repeat="row in detailOfMaster.masterDataBeans" novalidate>
+
+                                            <td ng-init="getReference(editMaster1)">
+                                                <div ng-class="{'has-error': (editMaster1.shortcutCode.$error.exists)}">
+                                                    <input type="text" class="form-control" name="shortcutCode" id="shortcutCode" ng-model="row.shortcutCode" ng-change="shortCutExists(row, editMaster1)" ng-disabled="row.isArchieve === true" maxlength="2" numbers-only="numbers-only"/>
+                                                    <span ng-show="editMaster1.shortcutCode.$error.exists" class="text-danger">{{entity + 'Shortcut already assigned.'| translate }}</span>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <div ng-class="{'has-error': (editMaster1.masterValue.$dirty || editMaster1.masterValue.$error.exists || submitted) && editMaster1.masterValue.$invalid}">
+                                                    <input ng-pattern="/^[^.]+$/" type="text" class="form-control"  id ="masterValue" name="masterValue"  ng-model="row.value" ng-change="masterValueExists(row, editMaster1, $index)" maxlength="100" required ng-disabled="row.isArchieve === true"/>
+                                                    <div ng-show="(editMaster1.masterValue.$dirty || submitted) && editMaster1.masterValue.$invalid">
+                                                        <span ng-show="(editMaster1.masterValue.$error.required)" class="text-danger">{{entity + 'Value not entered'| translate }}</span>
+                                                    </div>
+                                                    <span ng-show="editMaster1.masterValue.$error.exists" class="text-danger">{{entity + row.value + ' already entered'| translate }}</span>
+                                                    <span class="help-block" ng-show="editMaster1.masterValue.$error.pattern">{{ entity + 'Value is invalid ' | translate}}</span>
+                                                </div>
+
+                                            </td>
+
+                                            <td><div ng-class="{'has-error': (editMaster1.translation.$dirty || editMaster1.translation.$error.exists || submitted) && editMaster1.translation.$invalid}">
+                                                    <input type="text" class="form-control" id="translation" name="translation" ng-required='!langNotSelected && !row.isArchieve' ng-model="row.langaugeIdNameMap[languageId]" maxlength="100" ng-disabled="row.isArchieve === true || langNotSelected"/>
+                                                </div>
+                                                <div ng-show="(editMaster1.translation.$dirty || submitted) && editMaster1.translation.$invalid">
+                                                    <span ng-show="(editMaster1.translation.$error.required)" class="text-danger">{{entity + 'Value not entered'| translate }}</span>
+                                                </div>
+                                                <span ng-show="editMaster1.translation.$error.exists" class="text-danger">{{entity + 'value assigned.'| translate }}</span>
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" class="checkbox checkbox-inline" ng-model="row.isOftenUsed" ng-checked="row.isOftenUsed" ng-true-value='true' ng-disabled="row.isArchieve === true"/>
+                                            </td>
+
+                                            <td>
+                                                <input type="checkbox" class="checkbox checkbox-inline" ng-model="row.newArchieve" ng-checked="row.newArchieve" ng-true-value='true'/>
+                                                <span class="col-md-offset-2" ng-show="row.valueEntityId === undefined || row.valueEntityId === null">
+                                                    <a title="{{entity + 'Click to remove'|translate}}" ng-click="removeRow(row, editMaster1)" class="glyphicon glyphicon-remove text-danger" ></a>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a ng-click="cancel()">Cancel</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="saveMaster(editMasterForm)" ng-show="canAccess('mastersAddEdit')">{{ entity + "Save Master" | translate }}</button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div ng-if="addExceptionPage === true">
+        <div class="col-md-5">
+            <h4><span title="{{masterName}}">Add Exception - {{masterName.length > 50 ? masterName.substring(0, 50) + '...' : masterName}}</span></h4>
+        </div>
+        <div class="col-xs-12 form-group">
+            <form role="form" class="form-horizontal" novalidate name="addExceptionForm" method="POST">
+                <div ng-init="registerLocationChangeEvent(addExceptionForm);
+                        initAddExceptionForm(addExceptionForm)">
+                    <div class="form-group">
+                        <label for="forUser"  class="col-md-3 control-label">
+                            {{ entity + 'For User' | translate}}
+                        </label>
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="col-md-12 hkg-nopadding" name="forUser" id="forUser" ui-select2="autoCompleteUsers" ng-model="valueException.forUsers"/>
+                                <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                            </div>
+                        </div>    
+                        <div class="col-md-1">
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <label for="forValue"  class="col-md-3 control-label">
+                            {{ entity + 'For Value' | translate}}
+                        </label>
+                        <div class="col-md-6" ng-if="valueList.length > 0">
+                            <div ng-class="{'has-error': addExceptionForm.forValue.$invalid && (addExceptionForm.forValue.$dirty || submitted)}"> 
+                                <input type="text" class="col-md-12 hkg-nopadding" ng-required='true' required name="forValue" id="forValue" ui-select2="multiValues" ng-model="valueException.forValue"/>
+                                <div class="error,help-block" ng-show="(addExceptionForm.forValue.$dirty || submitted) && addExceptionForm.forValue.$invalid">
+                                    <span class="help-block" ng-show="addExceptionForm.forValue.$error.required">{{entity + 'Select values'| translate }}</span>
+                                </div>
+                            </div>
+                        </div>    
+                        <div class="col-md-1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dependentOnField"  class="col-md-3 control-label">
+                            {{ entity + 'Dependent On' | translate}}
+                        </label>
+                        <div class="col-md-7" ng-if="autoCompleteDependentOnFields != undefined">
+                            <div>
+                                <input type="text" class="col-md-5 hkg-nopadding"  name="dependentOnField" id="dependentOnField" ui-select2="autoCompleteDependentOnFields" ng-model="valueException.dependentOnField" />
+                                <div ng-if="fieldValueList !== undefined && fieldValueList.length > 0" class="col-md-6" ng-class="{'has-error': addExceptionForm.dependentOnFieldValues.$invalid && (addExceptionForm.dependentOnFieldValues.$dirty || submitted)}">
+                                    <input type="text" style="position: relative;float: left;  width: 92%;min-height: 1px;padding-left: 0px;padding-right: 0px;" class="hkg-nopadding" name="dependentOnFieldValues" ng-required="valueException.dependentOnField !== true" id="dependentOnFieldValues" ui-select2="multiDependentValueList" ng-model="valueException.dependentOnFieldValues"/>
+                                    <div class="col-md-12 error,help-block" ng-show="(addExceptionForm.dependentOnFieldValues.$dirty || submitted) && addExceptionForm.dependentOnFieldValues.$invalid">
+                                        <span class="help-block" ng-show="addExceptionForm.dependentOnFieldValues.$error.required">{{entity + 'Select Dependent On Values'| translate }}</span>
+                                    </div>
+                                </div>
+
+                                <div ng-if="fieldValueList === undefined || fieldValueList.length === 0" class="col-md-6">
+                                    <span>No Values available</span>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="col-md-1">
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right"> 
+                                <a href="" ng-click="addExceptionForm.$setPristine();
+                                    cancelException()">
+                                    {{ entity + 'Cancel' | translate}}
+                                </a>&nbsp;
+                                <button class="btn btn-hkg">
+                                    <span ng-click="addException(addExceptionForm)" ng-bind="entity + 'Add Exception' | translate" ng-if="!editExceptionFlag"></span>
+                                    <span ng-click="updateException(addExceptionForm)" ng-bind="entity + 'Update Exception' | translate" ng-if="editExceptionFlag"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="form-group" id='masterDetail' ng-if="(exceptionList.length) > 0">
+            <div class="form-group">
+                <div  class="col-md-12" ng-if="exceptionList">
+                    <table class="table" cellspacing="0" width="100%" ag-data-table="exceptionList" >
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">{{entity + "Sr.No."|translate}}</th>
+                                <th class="col-md-3">{{entity + "For User"|translate}}</th>
+                                <th class="col-md-3">{{entity + "For Value"|translate}}</th>
+                                <th class="col-md-3">{{entity + "Dependent On"|translate}}</th>
+                                <th class="col-md-2">{{ entity + "Actions" | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="exception in exceptionList" >
+                                <td class="col-md-1">{{$index + 1}}</td>
+                                <td class="col-md-3"><span title="{{exception.userToBeDisplay}}">{{(exception.userToBeDisplay !== null && exception.userToBeDisplay !== undefined) ? (exception.userToBeDisplay.length > 15 ? exception.userToBeDisplay.substring(0, 15) + '...' : exception.userToBeDisplay) : 'N/A'}}</span></td>
+                                <td class="col-md-3"><span title="{{exception.valueToBeDisplay}}">{{(exception.valueToBeDisplay !== null && exception.valueToBeDisplay !== undefined) ? (exception.valueToBeDisplay.length > 15 ? exception.valueToBeDisplay.substring(0, 15) + '...' : exception.valueToBeDisplay) : 'N/A'}}</span></td>
+                                <td class="col-md-3"><span title="{{exception.dependentOnFieldValuesToBeDisplay}}">{{(exception.dependentOnFieldValuesToBeDisplay !== null && exception.dependentOnFieldValuesToBeDisplay !== undefined) ? (exception.dependentOnFieldValuesToBeDisplay.length > 15 ? exception.dependentOnFieldValuesToBeDisplay.substring(0, 15) + '...' : exception.dependentOnFieldValuesToBeDisplay) : 'N/A'}}</span></td>
+                                <td class="col-md-2">
+                                    <button ng-disabled="exception.isArchive === true"  ng-click="retrieveExceptionForUpdate(exception)" title="{{entity + 'Click to edit'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-edit btn btn-link"></button>&nbsp;&nbsp;
+                                    <button ng-disabled="exception.isUpdated === true" ng-if="exception.isArchive === false" ng-click="removeException(exception)" title="{{entity + 'Remove Exception'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-remove btn btn-link"></button>
+                                    <button ng-disabled="exception.isUpdated === true" ng-if="exception.isArchive === true" ng-click="undoException(exception)" title="{{entity + 'Undo Exception'|translate}}" style="padding-top: 0px" class="glyphicon glyphicon-repeat  btn btn-link "></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-12 pull-right text-right"> 
+                        <a href="" ng-click="addExceptionForm.$setPristine();
+                            cancelExceptionPage()">
+                            {{ entity + 'Cancel' | translate}}
+                        </a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="saveException(addExceptionForm)">
+                            <span ng-bind="entity + 'Save Exception' | translate"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div ng-class="{'col-xs-3 tree-bg':customMaster.length !== 0}" ng-if="customMaster.length !== 0">
+    <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'Existing master types'| translate }}</strong></span>
+        <hr class="margin-md"/>
+        <div  ng-click='showSelectedMasters(selectedMasterId)'
+              data-angular-treeview="true"
+              data-tree-id="selectedMasterId"
+              ag-treemodel="masterType" display-count="true" search-id="serchedList" entity-name="MASTER.">
+        </div>
+
+    </div>
+</div>

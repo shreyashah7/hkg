@@ -1,0 +1,270 @@
+
+<div ng-init="initializeData();">
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12 col-lg-8">
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate}}</li>
+                <li>{{entity + 'Stock'|translate}}</li>
+                <li class="active">{{entity + 'End Of The Day'|translate}}</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 new-panel">
+        <div class="clearfix"></div>
+        <div id="messages" ng-include src="'templates/messages.html'"></div>
+        <div class="clearfix"></div>
+        <div ng-if="flag.homePage && (generalSearchTemplate == null || generalSearchTemplate.length === 0)">
+            <div class="col-lg-12 col-md-12 col-xs-12">
+                <table class="table table-bordered" >
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the search field for end of day'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <p></p>
+        </div>
+        <div  ng-if="flag.homePage && generalSearchTemplate.length > 0">
+            <!--<form class="form-horizontal" name="endDayFirstForm" novalidate>-->
+            <div id="tabset" class="form-group col-lg-12 col-md-12 col-xs-12">
+                <tabset>
+                    <tab  heading="Issue ({{issueStockList.length}})" ng-click="tabChangeEvent('Issue')">
+                        <div id='masterDetailIssue'>
+                            <div class="row">&nbsp;</div>
+                            <div class="form-group">
+                                <div  class="col-md-12" id="issueList" title="Stock Details" accordion-collapse ng-if="issueListFilled && issueStockList.length > 0">
+                                    <div id="gridTable" ui-grid="issueGridOptions"  ui-grid-pinning ui-grid-auto-resize></div>
+                                </div>
+                                <div ng-if="issueListFilled && issueStockList.length === 0">
+                                    <br/>
+                                    <div class="col-lg-12 col-md-12 col-xs-12">
+                                        <table class="table  table-bordered" >
+                                            <tr>
+                                                <td class="col-md-12">
+                                                    {{entity + 'No matching results found'| translate}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div ng-if="flag.issueSecondScreen">
+                                <form class="form-horizontal" name="issueLotOrPacketForm" novalidate>
+                                    <div class="panel-heading">
+                                        <div class="form-group required">
+                                            <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                                                <label for="carrierBoy" class="col-md-4 control-label wordRap">{{entity + "Carrier Boy"| translate}}</label>
+                                                <div class="col-md-8" ng-class="{
+                                            'has-error'
+                                                    : issueLotOrPacketForm.carrierBoy.$invalid && (issueLotOrPacketForm.carrierBoy.$dirty || flag.submitted)
+                                            }">
+                                                    <input id="carrierBoy" required name="carrierBoy" class="form-control hkg-nopadding" ui-select2="autoCompleteIssueTo" ng-model="issueDataBean.carrierBoy"/>
+                                                    <div class="error,help-block" ng-show="issueLotOrPacketForm.carrierBoy.$invalid && (issueLotOrPacketForm.carrierBoy.$dirty || flag.submitted)">
+                                                        <span class="help-block" ng-show="issueLotOrPacketForm.carrierBoy.$error.required">{{ entity + "Select carrier boy" | translate }}</span>                    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                                                <label for="inStockOfDepartment" class="col-md-4 control-label wordRap">{{entity + "In Stock Of Department"| translate}}</label>
+                                                <div class="col-md-8" ng-class="{
+                                            'has-error'
+                                                    : issueLotOrPacketForm.inStockOfDepartment.$invalid && (issueLotOrPacketForm.inStockOfDepartment.$dirty || flag.submitted)
+                                            }">
+                                                    <input id="inStockOfDepartment" required name="inStockOfDepartment" class="form-control hkg-nopadding" ui-select2="autoCompleteInStockOfDepartment" ng-model="issueDataBean.inStockOfDepartment"/>
+                                                    <div class="error,help-block" ng-show="issueLotOrPacketForm.inStockOfDepartment.$invalid && (issueLotOrPacketForm.inStockOfDepartment.$dirty || flag.submitted)">
+                                                        <span class="help-block" ng-show="issueLotOrPacketForm.inStockOfDepartment.$error.required">{{ entity + "Select department" | translate }}</span>                    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="barcodeDiv" class="form-group">
+                                            <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                                                <label for="barcode" class="col-md-4 control-label wordRap">{{entity + "Barcode"| translate}}</label>
+                                                <div class="col-md-8" ng-class="{
+                                            'has-error'
+                                                    : issueLotOrPacketForm.barcode.$invalid && (issueLotOrPacketForm.barcode.$dirty || flag.submitted)
+                                            }">
+                                                    <input type="text" id="barcode" name="barcode" class="form-control" ng-keydown="changeBarcodeFormation($event, 'issue')"  ng-model="issueDataBean.barcode">
+                                                    <div class="error,help-block" ng-show="issueLotOrPacketForm.barcode.$invalid && (issueLotOrPacketForm.barcode.$dirty || flag.submitted)">
+                                                        <span class="help-block" ng-show="issueLotOrPacketForm.barcode.$error.required">{{ entity + "Enter barcode" | translate }}</span>                    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>        
+                                    </div>
+                                    <div class="panel-heading" ng-if="issueBarcodeGridOptions.data.length > 0"><h4>{{entity + 'Issue Stocks'| translate}}</h4>&nbsp;&nbsp;<span class="badge badge-notifications">{{issueBarcodeGridOptions.data.length}}</span></div>
+                                    <div class="col-xs-12" ng-if="issueBarcodeGridOptions.data.length > 0">
+                                        <div id="issueBarcodeGridTable" ui-grid="issueBarcodeGridOptions" ui-grid-pinning></div>
+                                    </div>
+                                    <div class="col-xs-12">
+                                        <div class="row">
+                                            <hr/>
+                                            <div class="col-xs-6 pull-right text-right">
+                                                <a ng-click="onBack(issueLotOrPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                                <button class="btn btn-hkg" ng-disabled="issueBarcodeGridOptions.data.length === 0" ng-click="issueSubmit(issueLotOrPacketForm)">{{entity + 'Issue'| translate}}</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </tab>
+                    <tab heading="Recieve ({{recieveStockList.length}})" ng-click="tabChangeEvent('Recieve')">
+                        <div id='masterDetailReceive'>
+                            <div class="row">&nbsp;</div>
+                            <div class="form-group">
+                                <div  class="col-md-12" id="receiveList" title="Stock Details" accordion-collapse ng-if="recieveListFilled && recieveStockList.length > 0">
+                                    <div id="gridTable" ui-grid="recieveGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                                </div>
+                                <div ng-if="recieveListFilled && recieveStockList.length === 0">
+                                    <br/>
+                                    <div class="col-lg-12 col-md-12 col-xs-12">
+                                        <table class="table  table-bordered" >
+                                            <tr>
+                                                <td class="col-md-12">
+                                                    {{entity + 'No matching results found'| translate}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                                <div ng-if="flag.recieveSecondScreen">
+                                    <form class="form-horizontal" name="recieveLotOrPacketForm" novalidate>
+                                        <div class="panel-heading">
+                                            <div class="form-group">
+                                                <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                                                    <label for="recieveBarcode" class="col-md-4 control-label wordRap">{{entity + "Barcode"| translate}}</label>
+                                                    <div class="col-md-8" ng-class="{
+                                            'has-error'
+                                                    : recieveLotOrPacketForm.recieveBarcode.$invalid && (recieveLotOrPacketForm.recieveBarcode.$dirty || flag.recieveSubmitted)
+                                            }">
+                                                        <input type="text" id="recieveBarcode" name="recieveBarcode" class="form-control" ng-keydown="changeBarcodeFormation($event, 'receive')"  ng-model="recieveDataBean.barcode"/>
+                                                        <div class="error,help-block" ng-show="recieveLotOrPacketForm.recieveBarcode.$invalid && (recieveLotOrPacketForm.recieveBarcode.$dirty || flag.recieveSubmitted)">
+                                                            <span class="help-block" ng-show="recieveLotOrPacketForm.recieveBarcode.$error.required">{{ entity + "Enter barcode" | translate }}</span>                    
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>        
+                                        </div>
+                                        <div class="panel-heading" ng-if="receiveBarcodeGridOptions.data.length > 0"><h4>{{entity + 'Receive Stocks'| translate}}</h4>&nbsp;&nbsp;<span class="badge badge-notifications">{{receiveBarcodeGridOptions.data.length}}</span></div>
+                                        <div class="col-xs-12" ng-if="receiveBarcodeGridOptions.data.length > 0">
+                                            <div id="receiveBarcodeGridTable" ui-grid="receiveBarcodeGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                                        </div>
+                                        <div class="col-xs-12">
+                                            <div class="row">
+                                                <hr/>
+                                                <div class="col-xs-6 pull-right text-right">
+                                                    <a ng-click="onBack(recieveLotOrPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                                    <button class="btn btn-hkg" ng-disabled="receiveBarcodeGridOptions.data.length === 0" ng-click="recieveSubmit(recieveLotOrPacketForm)">{{entity + 'Recieve'| translate}}</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </tab>
+                    <tab heading="Return ({{returnStockList.length}})" ng-click="tabChangeEvent('Return')">
+                        <div id='masterDetailReturn'>
+                            <div class="row">&nbsp;</div>
+                            <div class="form-group">
+                                <div  class="col-md-12" id="returnList" title="Stock Details" accordion-collapse ng-if="returnListFilled && returnStockList.length > 0">
+                                    <div id="gridTable" ui-grid="returnGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                                </div>
+                                <div ng-if="returnListFilled && returnStockList.length === 0">
+                                    <br/>
+                                    <div class="col-lg-12 col-md-12 col-xs-12">
+                                        <table class="table  table-bordered" >
+                                            <tr>
+                                                <td class="col-md-12">
+                                                    {{entity + 'No matching results found'| translate}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                                <div ng-if="flag.returnSecondScreen">
+
+                                    <form class="form-horizontal" name="returnLotOrPacketForm" novalidate>
+                                        <div class="panel-heading">
+                                            <div class="form-group">
+                                                <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                                                    <label for="returnBarcods" class="col-md-4 control-label wordRap">{{entity + "Barcode"| translate}}</label>
+                                                    <div class="col-md-8" ng-class="{
+                                            'has-error'
+                                                    : returnLotOrPacketForm.returnBarcods.$invalid && (returnLotOrPacketForm.returnBarcods.$dirty || flag.returnSubmitted)
+                                            }">
+                                                        <input type="text" id="returnBarcods" name="returnBarcods" class="form-control" ng-keydown="changeBarcodeFormation($event, 'return')"  ng-model="returnDataBean.barcode"/>
+                                                        <div class="error,help-block" ng-show="returnLotOrPacketForm.returnBarcods.$invalid && (returnLotOrPacketForm.returnBarcods.$dirty || flag.returnSubmitted)">
+                                                            <span class="help-block" ng-show="returnLotOrPacketForm.returnBarcods.$error.required">{{ entity + "Enter barcode" | translate }}</span>                    
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>        
+                                        </div>
+                                        <div class="panel-heading" ng-if="returnBarcodeGridOptions.data.length > 0"><h4>{{entity + 'Return Stocks'| translate}}</h4>&nbsp;&nbsp;<span class="badge badge-notifications">{{returnBarcodeGridOptions.data.length}}</span></div>
+                                        <div class="col-xs-12" ng-if="returnBarcodeGridOptions.data.length > 0">
+                                            <div id="returnBarcodeGridTable" ui-grid="returnBarcodeGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                                        </div>
+                                        <div class="col-xs-12">
+                                            <div class="row">
+                                                <hr/>
+                                                <div class="col-xs-6 pull-right text-right">
+                                                    <a ng-click="onBack(returnLotOrPacketForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                                    <button class="btn btn-hkg" ng-disabled="returnBarcodeGridOptions.data.length === 0" ng-click="returnSubmit(returnLotOrPacketForm)">{{entity + 'Return'| translate}}</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </tab>
+                </tabset>
+            </div>
+            <!--                <div class="col-xs-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-6 pull-right text-right">
+                                        <button class="btn btn-hkg" ng-if="flag.rowSelectedflag" ng-click="nextScreen()">{{entity + 'Next'| translate}}</button>
+                                    </div>
+                                </div>
+                            </div>-->
+            <!--</form>-->
+        </div>
+    </div>
+</div>
+<div class="modal fade" role="dialog" id="deleteDialog" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Remove Stock'| translate }}</h4>
+            </div >
+            <form  class="form-horizontal" name="deleteDialog" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to remove stock?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteStock()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

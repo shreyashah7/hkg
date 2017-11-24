@@ -1,0 +1,683 @@
+<div class="row">
+    <div class="col-xs-12" ng-cloak ng-if="flag"> 
+        <!--breadcrumb-->
+        <div id='pageTop'></div>
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12  col-lg-8" >
+                <ol class="breadcrumb">
+                    <li> {{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Edit My Profile'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-10 new-panel" id="mainPanel">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form class="form-horizontal" role="form" >
+                        <!--<a ng-click="directCreate()">Direct create</a>-->
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </form>
+                </div>
+                <div class="col-xs-12" ng-show="displayEmployeeFlag !== 'search' && isEmpCode">
+                    <div>
+                        <form class="form-horizontal" role="form" name="add_employee_form" novalidate>                           
+
+                            <div id="personal" data-expand>
+                                <h4>{{entity + 'Personal details'|translate}}</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Employee Type'|translate}}</label>
+                                            <span class="col-md-6" ng-show="employee.emplTypeLabel !== null">{{entity + employee.emplTypeLabel|translate}}</span>
+                                            <span class="col-md-6" ng-hide="employee.emplTypeLabel !== null">{{entity + notAvailable|translate}}</span>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Employee Code'|translate}}</label>
+                                            <span class="col-md-6">{{employee.employeeCode !== null && employee.employeeCode|| entity +notAvailable|translate}}</span>
+
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'User Id'|translate}}</label>
+                                            <span class="col-md-6">{{employee.userId !== null && employee.userId|| entity +notAvailable|translate}}</span>
+
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="input_empfullname" class="col-md-6 control-label">{{entity + 'Employee Name'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error': (add_employee_form.input_empfullname.$invalid && submitted) || notUniqueEmpname }">
+                                                <input type="text" class="form-control" name="input_empfullname" ng-model="employee.empName" placeholder="Firstname middlename lastname" required ng-blur="doesEmployeeNameExist(employee.empName);
+                                                                    changeholdername()"/>
+                                                <div class="error,help-block" ng-show="(add_employee_form.input_empfullname.$invalid && submitted) || notUniqueEmpname">
+                                                    <span class="help-block"  ng-show="add_employee_form.input_empfullname.$error.required">{{entity + ' Employee name not entered'|translate}}</span>
+                                                    <span class="help-block" ng-show="notUniqueEmpname">{{ entity + " Employee name already exisits" | translate }}</span>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div flow-init="uploadFile" flow-file-added="profileFileAdded($file, $flow)" flow-file-success="profileFileUploaded($file,$flow,addEventForm,$message)" flow-files-submitted="$flow.upload()">
+                                            <div name='profileImage'>
+
+                                                <div class='row'>
+                                                    <div class='col-md-4'>
+
+                                                        <div ng-if="employee.profileImageName == null || employee.profileImageName.length === 0">
+                                                            <!--<img src="images/add-employee/add_pict.png" height="130" width="130"/>-->
+                                                            <img ng-src="{{retrieveAvatar()}}" height="130" width="130"/>
+                                                        </div>
+                                                        <div ng-if="employee.profileImageName != null && employee.profileImageName.length > 0">
+                                                            <img ng-src="{{getProfileImageEmployee()}}" id='templateModal' height="130" width="130"/>
+                                                            <span class="glyphicon glyphicon-remove text-danger" style="vertical-align: top;cursor: pointer;" ng-click="$flow.files.splice($index, 1);
+                                                                        profileFileRemove()"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class='col-md-1'>
+                                                        <span title="Upload from drive" class="glyphicon glyphicon-folder-open text-info" style="font-size: 18px;cursor: pointer;" flow-btn></span><!--{{entity + 'Click To Add Picture'|translate}} -->                        
+                                                        <camera style="display:inline;" model-name="Franchise" model-value="employee.profileImageName" feature-name="USER" field-type="PROFILE" is-custom="false" is-thumbnail="true" unique-id="profilePic"></camera>
+                                                    </div>
+                                                </div>
+<!--                                                <div class='row'>
+                                                    <div class='col-md-12'>
+                                                        <div class="text-right" style="width: 130px;">
+                                                            <button class="btn btn-hkg" flow-btn>{{entity + 'Click To Add Picture'|translate}}</button>
+                                                            <span title="Upload from drive" class="glyphicon glyphicon-folder-open text-info" style="font-size: 18px;cursor: pointer;" flow-btn></span>{{entity + 'Click To Add Picture'|translate}}                         
+                                                            <camera style="display:inline;" model-name="Franchise" model-value="employee.profileImageName" feature-name="USER" field-type="PROFILE" is-custom="false" is-thumbnail="true" unique-id="profilePic"></camera>
+                                                        </div>
+                                                    </div>
+                                                </div>-->
+                                                <ul class="list-group" style="margin-bottom: 0px;">    
+                                                    <li class="list-group-item" ng-if="profileImg.invalidFileFlag">
+                                                        <span class="text-danger"> {{profileImg.fileName}} {{entity + 'not image file'| translate}} </span>
+                                                        <span class="glyphicon glyphicon-remove pull-right text-danger" ng-click="profileImg.invalidFileFlag = false"></span>
+                                                    </li>
+                                                    <li class="list-group-item" ng-if="profileImg.invalidFileSizeFlag">
+                                                        <span class="text-danger"> {{entity + 'File size too large'| translate}} </span>
+                                                        <span class="glyphicon glyphicon-remove pull-right text-danger" ng-click="profileImg.invalidFileSizeFlag = false"></span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6 control-label">
+                                                <label for="input_empgender">{{entity + 'Gender'|translate}}</label>
+                                            </div>
+                                            <div class="col-md-6 col-lg-6 col-sm-12">
+                                                <label class="radio-inline">
+                                                    <input type="radio" name="grp_gender" id="inlineRadio1" value="male" ng-model="employee.gender">
+                                                    {{entity + 'Male'| translate}} </label>
+                                                <label class="radio-inline">
+                                                    <input type="radio" name="grp_gender" id="inlineRadio2" value="female" ng-model="employee.gender">
+                                                    {{entity + 'Female'| translate}} </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="input_empdob" class="col-md-6 control-label">{{entity + 'DOB'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_empdob.$invalid && submitted}">
+                                                <span class="input-group">
+
+                                                    <input type="text" placeholder="mm/dd/yyyy" ng-change="updateYearsOfPassing()" class="form-control" datepicker-popup="{{format}}" ng-model="employee.dob" is-open="emp_dob_opened" ng-required="true" close-text="Close" name="input_empdob"/>
+
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default" ng-click="open($event);
+                                                                    emp_dob_opened = true;"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                    </span>
+                                                </span>
+                                                <div class="error,help-block" ng-show="add_employee_form.input_empdob.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.input_empdob.$error.required && !(add_employee_form.input_empdob.$error.date || add_employee_form.input_empdob.$error.min || add_employee_form.input_empdob.$error.max)">
+                                                        {{ entity + "Select DOB" | translate }}</span>
+                                                    <span class="help-block" ng-show="add_employee_form.input_empdob.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                                    <span class="help-block" ng-show="add_employee_form.input_empdob.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                                    <span class="help-block" ng-show="add_employee_form.input_empdob.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" ng-if="!isSuperAdmin">
+                                    <div class="col-md-6">
+                                        <div class="form-group required">
+                                            <label for="input_otherdetails_maritalstatus" class="col-md-6 control-label">{{entity + 'Other Details'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_otherdetails_maritalstatus.$invalid && submitted}">
+                                                <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                                                    <select class="form-control" required name="input_otherdetails_maritalstatus" ng-model="employee.maritalstatus" ng-options="maritalStatus.value as (maritalStatus.shortcutCode+'-'+maritalStatus.label) for maritalStatus in maritalStatusList">
+                                                        <option value="">{{ entity + 'Marital status' | translate}}</option>
+                                                    </select>
+                                                </div>
+                                                <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="maritalStatusList" model-value="employee.maritalstatus" master-code="MS" is-shortcut-required="true"></add-master-value>
+                                                <div class="error,help-block" ng-show="add_employee_form.input_otherdetails_maritalstatus.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.input_otherdetails_maritalstatus.$error.required">{{entity + 'Select marital status'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_empCaste.$invalid && submitted}">
+                                                <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                                                    <select class="form-control" required name="input_empCaste" ng-model="employee.caste" ng-options="caste.value as  (caste.shortcutCode+'-'+caste.label) for caste in casteList">
+                                                        <option value="">{{ entity + 'Caste' | translate}}</option>
+                                                    </select>
+                                                </div>
+                                                <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="casteList" model-value="employee.caste" master-code="CASTE" is-shortcut-required="true"></add-master-value>
+                                                <div class="error,help-block" ng-show="add_employee_form.input_empCaste.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.input_empCaste.$error.required">{{entity + 'Select caste'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row"  ng-if="!isSuperAdmin">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6 col-md-offset-6" ng-class="{'has-error': add_employee_form.select_nationality.$invalid && submitted}">
+                                                <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                                                    <select class="form-control" required name="select_nationality" ng-model="employee.nationality" ng-options="nationality.value as (nationality.shortcutCode+'-'+nationality.label) for nationality in nationalityMap">
+                                                        <option value="">{{ entity + 'Nationality ' | translate}}</option>
+                                                    </select>
+                                                </div>
+                                                <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="nationalityMap" model-value="employee.nationality" master-code="NTNLTY" is-shortcut-required="true"></add-master-value>
+                                                <div class="error,help-block" ng-show="add_employee_form.select_nationality.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.select_nationality.$error.required">{{entity + 'Select nationality'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_empbloodGrp.$invalid && submitted}">
+                                                <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                                                    <select class="form-control" required name="input_empbloodGrp" ng-model="employee.bloodGrp" ng-options="bloodGroup.value as (bloodGroup.shortcutCode+'-'+bloodGroup.label) for bloodGroup in bloodGroups">
+                                                        <option value="">{{ entity + 'Blood group ' | translate}}</option>
+                                                    </select>
+                                                </div>
+                                                <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="bloodGroups" model-value="employee.bloodGrp" master-code="BG" is-shortcut-required="true"></add-master-value>
+                                                <div class="error,help-block" ng-show="add_employee_form.input_empbloodGrp.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.input_empbloodGrp.$error.required">{{entity + 'Select blood group'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6 control-label">
+                                                <label for="input_empgender">{{entity + 'Preffered Language'|translate}}</label>
+                                            </div>
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_language.$invalid && submitted}">
+                                                <select class="form-control" name="input_language" ng-model="employee.prefferedLang" ng-options="language.value as language.label for language in languageList">
+                                                    <!--<option value="">English</option>-->
+                                                </select>
+                                                <div class="error,help-block" ng-show="add_employee_form.input_empbloodGrp.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.input_empbloodGrp.$error.required">{{entity + 'Select preferred Language'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="contact"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Contact Details'|translate}}</h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group required">
+                                            <label for="input_empcurrentaddress" class="col-md-6 control-label">{{entity + 'Current Address'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.input_empcurrentaddress.$invalid && submitted}">
+                                                <input type="text" id="input_empcurrentaddress" name="input_empcurrentaddress" class="col-md-12 hkg-nopadding" ui-select2="multiLocations" ng-model="employee.currentaddress" placeholder="district,state,country" required  />
+                                                <div class="error,help-block" ng-show="submitted && add_employee_form.input_empcurrentaddress.$invalid">
+                                                    <span class="help-block" ng-show="add_employee_form.input_empcurrentaddress.$error.required">{{ entity + "Select current address" | translate }}</span>                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6 col-md-offset-6" ng-class="{'has-error': add_employee_form.fulladdress.$invalid && submitted}">
+                                                <textarea rows="3" maxlength="500" class="form-control" required name="fulladdress" placeholder="Full address.." ng-model="employee.fulladdress"></textarea>
+                                                <div class="error,help-block" ng-show="add_employee_form.fulladdress.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.fulladdress.$error.required">{{entity + 'Enter full address'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6" ng-class="{'has-error': add_employee_form.pincode.$invalid && submitted}">
+                                                <input type="text" maxlength="6" class="form-control" numbers-only="numbers-only" required name="pincode" placeholder="Pin code" ng-model="employee.pincode"/>
+                                                <div class="error,help-block" ng-show="add_employee_form.pincode.$invalid && submitted">
+                                                    <span class="help-block" ng-show="add_employee_form.pincode.$error.required">{{entity + 'Enter pin code'|translate}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group required">
+                                            <label for="input_phnno" class="col-md-6 control-label">{{entity + 'Phone Number'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error': (add_employee_form.input_phnno.$invalid || !isPhoneValidate) && (add_employee_form.input_phnno.$dirty || submitted)}">
+                                                <input type="text" maxlength="10" class="form-control" numbers-only="numbers-only" required name="input_phnno" ng-model="employee.phnno" ng-change="phoneValidate(employee.phnno)" placeholder="Primary number"/>
+                                                <div class="error,help-block" ng-show="(add_employee_form.input_phnno.$dirty || submitted) && (add_employee_form.input_phnno.$invalid || !isPhoneValidate)">
+                                                    <span class="help-block" ng-show="add_employee_form.input_phnno.$error.required">{{entity + 'Enter phone number'|translate}}</span>
+                                                    <span class="help-block" ng-show="!isPhoneValidate && !add_employee_form.input_phnno.$error.required">{{ entity + "Phone number not valid" | translate }}</span>                
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <div class="col-md-6"  ng-class="{'has-error': (add_employee_form.altphnno.$invalid || !isaltPhoneValidate) && (add_employee_form.altphnno.$dirty || submitted)}">
+                                                <input type="text" maxlength="10" class="form-control" numbers-only="numbers-only" name= "altphnno" ng-model="employee.altphnno" ng-change="altPhoneValidate(employee.altphnno)"  placeholder="Alternate number"/>
+                                                <div class="error,help-block" ng-show="(add_employee_form.altphnno.$dirty || submitted) && (add_employee_form.altphnno.$invalid || !isaltPhoneValidate)">
+                                                    <span class="help-block" ng-show="!isaltPhoneValidate">{{ entity + " Alternate Phone number not valid" | translate }}</span>                
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="col-md-6 control-label">{{entity + 'Personal Email'|translate}}</label>
+                                            <div class="col-md-6" ng-class="{'has-error':  (add_employee_form.emailAddress.$invalid || !isEmailValidate) && (add_employee_form.emailAddress.$dirty || submitted)}">
+                                                <span class="input-group">
+                                                    <input  type="text"  class="form-control" ng-model="employee.email" name="emailAddress" placeholder="Personal email ID" ng-blur="validateEmail(employee.email)"/>
+                                                </span>
+                                                <div class="error,help-block" ng-show="(add_employee_form.emailAddress.$dirty || submitted) && (add_employee_form.emailAddress.$invalid || !isEmailValidate)">
+                                                    <!--<span class="help-block" ng-show="add_employee_form.emailAddress.$error.required">{{ entity + "Email not entered" | translate }}</span>-->                    
+                                                    <span class="help-block"  ng-show="!isEmailValidate && !add_employee_form.emailAddress.$error.required">{{ entity + "Email not valid" | translate }}</span>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="identification"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Identification Details'|translate}}</h4>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Id Card Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empIdCardNum !== null && employee.empIdCardNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Adhar Card Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empAdhaarCardNum !== null && employee.empAdhaarCardNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Pan Card Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empPanNum !== null && employee.empPanNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>                                   
+                                </div>      
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'License Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empLicenceNum !== null && employee.empLicenceNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group" ng-show="employee.empLicenceNum.length > 0">
+                                            <label class="col-md-6 text-right">{{entity + 'Vehicle Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empVehicalNum !== null && employee.empVehicalNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" ng-show="employee.empLicenceNum.length > 0">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'PUC Expiry'|translate}}</label>                                           
+                                            <span class="col-md-6" ng-bind="employee.empPucExpiresOn  | date : 'mediumDate'"ng-show="employee.empPucExpiresOn !== null"></span>    
+                                            <span class="col-md-6" ng-bind="entity + notAvailable | translate" ng-show="employee.empPucExpiresOn === null"></span>     
+                                        </div>
+                                    </div>                                   
+                                </div>         
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Passport Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empPassportNum !== null && employee.empPassportNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group" ng-show="employee.empPassportNum.length > 0">
+                                            <label class="col-md-6 text-right">{{entity + 'Issued On'|translate}}</label>                                           
+                                            <span class="col-md-6" ng-bind="employee.empPassportIssueOn  | date : 'mediumDate'" ng-show="employee.empPassportExpiresOn !== null"></span>    
+                                            <span class="col-md-6" ng-bind="entity + notAvailable | translate" ng-show="employee.empPassportIssueOn === null"></span>    
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" ng-show="employee.empPassportNum.length > 0">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Expires On'|translate}}</label>                                           
+                                            <span class="col-md-6" ng-bind="employee.empPassportExpiresOn  | date : 'mediumDate'" ng-show="employee.empPassportExpiresOn !== null"></span>    
+                                            <span class="col-md-6" ng-bind="entity + notAvailable | translate" ng-show="employee.empPassportExpiresOn === null"></span>    
+
+                                        </div>
+                                    </div>                                   
+                                </div>         
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="col-md-6 text-right">{{entity + 'Bank Account Number'|translate}}</label>                                           
+                                            <span class="col-md-6">{{employee.empAccountNum !== null && employee.empAccountNum|| entity +notAvailable|translate}}</span>    
+                                        </div>
+                                    </div>
+
+                                </div>                                       
+                            </div>
+                            <div id="education"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Educational Details'|translate}}</h4> 
+                                <div ng-if="viewAllEdu.length === 0"><b>{{entity + notAvailableSection|translate}}</b></div>
+                                <div ng-if="(viewAllEdu.length) > 0">
+                                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="viewAllEdu">
+                                        <thead ng-if="viewAllEdu.length > 0">
+                                            <tr>
+                                                <th>{{ entity + 'Education Degree ' | translate}}</th>
+                                                <th>{{ entity + 'Passing Year' | translate}}</th>
+                                                <th>{{ entity + 'Educational School/University' | translate}}</th>
+                                                <th>{{ entity + 'Medium Of Passing' | translate}}</th>
+                                                <th>{{ entity + 'Percentage' | translate}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody ng-if="viewAllEdu.length > 0">
+                                            <tr ng-repeat="edudetail in viewAllEdu" dt-rows>
+                                                <td>{{edudetail.degreename}}</td>
+                                                <td>{{edudetail.yearname}}</td>
+                                                <td>{{edudetail.universityname}}</td>
+                                                <td>{{edudetail.mediumname}}</td>
+                                                <td>{{edudetail.empPercentage}}</td>                                               
+                                            </tr>
+                                        </tbody>
+                                    </table> 
+                                </div>
+                            </div>
+
+                            <div id="experience"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Experience Details'|translate}}</h4>
+                                <div ng-if="viewAllExp.length === 0" > <b> {{entity + notAvailableSection|translate}} </b></div>
+                                <div ng-if="(viewAllExp.length) > 0">
+                                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="viewAllExp">
+                                        <thead ng-show="viewAllExp.length > 0">
+                                            <tr>
+                                                <th>{{ entity + 'Company' | translate}}</th>
+                                                <th>{{ entity + 'Designation'| translate}}</th>
+                                                <th>{{ entity + 'Work From'| translate}}</th>
+                                                <th>{{ entity + 'Work To'| translate}}</th>
+                                                <th>{{ entity + 'Salary'| translate}}</th>
+                                                <th>{{ entity + 'Reason For Leaving'| translate}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody ng-show="viewAllExp.length > 0">
+                                            <tr ng-repeat="Expdetail in viewAllExp" dt-rows>
+                                                <td>{{Expdetail.company}}</td>
+                                                <td>{{Expdetail.designationname}}</td>
+                                                <td>{{Expdetail.startedFrom|date:dateFormat}}</td>
+                                                <td>{{Expdetail.workedTill|date:dateFormat}}</td>
+                                                <td>{{Expdetail.salary}}</td>                            
+                                                <td>{{Expdetail.reasonOfLeaving}}</td>                                            
+                                            </tr>
+                                        </tbody>
+                                    </table> 
+                                </div>
+                            </div>
+                            <div id="family"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Family Details'|translate}}</h4>
+                                <div ng-if="viewAllFamily.length === 0"><b>{{entity + notAvailableSection|translate}}</b></div>
+                                <div ng-if="(viewAllFamily.length) > 0">
+                                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="viewAllFamily">
+                                        <thead ng-show="viewAllFamily.length > 0">
+                                            <tr>
+                                                <th>{{ entity + 'Name' | translate}}</th>
+                                                <th>{{ entity + 'Relation' | translate}}</th>
+                                                <th>{{ entity + 'DOB' | translate}}</th>
+                                                <th>{{ entity + 'Occupation' | translate}}</th>
+                                                <th>{{ entity + 'Blood Group' | translate}}</th>
+                                                <th>{{ entity + 'Contact' | translate}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody ng-show="viewAllFamily.length > 0">
+                                            <tr ng-repeat="Familydetail in viewAllFamily" dt-rows>
+                                                <td>{{Familydetail.firstName}}</td>
+                                                <td>{{Familydetail.relationname}}</td>
+                                                <td>{{Familydetail.dateOfBirth|date:dateFormat}}</td>
+                                                <td>{{Familydetail.occupationname}}</td>
+                                                <td>{{Familydetail.bloodGroupname}}</td>                            
+                                                <td>{{Familydetail.mobileNumber}}</td>
+
+                                            </tr>
+                                        </tbody>
+                                    </table>   
+                                </div>
+                            </div>
+
+                            <div id="policy"  ng-if="!isSuperAdmin">
+                                <h4>{{entity + 'Policy Details'|translate}}</h4>
+                                <div ng-if="viewAllPolicy.length === 0"><b>{{entity + notAvailableSection|translate}}</b></div>
+                                <div ng-if="(viewAllPolicy.length) > 0">
+                                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="viewAllPolicy">
+                                        <thead ng-show="viewAllPolicy.length > 0">
+                                            <tr>
+                                                <th>{{ entity + 'Policy Holder' | translate}}</th>
+                                                <th>{{ entity + 'Policy Company' | translate}}</th>
+                                                <th>{{ entity + 'Status' | translate}}</th>
+                                                <th>{{ entity + 'Policy Number' | translate}}</th>
+                                                <th>{{ entity + 'Policy Name' | translate}}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody ng-show="viewAllPolicy.length > 0">
+                                            <tr ng-repeat="Policydetail in viewAllPolicy" dt-rows>
+                                                <td>{{Policydetail.holdername}}</td>
+                                                <td>{{Policydetail.companyname}}</td>
+                                                <td>{{Policydetail.status}}</td>
+                                                <td>{{Policydetail.policyNumber}}</td>
+                                                <td>{{Policydetail.policyName}}</td>                            
+
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right">    
+                                        <a ng-click="cancelEditProfile()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                        <button class="btn btn-hkg" ng-click="addEmployee(add_employee_form)">Edit Profile</button>
+                                    </div>
+                                    <br/>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-2 col-lg-2 tree-bg" id="sidemenu" style="height: 700px;">
+            <div class="row affix fit-content" id="myNav">
+                <ul class="nav nav-stacked" >
+                    <li><a ng-click="scrollTo('personal')">{{entity + 'Personal Details'|translate}}</a></li>
+                    <li><a ng-click="scrollTo('contact')"  ng-if="!isSuperAdmin">{{entity + 'Contact Details'|translate}}</a></li>                    
+                    <li><a ng-click="scrollTo('identification')"  ng-if="!isSuperAdmin">{{entity + 'Identification Details'|translate}}</a></li>
+                    <li><a ng-click="scrollTo('education')"  ng-if="!isSuperAdmin">{{entity + 'Education Details'|translate}}</a></li>
+                    <li><a ng-click="scrollTo('experience')"  ng-if="!isSuperAdmin">{{entity + 'Experience Details'|translate}}</a></li>
+                    <li><a ng-click="scrollTo('family')"  ng-if="!isSuperAdmin">{{entity + 'Family Details'|translate}}</a></li>
+                    <li><a ng-click="scrollTo('policy')"  ng-if="!isSuperAdmin">{{entity + 'Policy Details'|translate}}</a></li>  
+                    <li>
+                        <a ng-click="openChangePassword()">{{entity + 'Change Password'|translate}}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--                                                        Modal                                           -->
+
+<!--Native Address modal-->
+<div class="modal fade" id="nativeAddressModal" tabindex="-1" role="dialog" aria-labelledby="nativeAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <form class="form-horizontal" role="form" name="native_address_modal" novalidate>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="nativeAddressModalLabel"> {{entity + 'Native Address'| translate }}</h4>
+                </div>
+                <div class="modal-body">
+                    <!--                    <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="col-md-6 control-label">{{entity + 'Nationality'|translate}}</label>
+                                                    <div class="col-md-6" ng-class="{'has-error': native_address_modal.select_nationality.$invalid && nativesubmitted}">
+                                                        <select class="form-control" required name="select_nationality" ng-model="employee.nativenationality" ng-options="nationality.value as nationality.label for nationality in nationalityMap">
+                                                            <option value="">Nationality</option>
+                                                        </select>
+                                                        <div class="error,help-block" ng-show="native_address_modal.select_nationality.$invalid && nativesubmitted">
+                                                            <span class="help-block" ng-show="native_address_modal.select_nationality.$error.required">{{entity + 'Select nationality'|translate}}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>-->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="input_empnativeaddress" class="col-md-6 control-label">{{entity + 'Native Address'|translate}}</label>
+                                <div class="col-md-6" ng-class="{'has-error': native_address_modal.input_empnativeaddress.$invalid && nativesubmitted}">
+                                    <input type="text" id="input_empnativeaddress" name="input_empnativeaddress" class="col-md-12 hkg-nopadding" ui-select2="multiLocations1" ng-model="employee.nativeaddress" placeholder="district,state,country" required  />
+                                    <div class="error,help-block" ng-show="nativesubmitted && native_address_modal.input_empnativeaddress.$invalid">
+                                        <span class="help-block" ng-show="native_address_modal.input_empnativeaddress.$error.required">{{ entity + "Select native address" | translate }}</span>                    
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="col-md-6 col-md-offset-6" ng-class="{'has-error': native_address_modal.fulladdress.$invalid && nativesubmitted}">
+                                    <textarea rows="3" maxlength="500" class="form-control" required name="fulladdress" placeholder="Full address.." ng-model="employee.nativefulladdress"></textarea>
+                                    <div class="error,help-block" ng-show="native_address_modal.fulladdress.$invalid && nativesubmitted">
+                                        <span class="help-block" ng-show="native_address_modal.fulladdress.$error.required">{{entity + 'Enter full address'|translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="col-md-6" ng-class="{'has-error': native_address_modal.pincode.$invalid && nativesubmitted}">
+                                    <input type="text" maxlength="6" class="form-control" numbers-only="numbers-only" required name="pincode" placeholder="Pin code" ng-model="employee.nativepincode"/>
+                                    <div class="error,help-block" ng-show="native_address_modal.pincode.$invalid && nativesubmitted">
+                                        <span class="help-block" ng-show="native_address_modal.pincode.$error.required">{{entity + 'Enter pin code'|translate}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" >
+                    <a ng-click="resetNativeAddress()">{{ entity + 'Reset' | translate }}</a>&nbsp;
+                    <a ng-click="cancelNativeAddress()">{{entity + 'Cancel'| translate }}</a>
+                    <button type="button" class="btn btn-hkg" ng-click="okNativeAddress(native_address_modal)"> {{entity + 'Ok'| translate }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--Native address ends-->
+
+<!--View all docs-->
+<div class="modal fade" id="viewdocsModal" tabindex="-1" role="dialog" aria-labelledby="viewdocsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <form class="form-horizontal" role="form" name="terminate_employee_modal" novalidate>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="viewdocsModalLabel"> {{entity + 'View All'| translate }}</h4>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="employee.otherdocs">
+                        <thead ng-show="hasAnyDoc">
+                            <tr>
+                                <th>{{ entity + 'Doc Name' | translate}}</th>
+                                <th>{{ entity + 'Action' | translate}}</th>
+                            </tr>
+                        </thead>
+                        <tbody ng-show="hasAnyDoc">
+                            <tr ng-repeat="doc in employee.otherdocs" ng-show="doc !== null"  dt-rows>
+                                <td>{{doc}}</td>
+                                <td>
+                                    <a ng-click="otherdocRemove($index)">Remove</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table> 
+                </div>
+                <div class="modal-footer">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--View all docs ends-->
+<!--Change password popup-->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <form class="form-horizontal" role="form" name="change_password" novalidate>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="changePasswordModalLabel"> {{entity + 'Change Password'| translate }}</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group required">
+                        <label for="Password" class="col-md-4 control-label"> {{entity + 'New Password'| translate }}</label>
+                        <div class="col-md-4" ng-class="{'has-error': change_password.Password.$invalid && (change_password.Password.$dirty || passsubmitted)}">
+                            <input type="password" class="form-control" ng-minlength="8" maxlength="50" id="Password" name="Password" ng-change="confirmPasswordValidation();" ng-required="true"   ng-model="password" required>
+                            <div class="error,help-block" ng-show="(change_password.Password.$dirty || passsubmitted) && change_password.Password.$invalid">
+                                <span class="help-block" ng-show="change_password.Password.$error.required">{{ entity + "Password not entered" | translate }}</span>
+                                <span class="help-block" ng-show="change_password.Password.$error.minlength">{{ entity + "Password must be atleast 8 characters" | translate }}</span>  
+                            </div>
+                        </div>
+                    </div>  
+                    <div class="form-group required">
+                        <label for="adminRetypePwd" class="col-md-4 control-label"> {{entity + 'Confirm Password'| translate }}</label>
+                        <div class="col-md-4" ng-class="{'has-error': change_password.adminRetypePwd.$invalid && (change_password.Password.$dirty || passsubmitted)}">
+                            <input type="password" class="form-control"  maxlength="50" id="adminRetypePwd"  ng-model="confirmpassword"  ng-change="confirmPasswordValidation()" ng-required="true"  name="adminRetypePwd" required>
+                            <div class="error,help-block" ng-show="(change_password.adminRetypePwd.$dirty || passsubmitted) && (change_password.adminRetypePwd.$invalid || isMatched)">
+                                <span class="help-block" ng-show="change_password.adminRetypePwd.$error.required">{{ entity + "Confirmation password not entered" | translate }}</span>                                                                        
+                                <span class="help-block" style="color: #a94442" ng-show="!change_password.adminRetypePwd.$error.required && isMatched">{{ entity + "Password mismatch, please try again" | translate }}</span>
+                            </div>
+                        </div>
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <a ng-click="resetPassword();">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="changePassword(change_password)">{{ entity + 'Submit' | translate}} </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!---Change password popup ends-->

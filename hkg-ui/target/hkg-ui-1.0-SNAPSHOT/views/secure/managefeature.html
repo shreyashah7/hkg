@@ -1,0 +1,320 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12  col-lg-8">
+                <ol class="breadcrumb">
+                    <li>You are here</li>
+                    <li>Manage</li>
+                    <li>Feature</li>
+                    <li class="active uppercase" ng-show="!showedit && !viewPage">Add Feature</li>
+                    <li class="active uppercase" ng-show="showedit && !viewPage">Edit Feature</li>
+                    <li class="active uppercase" ng-show="viewPage">View</li>
+                </ol>
+            </div>
+            <div ng-show="hasFeatureAccess && viewPage" class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a style="cursor: pointer" class="pull-right" ng-click="showAdd()">ADD FEATURE</a>
+            </div>
+            <div ng-show="hasFeatureAccess && !viewPage" class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a style="cursor: pointer" class="pull-right" ng-click="changeSeq()">Change Sequence</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div ng-show="hasFeatureAccess" class="col-xs-9 new-panel">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div  class="col-md-9" ng-show="!viewPage">
+                    <form role="form" name="feature_form" class="form-horizontal" novalidate ng-submit="save.submit(feature_form)">
+
+                        <!--<div class="form-group">&nbsp;</div>-->
+                        <!--                        <div  ng-init="registerLocationChangeEvent(feature_form);
+                                                        initFeatureForm(feature_form)" class="form-group">
+                                                    <label class="col-md-4 control-label" for="parent">
+                                                        {{i18EntityFeature + 'Parent'| translate }}
+                                                    </label>
+                                                    <div class="col-md-8"> 
+                                                        <ul class="nav navbar-nav" id="parent">
+                                                            <li class="dropdown">
+                                                                <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                                                                    {{feature.parentName}}<span class="caret"></span>
+                                                                </button>
+                                                                <ul class="dropdown-menu" style="width: 250px;min-width: 250px;">
+                                                                    <div ng-click='rootClick()'>
+                                                                        <ul>{{i18EntityFeature + 'Root'| translate }}</ul>
+                                                                    </div>
+                                                                    <div ng-click='featureClick(featuresDropDown)'
+                                                                         data-angular-treeview="true"
+                                                                         data-tree-id="featuresDropDown"
+                                                                         ag-treemodel="featureListDropDown">
+                                                                    </div>
+                        
+                                                                </ul>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div> -->
+                        <div  ng-init="registerLocationChangeEvent(feature_form);
+                                initFeatureForm(feature_form)" class="form-group">
+                            <label for="parent" class="col-md-4 control-label "> {{i18EntityFeature + 'Parent'| translate }}</label>
+                            <div id="parent"  name="Parent" class=" col-md-7 " ng-class="{'has-error': feature_form.Parent.$invalid && (submitted || feature_form.Parent.$dirty)}">
+                                <div class="dropdown">
+
+                                    <button class="dropdown-toggle form-control" data-toggle="dropdown" >
+                                        <span class="pull-left" ng-bind="feature.parentName"></span><span class="caret pull-right no-margin"></span>                                      </button>
+                                    <!--style="width: 250px;min-width: 250px;-->
+                                    <div  class="dropdown-menu col-xs-12" >
+
+                                        <div ng-click='rootClick()'>
+                                            <div>&nbsp;&nbsp;&nbsp;{{i18EntityFeature + 'Root'| translate }}</div>
+                                        </div>
+                                        <div ng-click='featureClick(featuresDropDown)'
+                                             data-angular-treeview="true"
+                                             data-tree-id="featuresDropDown"
+                                             ag-treemodel="featureListDropDown">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="error,help-block" ng-show="feature_form.Parent.$dirty && feature_form.Parent.$invalid">
+                                    <span class="help-block" ng-show="feature_form.Parent.$error.required">{{i18EntityFeature + 'Select  parent '| translate }}</span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="featurename">
+                                {{i18EntityFeature + 'Feature Name'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.FeatureName.$invalid && (submitted || feature_form.FeatureName.$dirty)}">
+                                <input ng-pattern="/^[^.]+$/" type="text" id="featurename" class="form-control" name="FeatureName" ng-model="feature.featureName" placeholder="" required/>
+
+                                <div class="error,help-block" ng-show="(feature_form.FeatureName.$dirty || submitted) && feature_form.FeatureName.$invalid">
+                                    <span class="help-block" ng-show="feature_form.FeatureName.$error.required">{{i18EntityFeature + 'Enter feature name'| translate }}</span>
+                                    <span class="help-block" ng-show="feature_form.FeatureName.$error.pattern">{{i18EntityFeature + 'Enter valid feature name'| translate }}</span>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="menulabel">
+                                {{i18EntityFeature + 'Menu Label'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.MenuLabel.$invalid && (submitted || feature_form.MenuLabel.$dirty)}">               
+                                <input type="text" id="menulabel" class="form-control" name="MenuLabel" ng-model="feature.menuLabel" placeholder="" required/>
+
+                                <div class="error,help-block" ng-show="(feature_form.MenuLabel.$dirty || submitted) && feature_form.MenuLabel.$invalid">
+                                    <span class="help-block" ng-show="feature_form.MenuLabel.$error.required">{{i18EntityFeature + 'Enter menu label'| translate }}</span>
+                                    <span class="help-block" ng-show="feature_form.MenuLabel.$error.pattern">{{i18EntityFeature + 'Enter valid menu label'| translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label" for="menuCategory">
+                                {{i18EntityFeature + 'Menu Category'| translate }}
+                            </label>
+                            <div class="col-md-7">               
+                                <input type="text" id="menuCategory" class="form-control" name="menuCategory" ng-model="feature.menuCategory" placeholder=""/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label" for="Description">
+                                {{i18EntityFeature + 'Description'| translate }}
+                            </label>
+                            <div class=" col-md-7">               
+                                <textarea name="Description" id="Description" rows="2" class="form-control" ng-model="feature.description" placeholder=""/>
+                            </div>
+                        </div>
+
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="Precedence">
+                                {{i18EntityFeature + 'Precedence'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.Precedence.$invalid && (submitted || feature_form.Precedence.$dirty)}" >                
+                                <select  name="Precedence" class="form-control" id="Precedence" ng-model="feature.precedence" required ng-options="precendence for precendence in precedences" > 
+                                </select>
+                                <div class="error,help-block" ng-show="(feature_form.Precedence.$dirty || submitted) && feature_form.Precedence.$invalid">
+                                    <span class="help-block" ng-show="feature_form.Precedence.$error.required">{{i18EntityFeature + 'Select feature precedence'| translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="menutype">
+                                {{i18EntityFeature + 'Menu Type'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.MenuType.$invalid && (submitted || feature_form.MenuType.$dirty)}" >        
+                                <select ng-model="feature.menuType" name="MenuType" class="form-control"  required id="menutype"> 
+                                    <option value="M">Menu</option>
+                                    <option value="MI">Menu Item</option>
+                                    <option value="EI">Extra Item</option>
+                                    <option value="IA">Item Attributes</option>
+                                </select>
+                                <div class="error,help-block" ng-show="(feature_form.MenuType.$dirty || submitted) && feature_form.MenuType.$invalid">
+                                    <span class="help-block" ng-show="feature_form.MenuType.$error.required">{{i18EntityFeature + 'Enter Menu Type'| translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="featureurl">
+                                {{i18EntityFeature + 'Feature URL'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.FeatureURL.$invalid && (submitted || feature_form.FeatureURL.$dirty)}">      
+                                <input type="text" id="featureurl" required class="form-control" name="FeatureURL" ng-model="feature.featureURL" placeholder=""/>
+
+                                <div class="error,help-block" ng-show="(feature_form.FeatureURL.$dirty || submitted) && feature_form.FeatureURL.$invalid">
+                                    <span class="help-block" ng-show="feature_form.FeatureURL.$error.required">{{i18EntityFeature + 'Enter feature URL'| translate }}</span>
+                                </div>  
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label" for="webserviceurl">
+                                {{i18EntityFeature + 'Web Service URL'| translate }}
+                            </label>
+                            <div class=" col-md-7">   
+                                <div class="hkg-input-img-container">
+                                    <textarea name="Description" id="webserviceurl" rows="4" class="form-control hkg-input-img-area" ng-model="feature.webserviceUrl" placeholder=""/>
+                                    <!--                                    <span class="hkg-input-img glyphicon glyphicon-info-sign" tooltip="Enter comma(,) seperated web service URL"  tooltip-trigger="mouseenter" tooltip-placement="top"></span>-->
+                                </div>
+
+                            </div>
+                            <div class="col-md-1">
+                                <span class="hkg-input-img glyphicon glyphicon-info-sign" tooltip="Enter comma(,) seperated web service URL"  tooltip-trigger="mouseenter" tooltip-placement="top"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group required">
+                            <label class="col-md-4 control-label" for="sequence">
+                                {{i18EntityFeature + 'Sequence No.'| translate }}
+                            </label>
+                            <div class="col-md-7" ng-class="{'has-error': feature_form.SeqNo.$invalid && (submitted || feature_form.SeqNo.$dirty)}">      
+                                <input type="text" numbers-only="true" id="sequence"  name="SeqNo" class="form-control" required ng-model="feature.seqNo"/>
+
+                                <div class="error,help-block" ng-show="(feature_form.SeqNo.$dirty || submitted) && feature_form.SeqNo.$invalid">
+                                    <span class="help-block" ng-show="feature_form.SeqNo.$error.required">{{i18EntityFeature + 'Enter sequence no'| translate }}</span>
+                                </div>  
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label" for="Crud">
+                                {{i18EntityFeature + 'Crud'| translate }}
+                            </label>
+                            <div class="col-md-7" >    
+                                <select name="crud" ng-model="feature.isCrud" class="form-control" id="Crud" > 
+                                    <option value="true">True</option>
+                                    <option value="false">False</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-4 control-label" for="Active">
+                                {{i18EntityFeature + 'Active'| translate }}
+                            </label>
+                            <div class="col-md-7" > 
+                                <select name="isActive" ng-model="feature.isActive" class="form-control"  id="Active" > 
+                                    <option value="true">{{i18EntityFeature + 'True'| translate }}</option>
+                                    <option value="false">{{i18EntityFeature + 'False'| translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-md-9 control-label">
+
+                            </label>
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right" > 
+                                        <a ng-click="changeSeq()"  href="" >{{i18EntityFeature + 'Cancel '| translate }}</a>&nbsp;
+                                        <button class="btn btn-hkg " type="submit"ng-show="!showedit">{{i18EntityFeature + 'Add Feature '| translate }}</button>
+                                        <button class="btn btn-hkg "ng-show="showedit" >{{i18EntityFeature + 'Edit Feature '| translate }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--                            <div class="col-md-8"> 
+                                                            <button class="btn btn-hkg pull-right" ng-show="!showedit">{{i18EntityFeature + 'Add Feature'| translate }}</button>
+                                                            <button class="btn btn-hkg pull-right" ng-show="showedit">{{i18EntityFeature + 'Edit Feature'| translate }}</button>
+                                                        </div>-->
+                        </div>
+                        <div class="form-group">&nbsp;</div>
+                    </form>
+                </div>
+                <div ng-show="viewPage">
+                    <form role="form" name="seq_form" class="form-horizontal" novalidate>
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">
+                                {{i18EntityFeature + 'Select Category'| translate }}
+                            </label>
+                            <div class="col-md-4">
+                                <select ng-model="menucategory" class="form-control" ng-change="onChangeCategory()"> 
+                                    <option value="stock">{{i18EntityFeature + 'Stock'| translate }}</option>
+                                    <option value="manage">{{i18EntityFeature + 'Manage'| translate }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="table-responsive">
+                            <div ng-show="newlist.length > 0">
+                                <table class="table table-striped table-responsive" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            <th>{{i18EntityFeature + 'Order'| translate }}</th>
+                                            <th>{{i18EntityFeature + 'Feature Name'| translate }}</th>
+                                            <th>{{i18EntityFeature + 'Action'| translate }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody  ui:sortable ng:model="newlist">
+                                        <tr ng-repeat="featureseq in newlist" dt-rows style="cursor: move;"> 
+                                            <td>
+                                                <span>{{$index + 1}}</span>
+                                            </td>
+                                            <td>{{featureseq.displayName}}</td>
+                                            <td>
+                                                <a href="" ng-click="up($index)" title="Up" ng-show="$index != 0" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                                <a href="" ng-click="down($index, $last)" title="Down" ng-show="$index != (newlist.length - 1)" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-down"></span></a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">
+                            </label>
+                            <div class="col-md-8"> 
+                                <button class="btn btn-hkg pull-right" ng-show="newlist.length > 0" ng-click="seqSavechanges()">{{i18EntityFeature + 'Save Changes'| translate }}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div ng-show="hasFeatureAccess" class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>EXISTING FEATURES</strong></span>
+                <hr class="margin-md"/>
+                <!--Tree component starts-->
+                <div> 
+                    <div ng-click='showEdit(features)' 
+                         data-angular-treeview="true"
+                         data-tree-id="features"
+                         ag-treemodel="featureList">
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>

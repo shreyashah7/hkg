@@ -1,0 +1,7 @@
+div[ag-treemodel]{-moz-user-select:-moz-none;-khtml-user-select:none;-webkit-user-select:none;-ms-user-select:none;user-select:none;}
+div[ag-treemodel] ul{margin:0;padding:0;list-style:none;border:none;}
+div[ag-treemodel] li{position:relative;padding:0 0 0 20px;line-height:26px;}
+div[ag-treemodel] li i,div[ag-treemodel] li span{cursor:pointer;}
+div[ag-treemodel] li span.node:hover{background-color:#a084c2;color:#fff;}
+div[ag-treemodel] li .selected{background-color:#a084c2;padding:1px 5px;color:#fff;}
+div[ag-treemodel] li span.selected:hover{background-color:#a084c2;padding:1px 5px;color:#fff;}

@@ -1,0 +1,72 @@
+<div ng-init="analyticsLogout()">
+    <div class="col-xs-12">
+        <div id="messages" ng-include src="'templates/messages.html'">
+
+        </div>
+    </div>
+    <div class="col-md-12 col-xs-12 col-lg-12" ng-show="showWarning">
+        <div class="bg-danger  col-md-12"><div></br> {{'DASHBOARD.' + 'A problem was detected during initial setup. Some features might not work as expected. Please contact administrator.'| translate}}</div></br></div>
+        <div >
+            <button class="btn btn-hkg" ng-click="initSetup();">
+                {{'DASHBOARD.' + 'Setup'| translate}}
+            </button>
+
+        </div>
+    </div>
+
+
+    <div class="row" ng-if="reports !== undefined && reports.length > 0">
+        <div class="col-xs-12"> 
+            <div class="panel panel-default">
+                <div class="panel-heading text-center">
+                    <label style="font-size: 18px;">
+                        {{currentReport.reportName}}
+                    </label>
+                    <span class="pull-left" ng-show="currentIndex === 0" title="No previous report">
+                        <img src="images/back.png" alt="previous" width="32" height="32" style="opacity: 0.5"/>
+                    </span>
+                    <a ng-show="currentIndex !== 0" ng-click="updateCurrentReport('prev')" title="Previous report">
+                        <span class="pull-left">
+                            <img src="images/back.png" alt="previous" width="32" height="32"/>
+                        </span>
+                    </a>
+                    <span class="pull-right" ng-show="(currentIndex === reports.length - 1)" title="No next report">
+                        <img src="images/forward.png" alt="next" width="32" height="32" style="opacity: 0.5"/>
+                    </span>
+                    <a ng-show="(currentIndex !== reports.length - 1)"  ng-click="updateCurrentReport('next')" title="Next report">
+                        <span class="pull-right">
+                            <img src="images/forward.png" alt="next" width="32" height="32"/>
+                        </span>
+                    </a>
+                </div>
+                <div class="panel-body">
+                    <div class="">
+                        <div class="row" ng-if="iframeUrl && invalidCredential !== true">
+                            <div class="col-xs-12 text-center">
+                                <!--<iframe id="reportPreviewiframe" ng-src="{{iframeUrl}}">-->
+                                <iframe id="reportPreviewiframe" src="{{iframeUrl}}" style="width: 100%;height: 500px;" marginheight="0" frameborder="0"></iframe>
+                                <!--<div id="reportPreviewiframe" style="width: 95%;height: 500px;"></div>-->
+                                <!--                                <object data="{{iframeUrl}}" style="width: 100%;height: 500px;">
+                                                                    <embed src="{{iframeUrl}}" style="width: 100%;height: 500px;">
+                                                                    Error: Embedded data could not be displayed.
+                                                                </object>-->
+                                <!--<iframe ng-src="{{report.query}}" style="width: 90%;height: 450px;" ng-attr-onload="iframeLoaded()" ng-attr-onerror="iframeFailed()">-->
+                            </div>
+                        </div>
+                        <div class="row" ng-if="invalidCredential === true">
+                            <div class="col-xs-12 text-center">
+                                <table class="table table-bordered" >
+                                    <tr>
+                                        <td class="col-md-12">
+                                            {{ entity + "Invalid credentials for analytics server, Contact administrator" | translate}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

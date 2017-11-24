@@ -1,0 +1,700 @@
+<div>
+    <form method="POST" class="form-horizontal" name="addEventForm" novalidate  >
+        <div class="form-group required" ng-init="registerLocationChangeEvent(addEventForm);
+                    initForm(addEventForm)">
+            <label for="eventCategory"  class="col-md-3 control-label">
+
+                <span>{{ entity + 'Event Category' | translate}}</span>
+            </label>
+            <div class="col-xs-8 col-lg-6" ng-class="{
+                    'has-error'
+                    : selectedEventCategoryDropdown.currentNode.id === 'D' && (addEventForm.eventCategory.$dirty || submitted)}"> 
+                <div>
+                    <div class="dropdown" >
+                        <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                            <span class="pull-left" ng-bind="selectedEventCategoryDropdown.currentNode.displayName"></span><span class="caret pull-right no-margin"></span>
+                        </button>
+                        <div class="dropdown-menu col-xs-12">
+                            <div ng-click='eventCategoryDropdownClick(selectedEventCategoryDropdown, addEventForm);'
+                                 data-angular-treeview="true"
+                                 data-tree-id="selectedEventCategoryDropdown"
+                                 ag-treemodel="eventCategoryListDropdown" search-id="eventCategoryId" entity-name="EVNTCTG_NM.">
+                            </div>
+
+                        </div>
+                        <div class="error,help-block" ng-show="(addEventForm.eventCategory.$dirty || submitted)">
+                            <span class="help-block" ng-show="selectedEventCategoryDropdown.currentNode.id === 'D'">{{ entity + 'Select event category' | translate}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2"> 
+                <a href="" ng-click="showAddCategoryPopup(addCategoryPopupForm)"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add Category"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+            </div>
+        </div>
+        <div class='form-group required'>
+            <label for="eventTitle"  class="col-md-3 control-label">
+                {{ entity + 'Event Title' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{
+                    'has-error'
+                    : addEventForm.eventTitle.$invalid && (addEventForm.eventTitle.$dirty || submitted)}"> 
+                <input type='text' ng-pattern="/^[^.]+$/" ng-model="event.eventTitle" id="eventTitle" name="eventTitle" class="form-control" required maxlength="100" ng-change="addEventForm.eventTitle.$setValidity('exists', true)" ng-blur="checkEventUniqueName(addEventForm)"/>
+
+                <div class="error,help-block" ng-show="(addEventForm.eventTitle.$dirty || submitted) && addEventForm.eventTitle.$invalid">
+                    <span class="help-block" ng-show="addEventForm.eventTitle.$error.required">{{ entity + 'Event title not entered' | translate}}</span>
+                    <span class="help-block" ng-show="addEventForm.eventTitle.$error.exists">{{ entity + eventExistsMsg | translate}}</span>
+                    <span class="help-block" ng-show="addEventForm.eventTitle.$error.pattern">{{ entity + 'Event name is invalid ' | translate}}</span>
+                </div>
+            </div>
+        </div>
+        <div class='form-group'>
+            <label for="eventDescription"  class="col-md-3 control-label">
+                {{ entity + 'Event Description' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{
+                    'has-error'
+                    : addEventForm.eventDescription.$invalid}"> 
+                <textarea  ng-model="event.description" ng-trim="false" id="task" name="eventDescription" class="form-control" maxlength="500" rows='3'></textarea>
+                <div id="messagecounter" style="text-align: right;">{{500 - event.description.length}} {{ entity + "characters left" | translate }}</div>
+            </div>
+        </div>
+
+        <div class='form-group'>
+            <label for="eventVenue"  class="col-md-3 control-label">
+                {{ entity + 'Event Venue' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{
+                    'has-error'
+                    : addEventForm.eventVenue.$invalid && (addEventForm.eventVenue.$dirty || submitted)}"> 
+                <textarea ng-model="event.address" ng-trim="false" id="task" name="eventVenue" class="form-control" maxlength="500" rows='3'></textarea>
+                <div style="text-align: right;">{{500 - event.address.length}} {{ entity + "characters left" | translate }}</div>
+                <!--                <div class="error,help-block" ng-show="(addEventForm.eventVenue.$dirty || submitted) && addEventForm.eventVenue.$invalid">
+                                    <span class="help-block" ng-show="addEventForm.eventVenue.$error.required">{{ entity + 'Event venue not entered' | translate}}</span>
+                                </div>-->
+            </div>
+        </div>
+        <div class='form-group'>
+            <label for="eventFromDate"  class="col-md-3 control-label">
+                <span style="color: red">*</span>{{ entity + 'Event Date' | translate}}
+            </label>
+            <div class="col-md-6">
+                <div class="row">
+                    <div class='col-md-5'>
+                        <div ng-class="{
+                                'has-error'
+                                : addEventForm.eventFromDate.$invalid && (addEventForm.eventFromDate.$dirty || submitted)}"> 
+                            <div class="input-group">
+                                <input type="text" id="fromDate" name="eventFromDate" class="form-control input-sm" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="event.fromDate" is-open="datePicker.opened_event_from_date" max="event.toDate"  min="minEventFromDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" ng-change="checkEventTime()" close-text="Close" ng-click="setEditEventMinFromDate()"/>
+                                <span class="input-group-btn">
+                                    <button class="form-control input-sm" ng-click="setEditEventMinFromDate();
+                                                                                open($event, 'opened_event_from_date');">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </button>
+                                </span> 
+                            </div>
+                            <div class="error,help-block" ng-show="(addEventForm.eventFromDate.$dirty || submitted) && addEventForm.eventFromDate.$invalid">
+                                <span class="help-block" ng-show="addEventForm.eventFromDate.$error.required && !(addEventForm.eventFromDate.$error.date || addEventForm.eventFromDate.$error.min || addEventForm.eventFromDate.$error.max)">
+                                    {{ entity + "Event date not entered" | translate }}</span>
+                                <span class="help-block" ng-show="addEventForm.eventFromDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                <span class="help-block" ng-show="addEventForm.eventFromDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                <span class="help-block" ng-show="addEventForm.eventFromDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <label for="eventToDate"  class="col-md-2 control-label">
+                        {{ entity + 'To' | translate}}
+                    </label>
+                    <div class='col-md-5' ng-class="{
+                            'has-error'
+                            : addEventForm.eventToDate.$invalid}">
+                        <div class="input-group">
+                            <input type="text" id="toDate" name="eventToDate" class="form-control input-sm" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="event.toDate" is-open="datePicker.opened_event_to_date"  min="event.fromDate===undefined?minEventFromDate:event.fromDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" close-text="Close"/>
+                            <span class="input-group-btn">
+                                <button class="form-control input-sm" ng-click="open($event, 'opened_event_to_date');">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="error,help-block" ng-show="(addEventForm.eventToDate.$dirty || submitted) && addEventForm.eventToDate.$invalid">
+                            
+                            <span class="help-block" ng-show="addEventForm.eventToDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                            <span class="help-block" ng-show="addEventForm.eventToDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                            <span class="help-block" ng-show="addEventForm.eventToDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class='form-group'>
+            <label for="eventStartTime"  class="col-md-3 control-label">
+                <br/><br/>
+                <span style="color: red">*</span>  {{ entity + 'Event Time' | translate}}
+            </label>
+            <div class="col-md-6">
+                <div class="row">
+                    <div class='col-md-5'>
+                        <!--<div>--> 
+                        <div class="input-group" >
+                            <timepicker ng-model="event.strtTime" ng-change="checkEventTime()" show-meridian="true"  name="eventStartTime" required ></timepicker>
+                        </div>
+                        <!--                            <div class="error,help-block" ng-show="(addEventForm.eventStartTime.$dirty || submitted) && addEventForm.eventStartTime.$invalid">
+                                                        <span class="help-block" ng-show="addEventForm.eventStartTime.$error.required">{{ entity + 'Event time not entered' | translate}}</span>
+                                                    </div>-->
+                        <!--</div>-->
+                    </div>
+                    <label for="eventEndTime"  class="col-md-2 control-label" >
+                        <br/>
+                        <br/>
+                        <span style="color: red">*</span> {{ entity + 'To' | translate}}
+                    </label>
+                    <div class='col-md-5' >
+                        <div class="input-group" >
+                            <timepicker ng-model="event.endTime" ng-change="checkEventTime()" show-meridian="true"  name="eventEndTime" required ></timepicker>
+
+                        </div>
+                        <!--                        <div class="error,help-block" ng-show="(addEventForm.eventEndTime.$dirty || submitted) && addEventForm.eventEndTime.$invalid">
+                                                    <span class="help-block" ng-show="addEventForm.eventEndTime.$error.required">{{ entity + 'Event time not entered' | translate}}</span>
+                                                </div>-->
+                    </div>
+                </div>
+            </div> 
+            <div class=" form-group" ng-show="((addEventForm.eventEndTime.$dirty && event.endTime === undefined) || (addEventForm.eventStartTime.$dirty && event.strtTime === undefined) || event.strtTime === null || event.endTime === null || ((event.strtTime === undefined || (event.endTime === undefined)) && submitted))" ng-class="{'has-error': ((addEventForm.eventEndTime.$dirty && event.endTime === undefined) || (addEventForm.eventStartTime.$dirty && event.strtTime === undefined) || event.strtTime === null || event.endTime === null || ((event.strtTime === undefined || (event.endTime === undefined)) && submitted))}">
+                <div class="col-md-4 col-md-offset-3">
+                    <div class="error,help-block ">
+                        <span class="help-block">{{ entity + 'Event time not entered' | translate}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group" ng-show="invalidTime" ng-class="{'has-error': (invalidTime)}">
+                <div class="col-md-4 col-md-offset-3">
+                    <div class="error,help-block ">
+                        <span class="help-block" >{{ entity + 'Enter valid time' | translate}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group required">
+            <label for="invitees"  class="col-md-3 control-label">
+
+                {{ entity + 'Invitees' | translate}}
+            </label>
+            <div class="col-md-6">
+                <div ng-class="{
+                        'has-error'
+                        : addEventForm.invitees.$invalid && (addEventForm.invitees.$dirty || submitted)}">  
+                    <div class="input-group">
+                        <input type="text" class="col-md-12 hkg-nopadding" id="invitees" name="invitees" ui-select2="autoCompleteInvitees" ng-model="event.invitees" required ng-required='true'/>
+                        <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                    </div>
+                    <div class="error,help-block" ng-show="(addEventForm.invitees.$dirty || submitted) && addEventForm.invitees.$invalid">
+                        <span class="help-block" ng-show="addEventForm.invitees.$error.required">{{entity + 'Invitees not selected'| translate }}</span>
+                    </div>
+                </div>
+            </div>    
+        </div>
+        <div class='form-group required'>
+            <label for="publishedOn"  class="col-md-3 control-label">
+                {{ entity + 'Published On' | translate}}
+            </label>
+
+            <div class="col-md-6" ng-class="{
+                    'has-error'
+                    : addEventForm.publishedOn.$invalid && (addEventForm.publishedOn.$dirty || submitted)}"> 
+                <div class="input-group">
+                    <input type="text" ng-disabled="event.status === 'Published'" id="fromDate" name="publishedOn" class="form-control input-sm" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="event.publishedOn" is-open="datePicker.opened_event_published_on_date"  min="minEventPublisedDate" max="event.fromDate"  datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" ng-click="setEditEventMinPublishedOnDate()"/>
+                    <span class="input-group-btn">
+                        <button ng-disabled="event.status === 'Published'" class="form-control input-sm" ng-click="setEditEventMinPublishedOnDate();
+                                                                                    open($event, 'opened_event_published_on_date');">
+                            <span class="glyphicon glyphicon-calendar"></span>
+                        </button>
+                    </span> 
+                </div>
+                <div class="error,help-block" ng-show="(addEventForm.publishedOn.$dirty || submitted) && addEventForm.publishedOn.$invalid">
+                    <span class="help-block" ng-show="addEventForm.publishedOn.$error.required && !(addEventForm.publishedOn.$error.date || addEventForm.publishedOn.$error.min || addEventForm.publishedOn.$error.max)">
+                        {{ entity + "Publish date not entered" | translate }}</span>
+                    <span class="help-block" ng-show="addEventForm.publishedOn.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                    <span class="help-block" ng-show="addEventForm.publishedOn.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                    <span class="help-block" ng-show="addEventForm.publishedOn.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" ng-if='editFlag'>
+            <label for="eventStatus"  class="col-md-3 control-label">
+                <span >{{ entity + 'Status' | translate}}</span>
+            </label>
+            <div class="col-md-6" >
+                <select class="form-control" ng-options="status.name as status.name for status in availableEventStatus" ng-model="event.status" name="eventStatus"> 
+                </select>   
+            </div>
+        </div>
+
+        <div flow-init="uploadFile" flow-file-added="bannerFileAdded($file, $flow)" flow-file-success="bannerFileUploaded($file,$flow,addEventForm,$message)" flow-files-submitted="$flow.upload()">
+            <div class='form-group'>
+                <label for="bannerImage"  class="col-md-3 control-label">
+                    {{ entity + 'Banner Image' | translate}}
+                </label>
+
+                <div class="col-md-4" name='bannerImage'>
+                    <div class='row'>
+                        <div class='col-md-6'>
+                            <button class="btn btn-hkg" flow-btn>{{entity + 'Choose File'|translate}}</button>                        
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-md-12'>
+                            <ul class="list-group">    
+                                <li class="list-group-item" ng-repeat="file in $flow.files">
+                                    {{file.name}}
+                                    <span class="glyphicon glyphicon-remove pull-right" ng-click="removeFromList($flow, $index)"></span>
+                                </li>
+                                <li class="list-group-item" ng-show="bannerImg.invalidFileFlag">
+                                    <span class="text-danger"> {{bannerImg.fileName}} {{entity + 'Not image file'| translate}} </span>
+                                    <span class="glyphicon glyphicon-remove pull-right" ng-click="bannerImg.invalidFileFlag = false"></span>
+                                </li>
+                                <li class="list-group-item" ng-show="bannerImg.invalidFileSizeFlag">
+                                    <span class="text-danger"> {{entity + 'File size too large'| translate}} </span>
+                                    <span class="glyphicon glyphicon-remove pull-right" ng-click="bannerImg.invalidFileSizeFlag = false"></span>
+                                </li>
+                            </ul>
+                            <div ng-if='$flow.files.length === 0 && editFlag && (imageName !== null && imageName !== undefined)'>
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <span >{{imageName}}</span>
+                                        <span class="glyphicon glyphicon-remove pull-right" ng-click="removeFromPage()"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-if="editFlag">
+            <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" db-map="dbType" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalEventTemplate" 
+                           ng-model="addEventData" ng-if="generalEventTemplate" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1">
+            </dynamic-form>   
+        </div>
+        <div ng-if="!editFlag">
+            <dynamic-form db-map="dbType"  
+                          internationalization-label="{{i18DynamicForm}}"  input-css ="col-md-6" label-css="col-md-3 control-label" form-name="form2" template="generalEventTemplate" 
+                          ng-model="addEventData" ng-if="generalEventTemplate"  is-diamond="false" no-of-field-per-row = "1"> 
+            </dynamic-form>   
+            <!--        <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" db-map="dbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalEventTemplate" 
+                                   ng-model="addEventData" ng-if="generalEventTemplate" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1">
+                    </dynamic-form>   -->
+        </div>
+        <div class="hkg-full-legend">
+            {{ entity + 'Registration Details' | translate}}
+        </div>
+        <div class="form-group">
+            <label for="regType" class="col-md-3 control-label">
+                {{ entity + 'Registration Type' | translate}}
+            </label>
+            <div class="col-md-4" ng-class="{
+                    'has-error'
+                    : addEventForm.regType.$invalid}" id="regType"> 
+                <label class="radio-inline">
+                    <input type="radio" name="regType" ng-model="event.registrationType" value="ONLN">{{ entity + 'Online' | translate}}
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="regType" ng-model="event.registrationType" value="OFLN">{{ entity + 'Offline' | translate}}
+                </label>
+            </div>
+        </div>
+        <!--Display if registration type is "Online"-->
+
+        <div class="form-group required" ng-if="event.registrationType === 'ONLN'">
+            <label for="regForm" class="col-md-3 control-label">
+
+                {{ entity + 'Registration Form' | translate}}
+            </label>
+            <div class="col-md-4"  ng-class="{'has-error': addEventForm.regForm.$invalid && submitted}"> 
+                <input type="text" id="copyEventName" name="regForm" class="col-md-12 hkg-nopadding form-control" ui-select2="regFormNames" ng-model="event.selectedRegForm" placeholder="None" ng-required="event.registrationType === 'ONLN'" select-by-id="true"/>
+                <div class="error,help-block" ng-show="(addEventForm.regForm.$prestine || submitted) && addEventForm.regForm.$invalid">
+                    <span class="help-block" ng-show="addEventForm.regForm.$error.required">{{entity + 'Registration form not selected'| translate }}</span>
+                </div>
+            </div>
+            <div class="col-md-3"> 
+                <a href="" ng-click="setConfigFormFlag(true)">{{ entity + 'Configure registration form' | translate}}</a>
+            </div>
+        </div>
+        <div ng-if="event.registrationType === 'ONLN'">
+            <div class="form-group required">
+                <label for="lastRegDate" class="col-md-3 control-label">
+
+                    {{ entity + 'Last Date Of Registration' | translate}}
+                </label>
+                <div class='col-md-4'>
+                    <div ng-class="{
+                            'has-error'
+                            : addEventForm.lastRegDate.$invalid && (addEventForm.lastRegDate.$dirty || submitted)}"> 
+                        <div class="input-group">
+                            <input type="text" id="lastRegDate" name="lastRegDate" class="form-control input-sm" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="event.registrationLastDate" is-open="datePicker.opened_event_last_reg_date"  min="event.publishedOn" max="event.fromDate" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="event.registrationType === 'ONLN'" close-text="Close"/>
+                            <span class="input-group-btn">
+                                <button class="form-control input-sm" ng-click="open($event, 'opened_event_last_reg_date');">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </button>
+                            </span> 
+                        </div>
+                        <div class="error,help-block" ng-show="(addEventForm.lastRegDate.$dirty || submitted) && addEventForm.lastRegDate.$invalid">
+                            <span class="help-block" ng-show="addEventForm.lastRegDate.$error.required && !(addEventForm.lastRegDate.$error.date || addEventForm.lastRegDate.$error.min || addEventForm.lastRegDate.$error.max)">
+                                {{ entity + "Last date for registration not entered" | translate }}</span>
+                            <span class="help-block" ng-show="addEventForm.lastRegDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                            <span class="help-block" ng-show="addEventForm.lastRegDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                            <span class="help-block" ng-show="addEventForm.lastRegDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <dynamic-form  input-css ="col-md-4" label-css="col-md-3 control-label" db-map="dbType1" 
+                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalRegFormTemplate" 
+                       ng-model="addRegFormData" ng-if="generalRegFormTemplate">
+        </dynamic-form>  
+        <div class="hkg-full-legend">
+            {{ entity + 'Customize Invitation Card Background' | translate}}
+        </div>
+        <div flow-init="uploadFile" flow-file-added="backgroundFileAdded($file, $flow)" flow-file-success="backgroundFileUploaded($file,$flow,addEventForm,$message)" flow-files-submitted="$flow.upload()">
+            <div class='form-group'>
+                <div class="col-md-6"> 
+                    <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a href="" ng-click="showInvitationCardPopup();
+                                                                                        previewForm = true;
+                                                                                        alert(2);
+                                                                                        setBackground();
+                                                                                        alert(1);">{{ entity + 'Create invitation card by clicking here..' | translate}}</a>
+                </div>
+            </div>
+
+            <!--Create Invitation card pop-up-->
+            <div class="modal fade" role="dialog" id="invitationCardPopup" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true" >
+                <div class="modal-dialog">
+                    <div class="modal-content" style="width: 700px;">
+                        <div class="modal-header">
+                            <a class="close" title="Close" href="" ng-click="hideInvitationCardPopup()">&times;</a>
+                            <h4 class="modal-title" id="myModalLabel">
+                                {{ entity + 'Invitation Card Preview' | translate}}
+                            </h4>
+                        </div>
+                        <div class='form-group'>
+                            <label for="cardBackground"  class="col-md-4 control-label">
+                                {{ entity + 'Background Image' | translate}}
+                            </label>
+                            <div class='col-md-2'>
+                                <button class="btn btn-hkg" flow-btn>{{entity + 'Choose File'|translate}}</button>                        
+                            </div>
+                            <!--                            <div flow-transfers class='col-md-2 form-control-static'>
+                                                            <div ng-repeat="file in transfers">
+                                                                <div class="progress progress-striped">
+                                                                    <div class="bar" style="width: {{file.progress() * 100}}%;"><b>{{file.progress() * 100}}</b></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>-->
+                            <div class='col-md-5'>
+                                <ul class="list-group" ng-if="$flow.files.length > 0">    
+                                    <li class="list-group-item" ng-repeat="file in $flow.files">
+                                        <span ng-bind="file.name.length > 20 ? file.name.substring(0, 20)+ '.' : file.name" tooltip="{{file.name}}"></span>
+                                        <span class="glyphicon glyphicon-remove pull-right" ng-click="removeBackground($flow, $index)"></span>
+
+                                    </li>
+                                    <li class="list-group-item" ng-show="backgroundImg.invalidFileFlag">
+                                        <span class="text-danger" tooltip="{{backgroundImg.fileName}}"> {{backgroundImg.fileName.length > 10 ? backgroundImg.fileName.substring(0, 10) + '.' : backgroundImg.fileName}} {{entity + 'not image file'| translate}} </span>
+                                        <span class="glyphicon glyphicon-remove pull-right" ng-click="backgroundImg.invalidFileFlag = false"></span>
+                                    </li>
+                                    <li class="list-group-item" ng-show="backgroundImg.invalidFileSizeFlag">
+                                        <span class="text-danger"> {{entity + 'File size too large'| translate}} </span>
+                                        <span class="glyphicon glyphicon-remove pull-right" ng-click="backgroundImg.invalidFileSizeFlag = false"></span>
+                                    </li>
+                                </ul>
+                                <div ng-if='$flow.files.length === 0 && editFlag && (invitationImageName !== null && invitationImageName !== undefined)'>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">
+                                            <span >{{invitationImageName}}</span>
+                                            <span class="glyphicon glyphicon-remove pull-right" ng-click="removeFromInvitationPage()"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <label for="labelColor"  class="col-md-4 control-label">
+                                {{ entity + 'Labels Color' | translate}}
+                            </label>
+
+                            <div class="col-md-3" ng-class="{
+                    'has-error'
+                    : addEventForm.labelColor.$invalid}" name='labelColor'> 
+                                <input colorpicker colorpicker-fixed-position="true" ng-model="event.labelColor" type="text" class="form-control">
+
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <label for="contentColor"  class="col-md-4 control-label">
+                                {{ entity + 'Content Color' | translate}}
+                            </label>
+
+                            <div class="col-md-3" ng-class="{
+                    'has-error'
+                    : addEventForm.contentColor.$invalid}" name='contentColor'> 
+                                <input colorpicker colorpicker-fixed-position="true" ng-model="event.contentColor" type="text" class="form-control">
+
+                            </div>
+                        </div>
+
+                        <!--</div>-->
+                        <!--<div class="col-md-8">-->
+                        <div  ng-if="editFlag && event.invitationTemplatePath != null">
+                            <div ng-include src="getTemplateName()" id='templateModal'></div>
+                        </div>
+                        <div  id='templateModal' ng-if="!editFlag || event.invitationTemplatePath == null">
+                            <!--For add event-->
+                            <div>
+                                <div id='templateImg'><img flow-img="$flow.files[0]" height="400px" width="700px" id='imgId' ng-show='false'></div>
+                                <div ng-if='previewForm'>
+                                    <div id='templateBackground' style='height: 400px;width: 700px;line-height: 1.42857143;font-size: 14px;font-family: none;position: relative' ng-init="setBackground()">
+                                        <div id="eventTitleDiv" style = "display: inline-block;position:absolute;left: 305px; top: 11px;" class='draggable'>
+                                            <span style='word-break:break-all;font-size: 24px;font-weight: normal;' ng-style="{color:event.contentColor}" id="eventTitle" ng-bind="event.eventTitle" ></span>
+                                        </div>
+                                        <div class='draggable' style = "display: inline-block;position:absolute;left: 232px; top: 40px;">
+                                            <span style='word-break:break-all;text-align: center;' ng-style="{color:event.contentColor}" ng-bind="event.description"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 420px; top: 71px;">
+                                            <span ng-style="{color:event.labelColor}"  style="font-weight: normal;font-size: 14px;line-height: 1.1;text-align: center;">{{entity + "Venue"|translate}}</span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 465px; top: 72px;">
+                                            <span ng-style='{color:event.contentColor}' ng-bind="event.address"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 202px; top: 73px;">
+                                            <span ng-style='{color:event.labelColor}'>{{entity + "Date:"|translate}}</span> <span ng-style='{color:event.contentColor}' ng-bind="event.fromDate|date:dateFormat"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute; opacity: 1; left: 310px; top: 72px;">
+                                            <span  ng-style='{color:event.labelColor}'>{{entity + "Time:"|translate}}</span> <span ng-style='{color:event.contentColor}' ng-bind="event.strtTime|date:'shortTime'"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 281px; top: 126px;">
+                                            <span ng-style='{color:event.labelColor}' style="font-weight: normal;font-size: 14px;line-height: 1.1;text-align: center;">{{entity + "Name"|translate}}</span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute; opacity: 1; left: 324px; top: 127px;">
+                                            <span ng-style='{color:event.contentColor}' ng-bind="invitationCard.employeeName"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 211px; top: 175px;">
+                                            <span ng-style='{color:event.contentColor}' ng-bind="invitationCard.employeeAddress"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 290px; top: 194px;">
+                                            <span ng-style='{color:event.labelColor}'>  {{entity + "Email:"| translate}}</span><span ng-style='{color:event.contentColor}' ng-bind="invitationCard.employeeEmail"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 279px; top: 152px;">
+                                            <span ng-style='{color:event.labelColor}'>{{entity + "Mo:"|translate}}</span> <span ng-style='{color:event.contentColor}' ng-bind="invitationCard.employeePhoneNo"></span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 326px; top: 230px;">
+                                            <span ng-style='{color:event.labelColor}'>{{entity + "Total Adults"|translate}}:</span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 287px; top: 251px;">
+                                            <sapn ng-style='{color:event.contentColor}'><span ng-bind="invitationCard.totalAdults"></span></sapn>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute; opacity: 1; left: 319px; top: 284px;">
+                                            <span ng-style='{color:event.labelColor}'>{{entity + "Total Children"|translate}}:</span>
+                                        </div>
+                                        <div class='draggable' style="display: inline-block;position:absolute;opacity: 1; left: 283px; top: 314px;">
+                                            <sapn ng-style='{color:event.contentColor}'><span ng-bind="invitationCard.totalChildren"></span></sapn>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="footer" class="modal-footer">
+                                <div id="drop" class="text-center droppable well well-lg">
+                                    Drop here to remove element
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 pull-right">
+                                        <button id="closebtn" class="btn btn-hkg"  ng-click="hideInvitationCardPopup()">{{ entity + 'Close' | translate}}</button>
+                                    </div>
+                                </div> 
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <dynamic-form  input-css ="col-md-4" label-css="col-md-3 control-label" db-map="dbType2" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalInviTemplate" 
+                           ng-model="addInvitationData" ng-if="generalInviTemplate">
+            </dynamic-form>      
+            <div class="col-md-12">
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-12 pull-right text-right"> 
+                        <a href="" ng-click="addEventForm.$setPristine();
+                                                                                            initManageEvent()">
+                            {{ entity + 'Cancel' | translate}}
+                        </a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="saveFilesAndEvent(addEventForm)">
+                            <span ng-bind="entity + 'Add Event' | translate" ng-if="!editFlag"></span>
+                            <span ng-bind="entity + 'Save Event' | translate" ng-if="editFlag"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--addCategory pop-up-->
+<div class="modal fade" role="dialog" id="addCategoryPopup" tabindex="-1" aria-hidden="true" >
+    <div class="modal-dialog">
+        <div class="modal-content" >
+            <div class="modal-header">
+                <a class="close" title="Close" href="" ng-click="hideAddCategoryPopup(addCategoryPopupForm)">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">
+                    {{ entity + 'Manage Event Category' | translate}}
+                </h4>
+            </div >
+            <form  class="form-horizontal" name="addCategoryPopupForm" role='form' novalidate >
+                <div class="modal-body" >
+                    <div class="form-group" ng-if="showCategoryModal" ng-init="initPopupParentCategory()">
+                        <label for="parentCategory"  class="col-md-4 control-label">
+                            <span>{{ entity + 'Parent Category' | translate}}</span>
+                        </label>
+                        <div class="col-xs-8 col-lg-6"> 
+                            <div>
+                                <div class="dropdown" >
+                                    <button class="dropdown-toggle form-control" data-toggle="dropdown" >
+                                        <span class="pull-left" ng-bind="selectedEventCategoryPopup.currentNode.displayName"></span><span class="caret pull-right no-margin"></span>
+                                    </button>
+                                    <div class="dropdown-menu col-xs-12">
+                                        <div ng-click='popupEventCategoryDropdownClick(selectedEventCategoryPopup);'
+                                             data-angular-treeview="true"
+                                             data-tree-id="selectedEventCategoryPopup"
+                                             ag-treemodel="eventCategoryListPopup" search-id="popupEventCategoryId">
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+
+                        <label for="categoryName"  class="col-md-4 control-label">
+                            {{ entity + 'Category Name' | translate}}
+
+                        </label>
+                        <div class="col-md-6" ng-class="{
+                                    'has-error'
+                                    : addCategoryPopupForm.categoryName.$invalid && (addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted)}"> 
+                            <input ng-pattern="/^[^.]+$/" type="text" ng-model="category.displayName"  name="categoryName" id="categoryName" class="form-control" maxlength="100" required ng-change="addCategoryPopupForm.categoryName.$setValidity('exists', true)" ng-blur="checkCategoryUniqueName(addCategoryPopupForm)" typeahead="category.label as category.label for category in eventCategorySuggestions | filter:{label:$viewValue}">
+                            <div class="error,help-block" ng-show="(addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted) && addCategoryPopupForm.categoryName.$invalid">
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.required">{{ entity + 'Category not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.pattern">{{ entity + 'Category name is invalid ' | translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <dynamic-form  input-css ="col-md-6" label-css="col-md-4 control-label" db-map="dbTypeForCategory" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="addCategoryPopupForm" template="categoryTemplate" submit-flag-name="categoryForm.submitted"
+                                   ng-model="addCategoryData" ng-if="categoryTemplate">
+                    </dynamic-form>  
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-6 pull-right">
+                            <a href=""  ng-click="hideAddCategoryPopup(addCategoryPopupForm)">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="saveEventCategory(addCategoryPopupForm)">{{ entity + 'Save Category' | translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Remove event popup-->
+<div class="modal fade" id="removeEventPopup" role="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" title="Close" ng-click="removeEventCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span ng-if="event.status === 'Remove event'">{{ entity + "Remove Event" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12" ng-if="event.status === 'Remove event'">
+                        {{ entity + "The following will be removed"|translate}}:
+                        <ul>
+                            <li>{{ entity + "Event Details"|translate}}</li>
+                            <li>{{ entity + "User Registrations"|translate}}</li>
+                            <li>{{ entity + "Associated Shifts"|translate}}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12" ng-if="event.status === 'Remove event'">
+                        {{ entity + "Are you sure you want to remove the event "|translate}}{{event.eventTitle}}?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="removeEventCancel()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button ng-if="event.status === 'Remove event'" class="btn btn-hkg" ng-click="removeEventOk(addEventForm)">
+                            {{ entity + "Remove" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Remove event popup-->
+<div class="modal fade" id="cancelEventPopup" role="dialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" title="Close" ng-click="removeEventCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span ng-if="event.status === 'Cancelled'">{{ entity + "Cancel Event" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12" ng-if="event.status === 'Cancelled'">
+                        {{ entity + "The following will be removed"|translate}}:
+                        <ul>
+                            <li>{{ entity + "Event Details"|translate}}</li>
+                            <li>{{ entity + "User Registrations"|translate}}</li>
+                            <li>{{ entity + "Associated Shifts"|translate}}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12" ng-if="event.status === 'Cancelled'">
+                        {{ entity + "Are you sure you want to cancel the event "|translate}}{{event.eventTitle}}?
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="cancelEventCancel()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button ng-if="event.status === 'Cancelled'" class="btn btn-hkg" ng-click="cancelEventOk(addEventForm)">
+                            {{ entity + "Cancel Event" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

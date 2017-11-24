@@ -1,0 +1,185 @@
+<form method="POST" class="form-horizontal" name="editInvoiceForm" novalidate>
+    <div ng-init="registerLocationChangeEvent(editInvoiceForm);
+            initEditInvoiceForm(editInvoiceForm)" ng-if="dataRetrieved">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Edit Invoice'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="flag.searchFieldNotAvailable===true &&!flag.showUpdatePage">
+                <table class="table table-bordered">
+                    <tr>
+                        <td class="col-md-12">
+                            {{entity + 'First configure the search field'| translate}}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div ng-if="generalInvoiceTemplate.length > 0 && !flag.showUpdatePage">
+                <h4>{{entity + 'Search Invoice'| translate}}</h4>
+            </div>
+            <div ng-if="!flag.showUpdatePage">
+                <div ng-if="searchResetFlag">
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalInvoiceTemplate" 
+                                    ng-model="searchCustom" ng-if="generalInvoiceTemplate" is-diamond ="true">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalInvoiceTemplate">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a ng-click="onCanelOfSearch(invoiceForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(invoiceForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div ng-show="selectOneParameter">
+                    <div class="col-xs-12">&nbsp;</div>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Please select at least one field to search'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div ng-show="(!searchedData.length > 0 && listFilled)">
+                    <h4>{{entity + 'Searched Invoices'| translate}}</h4>
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'No matching results found'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="searchedData && (searchedData.length) > 0">
+                    <h4>{{entity + 'Searched Invoices'| translate}}</h4>
+                    <div class="form-group">                    
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <!--//////////////////UI-GRID/////////////////////-->
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-pinning ui-grid-selection ui-grid-auto-resize></div>
+                            <!--//////////////////UI-GRID/////////////////////-->
+
+                            <!--                                                                                        <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData">
+                                                                                                                        <thead>
+                                                                                                                            <tr>
+                                                                                                                                                                    <th ng-repeat="itr in mapToArray">{{itr}}</th>
+                                                                                                                                <th  style="white-space: nowrap;" ng-repeat="itr in invoiceLabelList">{{itr.label}}</th>
+                                                                                                                                <th>{{ entity + 'Action' | translate }}</th>
+                                                                                                                            </tr>
+                                                                                                                        </thead>
+                                                                                                                        <tbody>
+                                                                                                                            <tr ng-repeat="searchDataObj in searchedData" >
+                                                                                                                                <td ng-repeat="key in invoiceLabelList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                                                                                                                <td><a ng-click="editInvoice(searchDataObj)"><i class="glyphicon glyphicon-edit" title="{{ entity + 'Edit' | translate }}"></i></a></td>
+                                                                                                                            </tr>
+                                                                                                                        </tbody>
+                                                                                                                    </table>-->
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="gridOptions.data &&gridOptions.data.length > 0 ">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <button class="btn btn-hkg" ng-disabled="!selectedInvoice || selectedInvoice.length === 0" ng-click="editInvoice()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div ng-if="flag.showUpdatePage">
+                <div>
+                    <div ng-if="!updateInvoiceTemplate ||updateInvoiceTemplate.length===0">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'First configure the invoice field to update'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="invoiceParent" title="Invoice Details" accordion-collapse ng-if="updateInvoiceParentTemplate && updateInvoiceParentTemplate.length > 0 && invoiceCustomForUpdate">
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbTypeForUpdateParent" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceParentTemplate" 
+                                       ng-model="invoiceCustomForUpdate" ng-if="updateInvoiceParentTemplate" invoice-id="{{invoiceIdForConstraint}}" view-only="true" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+                    <div ng-if="parcelAddShow">
+                        <div class="panel-heading"><!-- class added to match parent collapse -->
+                            <h4 ng-if="updateInvoiceTemplate">Update Invoice</h4>
+                        </div>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbTypeForUpdate" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceTemplate" 
+                                       ng-model="invoiceCustom" ng-if="updateInvoiceTemplate" invoice-id="{{invoiceIdForConstraint}}" edit-flag="true" is-diamond="true">
+                            <!--ng-model="invoiceDataBean.invoiceCustom" ng-if="updateInvoiceTemplate" no-of-field-per-row = "2">-->
+                        </dynamic-form>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">                     
+                                <a ng-click="onCanel(editInvoiceForm)">{{entity + 'Back'| translate}}</a>&nbsp;                                
+                                <button class="btn btn-hkg" ng-if="flag.customFieldGeneratedForUpdate && updateInvoiceTemplate && updateInvoiceTemplate.length>0" 
+                                        ng-click="updateInvoice(editInvoiceForm)">{{entity + 'Update Invoice'| translate}}</button>
+                                <button class="btn btn-hkg" ng-if="canAccess('invoiceDelete') && flag.customFieldGeneratedForUpdate && updateInvoiceTemplate && updateInvoiceTemplate.length>0" 
+                                        ng-click="showPopUp(editInvoiceForm)">{{entity + 'Delete Invoice'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <br/>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" role="dialog" id="deleteInvoiceDialog" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/editinvoice" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Invoice'| translate }}</h4>
+            </div >
+            <form  class="form-horizontal" name="deleteInvoiceDialog" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete invoice?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteInvoice()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</form>

@@ -1,0 +1,252 @@
+<div ng-show="valExist" class="col-md-12 hkg-nopadding" ng-class="{'disabled': (outputData['empId'] !== $root.session.id || outputData.inStockOf !== $root.session.id) && (location.path() !== '/estimateprediction')}">
+    <style>
+        div.disabled
+        {
+            pointer-events: none;
+
+            /* for "disabled" effect */
+            opacity: 0.5;
+            background: #CCC;
+        }
+    </style>
+    <fieldset class="scheduler-border" style="display: inline-block;float: left;width: 8%">
+        <legend class="scheduler-border">{{entity + "Carat" | translate}}</legend>
+        <div class="carat1">
+            <div class="col-md-6 hkg-nopadding" data-toggle="buttons">
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='0'>
+                    {{entity +'0' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary"  ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='1'>
+                    {{entity +'1' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='2'>
+                    {{entity +'2' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='3'>
+                    {{entity +'3' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='4'>
+                    {{entity +'4' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='5'>
+                    {{entity +'5' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='6'>
+                    {{entity +'6' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='7'>
+                    {{entity +'7' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='8'>
+                    {{entity +'8' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratFirst" ng-change="changeData(sampleData)" btn-radio='9'>
+                    {{entity +'9' | translate}}
+                </label>
+                <br/>
+            </div>
+            <div class="col-md-6 hkg-nopadding" data-toggle="buttons" >
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='0'>
+                    {{entity +'0' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='1'>
+                    {{entity +'1' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='2'>
+                    {{entity +'2' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='3'>
+                    {{entity +'3' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='4'>
+                    {{entity +'4' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='5'>
+                    {{entity +'5' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='6'>
+                    {{entity +'6' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='7'>
+                    {{entity +'7' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='8'>
+                    {{entity +'8' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.caratSecond" ng-change="changeData(sampleData)" btn-radio='9'>
+                    {{entity +'9' | translate}}
+                </label>
+                <br/>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset class="scheduler-border " style="display: inline-block;float: left;width: 11%">
+        <legend class="scheduler-border">{{entity + "Cent" | translate}}</legend>
+        <div class="carat1">
+            <div class="col-md-4 hkg-nopadding" data-toggle="buttons">
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='0'>
+                    {{entity +'0' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='1'>
+                    {{entity +'1' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='2'>
+                    {{entity +'2' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='3'>
+                    {{entity +'3' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='4'>
+                    {{entity +'4' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='5'>
+                    {{entity +'5' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='6'>
+                    {{entity +'6' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='7'>
+                    {{entity +'7' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='8'>
+                    {{entity +'8' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centFirst" ng-change="changeData(sampleData)" btn-radio='9'>
+                    {{entity +'9' | translate}}
+                </label>
+                <br/>
+            </div>
+            <div class="col-md-4 hkg-nopadding" data-toggle="buttons" >
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='0'>
+                    {{entity +'0' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='1'>
+                    {{entity +'1' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='2'>
+                    {{entity +'2' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='3'>
+                    {{entity +'3' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='4'>
+                    {{entity +'4' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='5'>
+                    {{entity +'5' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='6'>
+                    {{entity +'6' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='7'>
+                    {{entity +'7' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='8'>
+                    {{entity +'8' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centSecond" ng-change="changeData(sampleData)" btn-radio='9'>
+                    {{entity +'9' | translate}}
+                </label>
+                <br/>
+            </div>
+            <div class="col-md-4 hkg-nopadding" data-toggle="buttons" >
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='0'>
+                    {{entity +'0' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='1'>
+                    {{entity +'1' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='2'>
+                    {{entity +'2' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='3'>
+                    {{entity +'3' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='4'>
+                    {{entity +'4' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='5'>
+                    {{entity +'5' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='6'>
+                    {{entity +'6' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='7'>
+                    {{entity +'7' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='8'>
+                    {{entity +'8' | translate}}
+                </label>
+                <br/>
+                <label class="btn btn-primary" ng-model="sampleData.centThird" ng-change="changeData(sampleData)" btn-radio='9'>
+                    {{entity +'9' | translate}}
+                </label>
+                <br/>
+            </div>
+        </div>
+    </fieldset>
+    <div style="float: left;width: 79%">
+        <div>
+            <fieldset  class="scheduler-border"  ng-repeat="field in inputData| orderBy:'order'" >
+                <legend class="scheduler-border">{{entity + field.label | translate}}</legend>
+                <div style="overflow-x: auto;white-space: nowrap;">
+                    <div ng-repeat="temp in dropdownValuesForPrimary[field.fieldId]| orderBy:'shortcutCode'" style="display: inline-block;padding-right: 1px;margin-right: 10px">
+                        <input type="radio" id="{{temp.value}}{{field.label}}" class="hkg-dynamic-radio radio-inline" ng-model="outputData[field.model]" ng-value="temp.value" name="{{temp.value}}{{field.label}}"/><label for="{{temp.value}}{{field.label}}">&nbsp;{{entity +temp.label| translate}}</label>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <fieldset  class="scheduler-border">
+            <div style="overflow-x: auto; padding-left: 10px">
+                <dynamic-form input-css ="col-md-4" label-css="col-md-3 control-label" db-map="dbType2" 
+                              internationalization-label="{{i18DynamicForm}}" form-name="form2" template="secondaryData" 
+                              no-of-field-per-row='6' ng-model="outputData" rap-calcy-data="outputData" rule-data="{{rules}}" ng-if="secondaryData && flag" is-diamond="true">
+                </dynamic-form>
+            </div>
+        </fieldset>
+    </div>
+</div>

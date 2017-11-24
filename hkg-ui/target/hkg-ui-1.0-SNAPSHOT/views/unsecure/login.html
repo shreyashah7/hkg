@@ -1,0 +1,81 @@
+<div class="row" >
+    <!--    <div class="col-xs-12 col-md-8 col-md-offset-2 " >-->
+
+    <div class="col-md-4 col-md-offset-4" style="padding-left: 0px;">  
+
+        <div class="panel panel-default" >
+
+            <div class="panel-body " >
+                <form role="form" name="loginform" class="form-horizontal" novalidate ng-submit="doLogin(loginform);" autocomplete="off">
+                    <div class="col-xs-8 col-xs-offset-2">
+                        <img alt="HKG" src="images/hkg-logo.png" class="img-responsive" />                             
+                    </div>
+                    <div class="col-xs-12" style="margin-left: 25px"> 
+                        <center>
+                            <!--                                <img alt="HKG" src="images/hk-logo.png" /> -->
+                        </center>
+                    </div>
+                    <div class="row" ng-show="message.show">&nbsp;</div>                        
+                    <!--                        <div class="col-xs-10 col-xs-offset-1 alert alert-danger" ng-show="message.show">
+                                                <button type="button" class="close" ng-click="message.show = false">&times;</button>
+                                                {{message.text}}
+                                            </div>                        -->
+                    <div class="list-group-item-text alert alert-danger" ng-show="message.show">
+                        <span class="glyphicon  glyphicon-remove-circle pull-left" title="Failure">&nbsp;</span> 
+                        {{'LOGIN.' + message.text| translate }}
+                        <span class="glyphicon  glyphicon-remove pull-right" title="Cancel" ng-click="message.show = false"></span>
+                    </div>
+                    <div class="form-group">
+                        &nbsp;
+                    </div>
+                    <div class="form-group">
+
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <div ng-class="{'has-error has-feedback': loginform.emailaddress.$invalid && (loginform.emailaddress.$dirty || submitted)}">  
+                                <!--<input id="emailaddress" ng-model="username" name="emailaddress" ng-pattern="EMAIL_REGEXP" type="text" required class="form-control"/>-->
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background-color: #977bb8;color:white"><span class="glyphicon glyphicon-user"></span></span>
+                                    <input id="emailaddress" ng-model="username" placeholder="{{'LOGIN.' + usernamePlaceholder| translate}}" name="emailaddress" type="text" required class="form-control" autofocus/>
+                                </div>
+
+                                <div class="error,help-block" ng-show="(loginform.emailaddress.$dirty || submitted) && loginform.emailaddress.$invalid">
+                                    <span class="help-block" ng-show="loginform.emailaddress.$error.required">{{ 'LOGIN.' + 'Enter Username'| translate}}</span>
+                                    <span class="help-block" ng-show="loginform.emailaddress.$error.pattern">{{'LOGIN.' + 'Enter Valid Username'| translate}}</span>
+                                    <span class="glyphicon glyphicon-remove form-control-feedback"></span>
+                                </div>
+                            </div>
+                        </div>                
+                    </div>
+                    <div class="form-group">                   
+
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <div ng-class="{'has-error  has-feedback': loginform.psw.$invalid && (loginform.psw.$dirty || submitted)}">  
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="background-color: #977bb8;color:white"><span class="glyphicon glyphicon-ok-circle"></span></span>
+                                    <input id="psw" name="psw" placeholder="{{'LOGIN.' + 'Password'| translate}}" ng-model="password" type="password" required class="form-control"/>
+                                </div>
+                                <div class="error,help-block" ng-show="(loginform.psw.$dirty || submitted) && loginform.psw.$invalid">
+                                    <span class="help-block" ng-show="loginform.psw.$error.required">Enter password</span>
+                                    <span class="glyphicon glyphicon-remove form-control-feedback"></span>
+                                </div>
+                            </div>
+                        </div>                  
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-10 col-xs-offset-1">
+                            <input type="checkbox" id='rememberme' ng-model="rememberme">&nbsp;&nbsp;<label ng-bind=" 'LOGIN.' + '  Remember me' | translate"></label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-xs-10 col-xs-offset-1">
+                                                      <button ng-disabled="invalidTimezone" class="btn btn-hkg col-xs-12"  ng-bind="'LOGIN.' +  actionbutton| translate"></button>
+                        </div>
+                    </div>                    
+                </form>
+                <br/>
+            </div>           
+        </div>        
+    </div>    
+</div>
+<!--</div>-->

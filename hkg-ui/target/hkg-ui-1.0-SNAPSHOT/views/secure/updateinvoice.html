@@ -1,0 +1,48 @@
+<div  ng-form="updateInvoiceForm">
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12 col-lg-8">
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate}}</li>
+                <li>{{entity + 'Stock'|translate}}</li>
+                <li>{{entity + 'Edit'|translate}}</li>
+                <li class="active">{{entity + 'Invoice'| translate}}</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 new-panel" ng-init="registerLocationChangeEvent(updateInvoiceForm);
+            initUpdateInvoiceForm(updateInvoiceForm)">
+        <div class="clearfix"></div>
+        <div id="messages" ng-include src="'templates/messages.html'"></div>
+        <div class="clearfix"></div>
+        <div ng-if="updateInvoiceParentTemplate && updateInvoiceParentTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+            <!--<h4 ng-if="updateInvoiceParentTemplate"> Invoice Details</h4>-->   
+            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbTypeForUpdateParent" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceParentTemplate" 
+                           ng-model="invoiceCustomForUpdate" ng-if="updateInvoiceParentTemplate" invoice-id="{{invoiceIdForConstraint}}" view-only="true">
+
+            </dynamic-form>
+        </div>
+        <div>
+            <div class="panel-heading"><!-- class added to match parent collapse -->
+                <h4 ng-if="updateInvoiceTemplate">Update Invoice</h4>
+            </div>
+            <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbTypeForUpdate" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="updateInvoiceTemplate" 
+                           ng-model="invoiceCustom" ng-if="updateInvoiceTemplate" invoice-id="{{invoiceIdForConstraint}}" edit-flag="true">
+                <!--ng-model="invoiceDataBean.invoiceCustom" ng-if="updateInvoiceTemplate" no-of-field-per-row = "2">-->
+            </dynamic-form>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-12" ng-if="flag.customFieldGeneratedForUpdate">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right">                     
+                    <a ng-click="onCanel(updateInvoiceForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="updateInvoice(updateInvoiceForm)">{{entity + 'Update Invoice'| translate}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--</div>-->

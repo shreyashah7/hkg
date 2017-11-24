@@ -1,0 +1,220 @@
+<div ng-init="initializePage();" class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>
+                    <li>{{ entity + 'Manage' | translate}}</li>
+                    <li>{{ entity + 'REFERENCE RATE' | translate}}</li>
+                </ol>
+            </div>
+
+        </div>
+        <!--breadcrumb-->
+        <div class="col-xs-12 new-panel">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="clearfix"></div>
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+
+                    <div ng-show="canAccess('referenceRateAdd')">
+                        <form  class="form-horizontal"  name="referencerateform" novalidate>
+
+                            <div class="form-group required" ng-init="registerLocationChangeEvent(referencerateform);
+                                                initRefRateForm(referencerateform)">
+                                <label for="currency" class="col-md-2 control-label">
+                                    <span>{{entity + 'Currency'|translate}}</span>
+                                </label>
+                                <!--<div id="currency"  name="currency"  ng-class="{'has-error':currencyDropdown.currentNode.id === '0' && submitted }">-->
+                                    <!--<div class="dropdown col-xs-8 col-lg-4" >-->
+                                        <!--                                        <button ng-disabled="refId !== undefined && isEdit" id="wordRap" class="dropdown-toggle  form-control" data-toggle="dropdown">
+                                                                                    <span class="pull-left" ng-bind="currencyDropdown.currentNode.displayName"></span><span class="caret pull-right no-margin"></span>
+                                                                                </button>
+                                                                                <div class="dropdown-menu col-xs-12 ">
+                                                                                    <div ng-click='currencyRateDropdownClick(currencyDropdown, referencerateform);'
+                                                                                         data-angular-treeview="true"
+                                                                                         data-tree-id="currencyDropdown"
+                                                                                         ag-treemodel="comboLabelAndDescriptionList" search-id="currencyIdd" >
+                                                                                    </div>
+                                                                                </div>
+                                                                                                                    </div>
+                                                                                <div class="error,help-block" ng-show=" currencyDropdown.currentNode.id === '0' && submitted">
+                                                                                    <span class="help-block" ng-show="currencyDropdown.currentNode.id === '0'">{{entity + 'Currency not selected  '| translate }}</span>
+                                                                                </div>-->
+                                        <!--</div>-->                                              
+                                        <div class="col-xs-8 col-lg-4" ng-class="{'has-error': referencerateform.select_CurrencyFieldType.$invalid && submitted}">
+                                            <select ng-disabled="refId !== undefined && isEdit" id="select_CurrencyFieldType" name="select_CurrencyFieldType" class="form-control col-md-12" ng-options="currency.value as currency.label for currency in comboLabelAndDescriptionList"  ng-model="currencyId" required>
+                                                <option value="">Select </option>
+                                            </select>
+                                            <div class="error,help-block" ng-show="referencerateform.select_CurrencyFieldType.$invalid && submitted">
+                                                <span class="help-block" ng-show="referencerateform.select_CurrencyFieldType.$error.required">{{ entity + "Currency type not entered" | translate }}</span>
+                                                <span class="help-block" ng-show="referencerateform.select_CurrencyFieldType.$error.sameValue">{{ entity + "Duplicate values entered" | translate }}</span>
+                                            </div> 
+                                        </div>
+                                    <!--</div>-->
+                                <!--</div>-->
+                            </div>
+
+
+                            <div class="form-group required">
+                                <label for="referenceRate" class="col-md-2 control-label">
+                                    <span>{{entity + 'Reference Rate'|translate}}</span>
+                                </label>
+                                <div class="col-md-4" ng-class="{'has-error': referencerateform.referenceRate.$invalid && submitted}">
+                                    <input ng-disabled="refId !== undefined && isEdit" type="text"  maxlength="20" id="referenceRate" name="referenceRate" ng-model="referenceRate" required class="form-control">
+                                    <!--                                    </div>-->
+                                    <div class="error,help-block" ng-show="(submitted) && referencerateform.referenceRate.$invalid">
+                                        <span class="help-block" ng-show="referencerateform.referenceRate.$error.required">{{entity + ' Reference rate not entered'| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--<div class="row">-->
+                            <div class="form-group required">
+                                <label for="applicableFrom" class="col-md-2 control-label">
+                                    <span>{{entity + 'Applicable From'|translate}}</span>
+                                </label>
+                                <div class="col-md-4"  ng-class="{'has-error': referencerateform.applicableFrom.$invalid && submitted}" >
+                                    <div class="input-group" ng-init="">
+                                        <input required type="text" id="applicableFrom" name="applicableFrom" placeholder="{{format}}" datepicker-popup="{{format}}" ng-model="applicableFrom" is-open="datepicker.from" min="minDate"   close-text="Close" class="form-control"/>
+                                        <span class="input-group-btn">
+                                            <button class="form-control" ng-click="open($event, 'from')">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </button>
+                                        </span>
+
+                                    </div>
+                                    <div class="error,help-block" ng-show="(submitted) && referencerateform.applicableFrom.$invalid">
+                                        <span class="help-block" ng-show="referencerateform.applicableFrom.$error.required && !(referencerateform.applicableFrom.$error.date || referencerateform.applicableFrom.$error.min || referencerateform.applicableFrom.$error.max)">
+                                            {{ entity + "Applicable date not entered" | translate }}</span>
+                                        <span class="help-block" ng-show="referencerateform.applicableFrom.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                        <span class="help-block" ng-show="referencerateform.applicableFrom.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                        <span class="help-block" ng-show="referencerateform.applicableFrom.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="clearfix"></div>
+                            <div class="col-xs-6">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-6 pull-right text-right">
+                                        <a  href="" ng-click="onCanelOfReferencePage(referencerateform)">{{entity + 'Cancel'| translate }}</a>
+                                        &nbsp;
+                                        <button class="btn btn-hkg" ng-click="updateReferenceRate();"  >{{entity + 'Save'| translate }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="clearfix"></div>
+                            <div>
+                                <tabset ng-show="currentCurrencyRateList && currentCurrencyRateList.length > 0">
+                                    <tab select="Current" heading="Current">
+                                        <div id='masterDetail'>
+                                            <div class="form-group">
+                                                <div  class="col-md-12" ng-if="currentRateListFilled">
+                                                    <table class="table" cellspacing="0" width="100%" data-table="currentCurrencyRateList" >
+                                                        <thead>
+                                                            <tr>
+                                                                <th>{{entity + "Sr.No."|translate}}</th>
+                                                                <th>{{entity + "Currency Code"|translate}}</th>
+                                                                <th>{{entity + "Reference Rate(INR)" | translate}}</th>
+                                                                <th>{{entity + "Updated On"|translate}}</th>                                                               
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr ng-repeat="row in currentCurrencyRateList" >
+                                                                <td>{{$index + 1}}</td>
+                                                                <td>
+                                                                    <span>
+                                                                        <a class="wordRap" ng-click="editReferenceRate(row)" title="{{entity + 'Click to edit'|translate}}">{{row.code}} ({{row.currencyName}})</a>
+                                                                    </span>
+                                                                </td>
+                                                                <td class="wordRap">{{row.referenceRate}}</td>
+                                                                <td>{{row.lastModifiedOn|date:"d MMM y"}}</td>                                                               
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </tab>
+                                    <tab ng-repeat="tab in tabManager.archivedList" heading="{{tab.code}}" active="tab.active" disabled="tab.disabled" ng-click="tabChangeEvent(tab)">
+                                        <div id='masterDetail' ng-show="tabManager.tabItems">
+                                            <div class="form-group">
+                                                <div  class="col-md-12" ng-if="tabListFilled">    
+                                                    <table class="table" cellspacing="0" width="100%" ag-data-table="tabManager.tabItems.list" >
+                                                        <thead>
+                                                            <tr>
+                                                                <th>{{entity + "Sr.No."|translate}}</th>
+                                                                <th>{{entity + "Currency Code"|translate}}</th>
+                                                                <th>{{entity + "Reference Rate(INR)" | translate}}</th>
+                                                                <th>{{entity + "Updated On"|translate}}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <!--<tr ng-repeat="row in tabManager.tabItems.list" dt-rows>-->
+                                                            <tr ng-repeat="row in tabManager.tabItems.list">
+                                                                <td>{{$index + 1}}</td>
+                                                                <td><span ng-if="!row.isActive">{{row.code}} ({{(row.currencyName)}})</span>
+                                                                    <span ng-if="row.isActive">
+                                                                        <a ng-click="editReferenceRate(row)" class="wordRap" title="{{entity + 'Click to edit'|translate}}">{{row.code}} ({{row.currencyName}})</a>
+                                                                    </span>
+                                                                </td>
+                                                                <td class="wordRap">{{row.referenceRate}}</td>
+                                                                <td>{{row.lastModifiedOn|date:"d MMM y"}}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </tab>
+
+                                </tabset>
+
+                                <br/><br/><br/>
+
+                                <!--</div>-->
+
+                            </div>
+                        </form>
+                    </div>
+                    <!--</div>-->
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" role="dialog" id="deletePopUp" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" href="#/managereferencerate" ng-click="hidedeletePopUp()">&times;</a>
+                        <h4 class="modal-title" id="myModalLabel">{{entity + 'Disable'| translate }}</h4>
+                    </div >
+                    <form  class="form-horizontal" name="overridePopUp" role='form'>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    {{entity + 'Disabling the reference rate will lead to removal of this currency for all future  conversions where ever applicable.
+                                                Do you wish to proceed ?'| translate }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-12 pull-right text-right"><a ng-click="hidedeletePopUp()">No</a>&nbsp;
+                                            <button class="btn btn-hkg " ng-click="disableCurrency()">{{ entity + "Yes" | translate }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

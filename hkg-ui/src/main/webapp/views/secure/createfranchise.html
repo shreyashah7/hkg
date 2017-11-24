@@ -1,0 +1,573 @@
+<div ng-if=isCreate>
+    <!--<h4><label class="control-label">{{entity + 'Add Franchise'| translate}}</label></h4>-->    
+
+    <form method="POST" class="form-horizontal" name="franchiseCreateForm" novalidate>
+
+        <div class="form-group required" ng-init="registerLocationChangeEvent(franchiseCreateForm); initCreateForm(franchiseCreateForm);">               
+            <label for="franchiseName" class="col-md-2 control-label">{{entity + 'Franchise Name'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.franchiseName.$invalid || notUniqueFranchise) && (franchiseCreateForm.franchiseName.$dirty || submitted)}">                    
+                <input type="text" ng-pattern="/^[^.]+$/" required maxlength="100" id="franchiseName" name="franchiseName" class="form-control" ng-model="franchise.franchiseName" >                                
+                <i ng-show="loadingNames" class="glyphicon glyphicon-refresh"></i>
+                <div class="error,help-block" ng-show="(franchiseCreateForm.franchiseName.$dirty || submitted) && (franchiseCreateForm.franchiseName.$invalid || notUniqueFranchise)">
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseName.$error.required">{{ entity + "Franchise name not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseName.$error.pattern">{{ entity + "Franchise name not valid" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseName.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                    <span class="help-block" ng-show="notUniqueFranchise">{{ entity + "Franchise name already exists" | translate }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group required">    
+            <label for="country" class="col-md-2 control-label">{{entity + 'Location'| translate}}</label>         
+            <div class="col-md-4" ng-class="{'has-error': franchiseCreateForm.country.$invalid && submitted}">
+                <input type="text" id="country" name="country" class="col-md-12 hkg-nopadding" ui-select2="multiLocations" ng-model="franchise.location" placeholder="city,district,state,country" required  />
+                <div class="error,help-block" ng-show="(submitted) && franchiseCreateForm.country.$invalid">
+                    <span class="help-block" ng-show="franchiseCreateForm.country.$error.required">{{ entity + "City not selected" | translate }}</span>                    
+                </div>
+            </div>
+        </div>
+        <div class="form-group required">               
+            <label for="address" class="col-md-2 control-label">{{entity + 'Address'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseCreateForm.address.$invalid && (franchiseCreateForm.address.$dirty || submitted)}">                    
+                <textarea required rows="5" maxlength="500" id="address" name="address" class="form-control" ng-model="franchise.address" ng-trim="false" ></textarea>                                
+                <div style="text-align: right;">{{500 - franchise.address.length}} {{ entity + "characters remains" | translate }}</div>
+                <div class="error,help-block" ng-show="(franchiseCreateForm.address.$dirty || submitted) && franchiseCreateForm.address.$invalid">
+                    <span class="help-block" ng-show="franchiseCreateForm.address.$error.required">{{ entity + "Address not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.address.$error.maxlength">{{ entity + "Maximum 500 characters" | translate }}</span>
+                </div>
+            </div> 
+            <label for="zipCode" class="col-md-2 control-label"> {{entity + 'Pincode'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseCreateForm.zipCode.$invalid && (franchiseCreateForm.zipCode.$dirty || submitted)}">                    
+                <input type="text" required ng-minlength="6" maxlength="6" id="zipCode" name="zipCode" numbers-only="numbers-only" class="form-control" ng-model="franchise.zipCode"/>                                
+                <div class="error,help-block" ng-show="(franchiseCreateForm.zipCode.$dirty || submitted) && franchiseCreateForm.zipCode.$invalid">                    
+                    <span class="help-block" ng-show="franchiseCreateForm.zipCode.$error.required">{{ entity + "Pincode not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.zipCode.$error.minlength">{{ entity + "Minimum 6 digits are required" | translate }}</span>                    
+
+                </div>
+            </div> 
+        </div>
+        <div class="form-group required"> 
+            <label for="contactPerson" class="col-md-2 control-label"> {{entity + 'Contact Person'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseCreateForm.contactPerson.$invalid && (franchiseCreateForm.contactPerson.$dirty || submitted)}">                    
+                <input type="text" required maxlength="50" id="contactPerson" name="contactPerson" class="form-control" ng-model="franchise.contactPerson" ng-blur="doesUserNameExist(franchise)">                                
+                <div class="error,help-block" ng-show="(franchiseCreateForm.contactPerson.$dirty || submitted) && franchiseCreateForm.contactPerson.$invalid">
+                    <span class="help-block" ng-show="franchiseCreateForm.contactPerson.$error.required">{{ entity + "Contact person name not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.contactPerson.$error.maxlength">{{ entity + "Maximum 6 characters" | translate }}</span>
+                </div>
+            </div> 
+            <label for="phoneNumber" class="col-md-2 control-label">{{entity + 'Phone Number'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.phoneNumber.$invalid || !isPhoneValidate) && (franchiseCreateForm.phoneNumber.$dirty || submitted)}">                    
+                <input type="text" required maxlength="10" numbers-only id="phoneNumber" name="phoneNumber" class="form-control" ng-model="franchise.phoneNumber" ng-blur="phoneValidate(franchise.phoneNumber)">                                
+                <div class="error,help-block" ng-show="(franchiseCreateForm.phoneNumber.$dirty || submitted) && (franchiseCreateForm.phoneNumber.$invalid || !isPhoneValidate)">
+                    <span class="help-block" ng-show="franchiseCreateForm.phoneNumber.$error.required">{{ entity + "Phone number not entered" | translate }}</span>
+                    <span class="help-block"  ng-show="!isPhoneValidate && !franchiseCreateForm.phoneNumber.$error.required">{{ entity + "Phone number not valid" | translate }}</span>                
+                </div>
+            </div> 
+        </div>
+        <div class="form-group required"> 
+            <label for="emailAddress" class="col-md-2 control-label"> {{entity + 'Email'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.emailAddress.$invalid || !isEmailValidate) && (franchiseCreateForm.emailAddress.$dirty || submitted)}">                    
+                <input type="text" required maxlength="100" id="emailAddress" name="emailAddress" class="form-control" ng-model="franchise.emailAddress" ng-blur="emailValidate(franchise.emailAddress)"
+                       >                                
+                <div class="error,help-block" ng-show="(franchiseCreateForm.emailAddress.$dirty || submitted) && (franchiseCreateForm.emailAddress.$invalid || !isEmailValidate)">
+                    <span class="help-block" ng-show="franchiseCreateForm.emailAddress.$error.required">{{ entity + "Email not entered" | translate }}</span>                    
+                    <span class="help-block" ng-show="!isEmailValidate && !franchiseCreateForm.emailAddress.$error.required">{{ entity + "Email not valid" | translate }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group required" ng-show="existingFranchiseList.length > 0"> 
+            <label for="select_model" class="col-md-2 control-label">{{entity + 'Make Copy Of'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseCreateForm.select_model.$invalid && submitted}">    
+                <select id="select_model" name="select_model" class="form-control" ng-required="existingFranchiseList.length > 0" ng-options="model.id as model.franchiseName for model in franchiseModelList" ng-model="franchise.franchiseModel" ng-change="onModelChange(franchise.franchiseModel)">
+                    <option value="">{{entity + 'Select'| translate }}</option>
+                </select>
+                <div class="error,help-block" ng-show="(franchiseCreateForm.select_model.$dirty || submitted && franchiseCreateForm.select_model.$invalid)">
+                    <span class="help-block" ng-show="franchiseCreateForm.select_model.$error.required">{{ entity + "Select model" | translate }}</span>                    
+                </div>
+            </div>
+        </div>
+        <div class="form-group required"> 
+            <label for="select_model" class="col-md-2 control-label">{{entity + 'Franchise Code'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.franchiseCode.$invalid) && (franchiseCreateForm.franchiseCode.$dirty || submitted)}">                    
+                <input type="text" whitespace="whitespace" required maxlength="3" id="franchiseCode" name="franchiseCode" class="form-control" ng-model="franchise.franchiseCode" ng-blur="doesFranchiseCodeExists(franchise.franchiseCode,franchiseCreateForm);" ng-pattern="/^[a-zA-Z0-9]+$/">                                
+                <div class="error,help-block" ng-show="(franchiseCreateForm.franchiseCode.$dirty || submitted || franchiseCreateForm.franchiseCode.$error.exists) && (franchiseCreateForm.franchiseCode.$invalid || franchiseCreateForm.franchiseCode.$error.exists)">
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseCode.$error.required">{{ entity + "Franchise code not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseCode.$error.pattern">{{ entity + "Franchise code not valid" | translate }}</span>                    
+                    <span class="help-block" ng-show="franchiseCreateForm.franchiseCode.$error.exists">{{ entity + "Franchise code already exists" | translate }}</span>
+                </div>
+            </div>
+        </div>
+        <div ng-if="reload">
+            <dynamic-form  input-css ="col-md-4" label-css="col-md-2 control-label" db-map="dbType" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" entity="franchise" template="generalFranchiseTemplate" 
+                           ng-model="addFranchiseData" ng-if="generalFranchiseTemplate" is-diamond="false" no-of-field-per-row = "1">
+            </dynamic-form>      
+        </div>  
+        <div>
+            <div class="tabbable tabs-below" >
+                <ul  class="nav nav-tabs">
+
+                    <li ng-class="{active: selectedTab == 1}">
+                        <a ng-click="changeSelectedTab(1);">{{entity + 'Admin User'| translate}}</a>
+                    </li>
+                    <li ng-class="{active: selectedTab == 2}">
+                        <a ng-show="existingFranchiseList.length > 0 && designations.length > 0"  ng-click="changeSelectedTab(2)">{{entity + 'Designations'| translate}}</a>
+                    </li>
+                    <li ng-class="{active: selectedTab == 3}">
+                        <a ng-show="existingFranchiseList.length > 0 && showTab && machines.length > 0"  ng-click="changeSelectedTab(3)">{{entity + 'Machines'| translate}}</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" ng-show="selectedTab == 1">
+                    &nbsp;&nbsp;
+                    <div class="form-group required">
+                        <label for="adminName" class="col-md-2 control-label"> {{entity + 'Name'| translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.adminName.$invalid) && (franchiseCreateForm.adminName.$dirty || submitted) || invalidname}">
+                            <div>
+                                <input type="text"  maxlength="100" class="form-control" id="adminName" name="adminName" ng-model="franchise.adminName" ng-blur="isValidFormat(franchise.adminName, franchiseCreateForm);" placeholder="Firstname middlename lastname" required>
+                            </div>
+                            <div class="error,help-block" ng-show="(submitted && franchiseCreateForm.adminName.$invalid) || invalidname">
+                                <span class="help-block" ng-show="franchiseCreateForm.adminName.$error.required"> {{ entity + "Name not entered "| translate }}</span>
+                                <span class="help-block" ng-show="franchiseCreateForm.adminName.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                                <span class="help-block" ng-show="invalidname && !franchiseCreateForm.adminName.$error.required">{{ entity + " Format is not valid" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <label for="adminUserName" class="col-md-2 control-label"> {{entity + 'Username'| translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.adminUserName.$invalid || notUniqueUsername) && (franchiseCreateForm.adminUserName.$dirty || submitted)}">
+                            <div>
+                                <input type="text"  maxlength="100" class="form-control" id="adminUserName" name="adminUserName" ng-model="franchise.adminUserName" ng-blur="doesUserNameExist(franchise.adminUserName); userNameValidationCheck()" required>
+                            </div>
+                            <div class="error,help-block" ng-show="(franchiseCreateForm.adminUserName.$dirty || submitted) && (franchiseCreateForm.adminUserName.$invalid || notUniqueUsername)">
+                                <span class="help-block" ng-show="franchiseCreateForm.adminUserName.$error.required"> {{ entity + "Username not entered "| translate }}</span>
+                                <span class="help-block" ng-show="franchiseCreateForm.adminUserName.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                                <span class="help-block" ng-show="notUniqueUsername && !franchiseCreateForm.adminUserName.$error.required">{{ entity + "Username already exists" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <label for="Password" class="col-md-2 control-label"> {{entity + 'Password'| translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.Password.$invalid || !isuserMatched) && (franchiseCreateForm.Password.$dirty || submitted)}">
+                            <div>
+                                <input type="password" class="form-control" ng-minlength="8" maxlength="50" id="Password" name="Password" ng-change="confirmPasswordValidation();
+                                                    userNameValidationCheck()"   ng-model="franchise.password" required>
+                            </div>
+                            <div class="error,help-block" ng-show="(franchiseCreateForm.Password.$dirty || submitted) && (franchiseCreateForm.Password.$invalid || !isuserMatched)">
+                                <span class="help-block" ng-show="franchiseCreateForm.Password.$error.required">Password not entered</span>
+                                <span class="help-block" ng-show="franchiseCreateForm.Password.$error.minlength">{{ entity + "Password must be atleast 8 characters" | translate }}</span>  
+                                <span class="help-block"  ng-show="!isuserMatched">{{ entity + "Password cannot contain your username" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>  
+                    <div class="form-group required">
+                        <label for="adminRetypePwd" class="col-md-2 control-label"> {{entity + 'Retype Password'| translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': (franchiseCreateForm.adminRetypePwd.$invalid || isMatched) && (franchiseCreateForm.adminRetypePwd.$dirty || submitted)}">
+                            <div>
+                                <input type="password" class="form-control"  maxlength="50" id="adminRetypePwd"  ng-model="franchise.adminRetypePwd"  ng-change="confirmPasswordValidation()"  name="adminRetypePwd" required>
+                            </div>
+                            <div class="error,help-block" ng-show="(franchiseCreateForm.adminRetypePwd.$dirty || submitted) && (franchiseCreateForm.adminRetypePwd.$invalid || isMatched)">
+                                <span class="help-block" ng-show="franchiseCreateForm.adminRetypePwd.$error.required">{{ entity + "Confirmation password not entered" | translate }}</span>                                                                        
+                                <span class="help-block" ng-show="!franchiseCreateForm.adminRetypePwd.$error.required && isMatched">{{ entity + "Password mismatch, please try again" | translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" ng-show="selectedTab == 2">
+                &nbsp;&nbsp;
+                <div ng-class="{'has-error': isDesignationSelected}">
+                    <div class="error,help-block">
+                        <span class="help-block"  ng-show="isDesignationSelected">{{ entity + "You have to atleast select 1 designation" | translate }}</span>
+                    </div></div>
+                <div class="form-group">
+                    <div class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="row">
+                            <div class="col-xs-6">
+                            </div>
+                            <div class="col-xs-6">
+                                <b>{{ entity + "Required" | translate }}</b>                             
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-repeat="desgn in designations">
+                    <div class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <label for="{{desgn}}" class="col-md-2 control-label"> {{entity + desgn.requirementName| translate}}</label>         
+                            </div>
+                            <div class="col-xs-6">
+
+                                <input type="text" numbers-only="true" class="form-control" name="{{desgn}}" id="{{desgn}}" maxlength="4" ng-model="desgn.requiredValue">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="tab-content" ng-show="selectedTab == 3">
+                &nbsp;&nbsp;
+                <div class="form-group">
+                    <div class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="row">
+                            <div class="col-xs-6">
+                            </div>
+                            <div class="col-xs-6">
+                                <b>{{ entity + "Required" | translate }}</b>                             
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-repeat="desgn in machines">
+                    <div class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <label for="{{desgn}}" class="col-md-2 control-label"> {{entity + desgn.requirementName| translate}}</label>         
+                            </div>
+                            <div class="col-xs-6">
+
+                                <input type="text" numbers-only="true" class="form-control" name="{{desgn}}" id="{{desgn}}" maxlength="4" ng-model="desgn.requiredValue">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-12">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right">                     
+                    <a ng-click="cancelFranchise(franchiseCreateForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="doesFranchiseNameExist(franchise.franchiseName, franchiseCreateForm, 'create');">{{entity + 'Add Franchise'| translate}}</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div ng-if=!isCreate>
+    <!--<h4><label class="control-label">{{entity + 'Edit Franchise'| translate}}</label></h4>-->    
+
+    <form method="POST" class="form-horizontal" name="franchiseEditForm" novalidate>
+
+        <div class="form-group required" ng-init="registerLocationChangeEvent(franchiseEditForm)">   
+
+            <label for="franchiseName" class="col-md-2 control-label">{{entity + 'Franchise Name'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseEditForm.franchiseName.$invalid || notUniqueFranchise) && (franchiseEditForm.franchiseName.$dirty || submitted)}">                    
+
+                <input type="text" required maxlength="100" id="franchiseName" name="franchiseName" class="form-control" ng-model="editFranchise.franchiseName" >                                
+                <i ng-show="loadingNames" class="glyphicon glyphicon-refresh"></i>
+                <div class="error,help-block" ng-show="(franchiseEditForm.franchiseName.$dirty || submitted) && (franchiseEditForm.franchiseName.$invalid || notUniqueFranchise)">
+
+                    <span class="help-block" ng-show="franchiseEditForm.franchiseName.$error.required">{{ entity + "Franchise name not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.franchiseName.$error.pattern">{{ entity + "Franchise name not valid" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.franchiseName.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                    <span class="help-block" ng-show="notUniqueFranchise">{{ entity + "Franchise name already exists" | translate }}</span>
+                </div>
+            </div>
+            <label for="select_status" class="col-md-2 control-label">{{entity + 'Current Status'| translate}}</label>
+            <div class="col-md-4" ng-if="!franchiseActivateDeactivate">
+                <span ng-show="editFranchise.status == 'P'">{{entity + 'Created'| translate}}</span>
+                <span ng-show="editFranchise.status == 'A'">{{entity + 'Activated'| translate}}</span>
+            </div>
+            <div class="col-md-4" ng-if="franchiseActivateDeactivate" ng-class="{'has-error': franchiseEditForm.currentStatus.$invalid && (franchiseEditForm.currentStatus.$dirty || submitted)}">                    
+                <select id="select_status" class="form-control" ng-model="editFranchise.status">
+                    <option value="P" ng-show="created">{{entity + 'Created'| translate }}</option>
+                    <option value="A" ng-show="!created">{{ entity + 'Activated' | translate}}</option>
+                    <option value="A" ng-show="created && canActivated">{{ entity + 'Activate' | translate}}</option>
+                    <option value="R">{{entity + 'Remove'| translate }}</option>
+                </select>
+            </div> 
+        </div>
+        <!--        <div class="form-group">               
+                    <label for="select_country" class="col-md-2 control-label">{{entity + 'Country'| translate}}</label>         
+                    <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.country.$invalid && submitted}">
+                        <select id="select_country" class="form-control" ng-options="country.value as country.label for country in countryList" ng-model="editFranchise.country" ng-change="getChilds(editFranchise.country, 'S');">
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">               
+                    <label for="select_state" class="col-md-2 control-label">{{entity + 'State'| translate}}</label>         
+                    <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.state.$invalid && submitted}">
+                        <select id="select_state" class="form-control" ng-options="state.value as state.label for state in stateList" ng-model="editFranchise.state" ng-change="getChilds(editFranchise.state, 'D');">
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">               
+                    <label for="select_district" class="col-md-2 control-label">{{entity + 'District'| translate}}</label>         
+                    <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.district.$invalid && submitted}">
+                        <select id="select_district" class="form-control" ng-options="district.value as district.label for district in districtList" ng-model="editFranchise.district">
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">               
+                    <label for="select_city" class="col-md-2 control-label">{{entity + 'City'| translate}}</label>         
+                    <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.city.$invalid && submitted}">
+                        <select id="select_city" class="form-control" ng-options="city.value as city.label for city in cityList" ng-model="editFranchise.city">
+                        </select>
+                    </div>
+                </div>-->
+        <div class="form-group required">    
+            <label for="country" class="col-md-2 control-label">{{entity + 'Location'| translate}}</label>         
+            <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.country.$invalid && submitted}">
+                <input type="text" id="country" name="country" class="col-md-12 hkg-nopadding" ui-select2="multiLocations" ng-model="editFranchise.location" placeholder="city,district,state,country" required  />
+                <div class="error,help-block" ng-show="(submitted) && franchiseEditForm.country.$invalid">
+                    <span class="help-block" ng-show="franchiseEditForm.country.$error.required">{{ entity + "City not selected" | translate }}</span>                    
+                </div>
+            </div>
+        </div>
+        <div class="form-group required">               
+            <label for="address" class="col-md-2 control-label">{{entity + 'Address'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.address.$invalid && (franchiseEditForm.address.$dirty || submitted)}">                    
+                <textarea required rows="5" maxlength="500" id="address" name="address" class="form-control" ng-model="editFranchise.address" ng-trim="false" ></textarea>                                
+                <div style="text-align: right;">{{500 - editFranchise.address.length}} {{ entity + "characters remains" | translate }}</div>
+                <div class="error,help-block" ng-show="(franchiseEditForm.address.$dirty || submitted) && franchiseEditForm.address.$invalid">
+                    <span class="help-block" ng-show="franchiseEditForm.address.$error.required">{{ entity + "Address not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.address.$error.maxlength">{{ entity + "Maximum 500 characters" | translate }}</span>
+                </div>
+            </div> 
+            <label for="zipCode" class="col-md-2 control-label">{{entity + 'Pincode'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.zipCode.$invalid && (franchiseEditForm.zipCode.$dirty || submitted)}">                    
+                <input type="text" required  ng-minlength="6" maxlength="6" id="zipCode" name="zipCode" ng-pattern="/^[0-9]+$/" class="form-control" ng-model="editFranchise.zipCode"/>                                
+                <div class="error,help-block" ng-show="(franchiseEditForm.zipCode.$dirty || submitted) && franchiseEditForm.zipCode.$invalid">
+                    <span class="help-block" ng-show="franchiseEditForm.zipCode.$error.required">{{ entity + "Pincode not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.zipCode.$error.maxlength">{{ entity + "Maximum 6 digits are required" | translate }}</span>                    
+                    <span class="help-block" ng-show="franchiseEditForm.zipCode.$error.pattern">{{ entity + "Pincode not valid" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.zipCode.$error.minlength">{{ entity + "Minimum 6 digits are required" | translate }}</span>                    
+
+                </div>
+            </div> 
+        </div>
+        <div class="form-group required"> 
+            <label for="contactPerson" class="col-md-2 control-label">{{entity + 'Contact Person'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.contactPerson.$invalid && (franchiseEditForm.contactPerson.$dirty || submitted)}">                    
+                <input type="text" required maxlength="50" id="contactPerson" name="contactPerson" class="form-control" ng-model="editFranchise.contactPerson" ng-blur="doesUserNameExist(franchise)">                                
+                <div class="error,help-block" ng-show="(franchiseEditForm.contactPerson.$dirty || submitted) && franchiseEditForm.contactPerson.$invalid">
+                    <span class="help-block" ng-show="franchiseEditForm.contactPerson.$error.required">{{ entity + "Contact person name not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.contactPerson.$error.maxlength">{{ entity + "Maximum 6 characters" | translate }}</span>
+                </div>
+            </div> 
+            <label for="phoneNumber" class="col-md-2 control-label">{{entity + 'Phone Number'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': franchiseEditForm.phoneNumber.$invalid && (franchiseEditForm.phoneNumber.$dirty || submitted)}">                    
+                <input type="text" required maxlength="100" id="phoneNumber" name="phoneNumber" class="form-control" ng-model="editFranchise.phoneNumber" ng-blur="phoneValidate(editFranchise.phoneNumber)">                                
+                <div class="error,help-block" ng-show="(franchiseEditForm.phoneNumber.$dirty || submitted) && (franchiseEditForm.phoneNumber.$invalid || !isPhoneValidate)">
+                    <span class="help-block" ng-show="franchiseEditForm.phoneNumber.$error.required">{{ entity + "Phone number not entered" | translate }}</span>                                        
+                    <span class="help-block" ng-show="!isPhoneValidate && !franchiseEditForm.phoneNumber.$error.required">{{ entity + "Phone number not valid" | translate }}</span>                        
+                </div>
+            </div> 
+        </div>
+        <div class="form-group required"> 
+            <label for="emailAddress" class="col-md-2 control-label">{{entity + 'Email'| translate}}</label>
+            <div class="col-md-4" ng-class="{'has-error': (franchiseEditForm.emailAddress.$invalid || !isEmailValidate) && (franchiseEditForm.emailAddress.$dirty || submitted)}">                    
+                <input type="text" required maxlength="100" id="emailAddress" name="emailAddress" class="form-control" ng-model="editFranchise.emailAddress" ng-blur="emailValidate(editFranchise.emailAddress)"
+                       >                                
+                <div class="error,help-block" ng-show="(franchiseEditForm.emailAddress.$dirty || submitted) && (franchiseEditForm.emailAddress.$invalid || !isEmailValidate)">
+                    <span class="help-block" ng-show="franchiseEditForm.emailAddress.$error.required">{{ entity + "Email not entered" | translate }}</span>
+                    <span class="help-block" ng-show="franchiseEditForm.emailAddress.$error.maxlength">{{ entity + "Maximum 6 characters" | translate }}</span>
+                    <span class="help-block"  ng-show="!isEmailValidate">{{ entity + "Email not valid" | translate }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group required"> 
+            <label for="franchiseCode" class="col-md-2 control-label">{{entity + 'Franchise Code'| translate}}</label>
+            <div class="col-md-4">                    
+                <input type="text" id="franchiseCode" name="franchiseCode" class="form-control" ng-model="editFranchise.franchiseCode" ng-disabled="true">
+            </div>
+        </div>
+
+        <div class="form-group" ng-show="editFranchise.franchiseModel != 0"> 
+            <label for="select_model" class="col-md-2 control-label">{{entity + 'Copy Of'| translate}}</label>
+            <div class="col-md-4">                    
+                <select id="select_model" ng-disabled="true" class="form-control" ng-options="model.id as model.franchiseName for model in franchiseModelList" ng-model="editFranchise.franchiseModel">
+                </select>
+            </div>
+        </div>
+        <div ng-if="reload">
+            <dynamic-form  input-css ="col-md-4" label-css="col-md-2 control-label" db-map="dbType" 
+                           internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalFranchiseTemplate" 
+                           ng-model="addFranchiseData" ng-if="generalFranchiseTemplate" is-diamond="false" no-of-field-per-row = "1">
+            </dynamic-form>
+        </div>
+        <div>
+            <ul class="nav nav-tabs">
+                <li ng-class="{active: selectedTab == 1}">
+                    <a ng-click="changeSelectedTab(1)">{{entity + 'Admin User'| translate}}</a>
+                </li>
+                <li ng-class="{active: selectedTab == 2}">
+                    <a ng-show="editdesignations != null && editdesignations.length > 0"  ng-click="changeSelectedTab(2)">{{entity + 'Designations'| translate}}</a>
+                </li>
+                <li ng-class="{active: selectedTab == 3}">
+                    <a ng-show="editmachines != null && editmachines.length > 0"   ng-click="changeSelectedTab(3)">{{entity + 'Machines'| translate}}</a>
+                </li>
+            </ul>
+            <div class="tab-content" ng-show="selectedTab == 1">
+                &nbsp;&nbsp;
+                <div class="form-group">
+                    <label for="adminName" class="col-md-2 control-label"> Name:</label>
+                    <div class="col-md-4">
+                        <div>
+                            <input ng-disabled="true" id="adminName" class="form-control" type="text" value="{{editFranchise.adminName}}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="adminUserName" class="col-md-2 control-label"> Username:</label>
+                    <div class="col-md-4">
+                        <div>
+                            <input ng-disabled="true"  id="adminUserName" class="form-control" type="text" value="{{editFranchise.adminUserName}}">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="Password" class="col-md-2 control-label"> Password:</label>
+                    <div class="col-md-4">
+                        <div>
+                            <input ng-disabled="true" type="password"  id="Password" class="form-control" value="{{editFranchise.password}}">
+                        </div>
+                    </div>
+                </div>  
+                <div class="form-group">
+                    <label for="adminRetypePwd" class="col-md-2 control-label"> Retype Password:</label>
+                    <div class="col-md-4">
+                        <div>
+                            <input ng-disabled="true" class="form-control" id="adminRetypePwd" type="password" value="{{ editFranchise.password}}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" ng-show="selectedTab == 2">
+                &nbsp;&nbsp;
+
+                <div ng-class="{'has-error': isDesignationSelected}">
+                    <div class="error,help-block">
+                        <span class="help-block"  ng-show="isDesignationSelected">{{ entity + "You have to enter values for at least one designation" | translate }}</span>
+                    </div></div>
+                <div class="form-group">
+                    <div class="col-md-6 col-lg-6 col-sm-12">
+                        <div class="row">
+                            <div class="col-xs-4">
+                            </div>
+                            <div class="col-xs-4">
+                                <b>{{ entity + "Required" | translate }}</b>                             
+                            </div>
+                            <div class="col-xs-4">
+                                <b>{{ entity + "Realized" | translate }}</b>                             
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-repeat="desgn in editdesignations">
+                    <div class="col-md-6 col-lg-6 col-sm-12">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <label for="{{desgn}}" class="col-md-2 control-label"> {{entity + desgn.requirementName| translate}}</label>         
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="text" numbers-only="true" ng-disabled="!created" class="form-control" name="{{desgn}}" id="{{desgn}}" maxlength="4" ng-model="desgn.requiredValue" ng-blur="canBeActivated()">
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="number" ng-disabled="true" class="form-control" value="{{desgn.acquiredValue}}">
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+
+            <div class="tab-content" ng-show="selectedTab == 3">
+                &nbsp;&nbsp;
+                <div class="form-group">
+                    <div class="col-md-6 col-lg-6 col-sm-12">
+                        <div class="row">
+                            <div class="col-xs-4">
+                            </div>
+                            <div class="col-xs-4">
+                                <b>{{ entity + "Required" | translate }}</b>                             
+                            </div>
+                            <div class="col-xs-4">
+                                <b>{{ entity + "Realized" | translate }}</b>                             
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-repeat="desgn in editmachines">
+                    <div class="col-md-6 col-lg-6 col-sm-12">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <label for="{{desgn}}" class="col-md-2 control-label"> {{entity + desgn.requirementName| translate}}</label>         
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="text" numbers-only="true" ng-disabled="!created" class="form-control" name="{{desgn}}" id="{{desgn}}" maxlength="4" ng-model="desgn.requiredValue" ng-blur="canBeActivated()">
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="number" ng-disabled="true" class="form-control" value="{{desgn.acquiredValue}}">
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+
+            </div>
+
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-12">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right">                     
+                    <a ng-click="cancelFranchise(franchiseEditForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="doesFranchiseNameExist(editFranchise.franchiseName, franchiseEditForm, 'edit');">{{entity + 'Update Franchise'| translate}}</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <!--Remove Modal-->
+    <div class="modal fade" id="removeModal" tabindex="-1" role="dialog" aria-labelledby="removeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" >
+            <div class="modal-content" >
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="removeModalLabel"> {{entity + 'Remove Franchise'| translate }}</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div>
+                            {{ entity + "Are you sure you want to remove franchise \{\{franchiseName\}\} ?" | translate:{franchiseName:(franchiseName | translate)} }}
+
+                            <!--{{ entity + "removeMsg" | translate:{franchiseName:(franchiseName | translate)} }}-->
+                        </div>
+                    </div>
+
+                    <!--{{entity + 'Are you sure you want to remove franchise '| translate }}<b>{{franchiseName}}</b>?-->
+                </div>
+                <div class="modal-footer" >
+
+                    <a ng-click="hideRemovePanel()">{{i18EntityMessaging + 'Cancel'| translate }}</a>
+                    <button type="button" class="btn btn-hkg" ng-click="isThereAnyLinkWithFranchise()"> {{entity + 'Remove'| translate }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" >
+            <div class="modal-content" >
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="removeModalLabel"> {{entity + 'Information'| translate }}</h4>
+                </div>
+                <div class="modal-body">
+                    {{ entity + "There are active users or diamond stock or assets in the franchise \{\{franchiseName\}\} ?" | translate:{franchiseName:(franchiseName | translate)} }}
+                    {{entity + 'First remove all and Try again.'| translate }}
+                </div>
+                <div class="modal-footer" >
+                    <button type="button" class="btn btn-hkg" ng-click="ok()"> {{entity + 'Ok'| translate }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

@@ -1,0 +1,192 @@
+<div class="row" ng-init="initializeData()">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Stock'| translate }}</li>
+                    <li class="active">{{entity + 'Merge'| translate }}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </div>
+            </div>
+            <div ng-show="!flag.showstockPage && !stockdataflag">
+                <div class="col-xs-12">
+                    <table class="table table-bordered" ng-if="flag.configSearchFlag === true">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'First configure search fields for merge stock'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="table table-bordered" ng-if="!stockList.length > 0 && flag.configSearchFlag === false">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'No details found to merge stock'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-xs-12" ng-show="nodeDetailsInfo.length > 1">
+                    <div class="col-md-2">
+                        <label for="nodeId" class="control-label">{{entity + 'Select Node'| translate}}</label>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="nodeId" name="nodeId" ng-model="currentActivityNode" ng-change="updateStockAccordingToNode(currentActivityNode)" ng-options="node.nodeId as (node.nodeId +' - '+ node.groupName) for node in nodeDetailsInfo">
+                        </select>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-if="(stockList.length) > 0">
+                    <div><h4>{{entity + 'Stock details'| translate}}</h4></div>
+                    <div class="form-group">                        
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <div id="gridTable" ui-grid="gridOptions" ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                        </div>
+                    </div>  
+                </div>
+                <div class="col-xs-12" ng-show="(stockList.length) > 1 && flag.rowSelectedflag">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="mergeStockNext()">{{entity + 'Next'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="flag.showstockPage && stockdataflag">
+                <form class="form-horizontal" name="mergeForm" novalidate>
+                    <div class="col-md-12">
+                        <table class="table table-bordered" ng-if="((generalLotEditTemplate.length > 0 && fieldConfiguredForLot === false && flag.displayEditLotflag) || (generalPacketEditTemplate.length > 0 && fieldConfiguredForPacket === false && !flag.displayEditLotflag && flag.displayEditPacketflag))">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Mandatory fields are not configured for your designation, Please contact administrator'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+<!--                    <div ng-if="flag.multipleParents === false">
+                        <div ng-if="generalParentInvoiceTemplate">
+                            <div class="col-md-12" id="invoiceParent" title="Invoice Details" accordion-collapse ng-if="!flag.multipleParents && parentInvoiceCustom && generalParentInvoiceTemplate.length > 0">
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentInvoiceTemplate" 
+                                               ng-model="parentInvoiceCustom" ng-if="generalParentInvoiceTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div ng-if="generalParentParcelTemplate">
+                            <div class="col-md-12" id="parcelParent" title="Parcel Details" accordion-collapse ng-if="!flag.multipleParents && parentParcelCustom && generalParentParcelTemplate.length > 0">
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentParcelTemplate" 
+                                               ng-model="parentParcelCustom" ng-if="generalParentParcelTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div ng-if="generalParentLotTemplate">
+                            <div class="col-md-12" id="lotParent" title="Lot Details" accordion-collapse ng-if="!flag.multipleParents && parentLotCustom && generalParentLotTemplate.length > 0">
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentLotTemplate" 
+                                               ng-model="parentLotCustom" ng-if="generalParentLotTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div ng-if="!flag.displayEditLotflag && flag.displayEditPacketflag">
+                            <div ng-if="generalParentPacketTemplate">
+                                <div class="col-md-12" id="packetParent" title="Packet Details" accordion-collapse ng-if="!flag.multipleParents && parentPacketCustom && generalParentPacketTemplate.length > 0">
+                                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalParentPacketTemplate" 
+                                                   ng-model="parentPacketCustom" ng-if="generalParentPacketTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true" >
+                                    </dynamic-form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->
+                    <div ng-if="flag.multipleParents === true && flag.showstockPage === true">
+                        <div>
+                            <div class="col-md-12" id="packetParent" title="Parent Details" accordion-collapse>
+                                <div id="parentGridTable" ui-grid="parentGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-heading" ng-if="flag.displayEditLotflag">
+                        <table class="table table-bordered" ng-if="!generalLotEditTemplate || generalLotEditTemplate.length === 0">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Configure fields to edit for merge stock'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                        <h4 ng-if="generalLotEditTemplate && fieldConfiguredForLot">{{entity + 'Lot Details'| translate }}</h4>
+                        <div class="form-group required" ng-if="fieldConfiguredForLot">
+                            <div class="col-md-6 " style="padding-right: 0px;padding-left: 0px">
+                                <label for="parentdrp"  class="col-md-4 control-label">{{entity + 'Parent' | translate}}</label>
+                                <div class="col-xs-8 col-md-8 ">
+                                    <div ng-class="{'has-error': (mergeForm.parentdrp.$dirty || submitted) && mergeForm.parentdrp.$invalid}">
+                                        <select id="parentdrp" name="parentdrp" class="form-control col-md-8" ng-model="flag.parentId" ng-options='prnt.id as prnt.text for prnt in parentList' required>
+                                            <option value="">Select</option>
+                                        </select>
+                                        <div class="error,help-block" ng-show="(mergeForm.parentdrp.$dirty || submitted) && mergeForm.parentdrp.$invalid">
+                                            <span class="help-block" ng-show="mergeForm.parentdrp.$error.required">{{ entity + 'Parent not selected' | translate}}</span>
+                                        </div>                   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">&nbsp;</div>
+                        </div>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotEditDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotEditTemplate" 
+                                       ng-model="lotEditCustom" ng-if="generalLotEditTemplate && fieldConfiguredForLot" invoice-id="{{invoiceIdForConstraint}}" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" parcel-id="{{parcelIdForConstraint}}" is-diamond="true" >
+                        </dynamic-form>
+                    </div>
+                    <div class="panel-heading" ng-if="flag.displayEditPacketflag">
+                        <table class="table table-bordered" ng-if="!generalPacketEditTemplate || generalPacketEditTemplate.length === 0">
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Configure fields to edit for merge stock'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                        <h4 ng-if="generalPacketEditTemplate && fieldConfiguredForPacket">{{entity + 'Packet Details'| translate }}</h4>
+                        <div class="form-group required" ng-if="fieldConfiguredForPacket">
+                            <div class="col-md-6 " style="padding-right: 0px;padding-left: 0px">
+                                <label for="parentdrp" class="col-md-4 control-label">{{entity + 'Parent' | translate}}</label>
+                                <div class="col-xs-8 col-md-8 ">
+                                    <div ng-class="{'has-error': (mergeForm.parentdrp1.$dirty || submitted) && mergeForm.parentdrp1.$invalid}">
+                                        <select id="parentdrp1" name="parentdrp1" class="form-control col-md-8" ng-model="flag.parentId" ng-options='prnt.id as prnt.text for prnt in parentList' required>
+                                            <option value="">Select</option>
+                                        </select>
+                                        <div class="error,help-block" ng-show="(mergeForm.parentdrp1.$dirty || submitted) && mergeForm.parentdrp1.$invalid">
+                                            <span class="help-block" ng-show="mergeForm.parentdrp1.$error.required">{{ entity + 'Parent not selected' | translate}}</span>
+                                        </div>                   
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">&nbsp;</div>
+                        </div>
+                        <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetEditDbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalPacketEditTemplate" 
+                                       ng-model="packetEditCustom" ng-if="generalPacketEditTemplate" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" designation-id-for-allot="{{designationIdForAllot}}" designation-id-for-in-stock="{{designationIdForInStock}}" is-diamond="true">
+                        </dynamic-form>
+                    </div>
+
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onBack()">{{entity + 'Back'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-show="(flag.displayEditLotflag && !!generalLotEditTemplate && generalLotEditTemplate.length > 0) || (flag.displayEditPacketflag && !!generalPacketEditTemplate && generalPacketEditTemplate.length > 0)" 
+                                        ng-click="mergeStock()">{{entity + 'Merge'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

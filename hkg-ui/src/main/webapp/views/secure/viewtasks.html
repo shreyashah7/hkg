@@ -1,0 +1,591 @@
+<div ng-show="!displayTaskDetails && !displayTaskRepitition">
+
+    <div ng-if="smartListSelection !== '7'">
+        <div class="row">
+            <div class="col-md-1" ng-if="editCategoryFlag"></div>
+            <div class="form-group">
+                <div class="col-md-4"><h4> {{ entity + taskForYouHeader | translate}}</h4></div>
+                <div class="col-xs-8 col-lg-4 pull-right" ng-if="(selectedTaskForYouList.length > 0 || selectedTaskByYouList.length > 0)"> 
+                    <div>
+                        <div class="dropdown col-md-10" style="padding-right: 0px">
+                            <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                                <span class="pull-left">
+                                    {{entity + selectedCategoryLabel|translate}}  
+                                </span>
+                                <span class="caret pull-right no-margin"></span>
+                            </button>
+                            <ul class="dropdown-menu col-md-11 pull-right" ng-if="taskCategories.length > 0">
+                                <li ng-repeat="taskCategory in taskCategories">
+                                    <a ng-click="changeTaskCategory(taskCategory)"><span tooltip="{{taskCategory.text}}" tooltip-placement="right" ng-bind="taskCategory.text.length > 20 ? taskCategory.text.substring(0, 20) + '...' :taskCategory.text">{{taskCategory.text}}</span></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-2"> 
+                            <a href="" ng-click="showCategoryPopupFromView(addCategoryPopupForm)"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add Category"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!--Task for you table-->
+        <div class="row">
+            <div class="col-md-1" ng-if="editCategoryFlag"></div>
+            <div class="table-responsive" ng-class="{'col-md-11':editCategoryFlag}">
+                <div ng-if="taskResponse && allTaskForYouList.length > 0">
+                    <table width="100%" class="table table-hover" ag-data-table="allTaskForYouList"  dt-search='searchTask' dt-options="taskForYouDtOptions">
+                        <thead>
+                            <tr>
+                                <th class="sorting_asc_disabled col-md-1">
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'By' | translate}}
+                                </th>
+                                <th class="col-md-4">
+                                    {{ entity + 'Task' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'Due Date' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'Status' | translate}}
+                                </th>
+                                <th ng-if="smartListSelection !== '6' && smartListSelection !== '4'" class="col-md-1">
+                                    {{ entity + 'Action' | translate}}
+                                </th>
+                            </tr>
+
+                        </thead>
+                        <tbody >
+
+                            <tr ng-repeat="task in allTaskForYouList" dt-rows>
+                                <td><input type="checkbox" ng-model="task.selected" ng-change="setSelectedTaskList(task, selectedTaskForYouList)"/></td>
+                                <td>
+                                    <img tooltip="{{task.assignedBy}}" tooltip-placement="right" ng-src="{{appendAuthToken(getProfilePictureOfUser(task.assignedById))}}" width="30" height="30" class="img-circle" ng-if="isLoggedIn === true && session !== undefined"/>
+                                </td>
+                                <td ng-class="{'hkg-bold':task.taskRecipientDetailDataBeanList[0].taskEdited}">
+                                    <a href="" ng-click="showTaskDetails(task)" ><span ng-bind="task.taskName.length > 25 ? task.taskName.substring(0, 25) + '...' : task.taskName"></span></a><br/>
+                                    <span title="{{getCategoryNameById(task.taskRecipientDetailDataBeanList[0].recipientCategory)}}" ng-bind="(task.taskRecipientDetailDataBeanList[0].recipientCategory==undefined || task.taskRecipientDetailDataBeanList[0].recipientCategory==0)?(entity+'General'|translate):(getCategoryNameById(task.taskRecipientDetailDataBeanList[0].recipientCategory).length > 25 ? getCategoryNameById(task.taskRecipientDetailDataBeanList[0].recipientCategory).substring(0, 25) + '...' : getCategoryNameById(task.taskRecipientDetailDataBeanList[0].recipientCategory))"></span>
+                                </td>
+                                <td ng-class="{'hkg-bold':task.taskRecipientDetailDataBeanList[0].taskEdited}"><span ng-bind="formatDate(task.taskRecipientDetailDataBeanList[0].dueDate)"/></td>
+                                <td ng-class="{'hkg-bold':task.taskRecipientDetailDataBeanList[0].taskEdited}" >
+                                    <span ng-bind="task.taskRecipientDetailDataBeanList[0].status"></span>
+                                    <span ng-if="task.taskRecipientDetailDataBeanList[0].completedOn !== null && !task.taskRecipientDetailDataBeanList[0].taskEdited"> - <span ng-bind="formatDate(task.taskRecipientDetailDataBeanList[0].completedOn)"></span></span>
+                                    <span ng-if="task.taskRecipientDetailDataBeanList[0].status === 'Due'"> - <span ng-bind="formatDate(task.taskRecipientDetailDataBeanList[0].onDate)"></span></span>
+                                    <span ng-if="task.taskRecipientDetailDataBeanList[0].status === 'Cancelled' && (task.repeatativeMode === 'D' || task.repeatativeMode === 'W' || task.repeatativeMode === 'M')"> - <span ng-bind="formatDate(task.taskRecipientDetailDataBeanList[0].attendedOn)"></span></span>
+                                    <span ng-if="task.taskRecipientDetailDataBeanList[0].status === 'Cancelled' && (task.repeatativeMode !== 'D' && task.repeatativeMode !== 'W' && task.repeatativeMode !== 'M')"> - <span ng-bind="formatDate(task.taskRecipientDetailDataBeanList[0].updatedOn)"></span></span>
+                                </td>
+                                <td ng-if="smartListSelection !== '6' && smartListSelection !== '4'" class='text-center pointer'>
+                                    <span ng-class="{'text-danger':task.taskRecipientDetailDataBeanList[0].status === 'Completed' || task.taskRecipientDetailDataBeanList[0].status === 'Cancelled'}" class="glyphicon glyphicon-remove text-muted" ng-click='removetTaskFromList($index, task.taskRecipientDetailDataBeanList[0].id, task.taskRecipientDetailDataBeanList[0].status)' title="{{entity + 'Remove from dashboard'|translate}}"></span>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="col-lg-12 col-md-12 col-xs-12" ng-if="taskResponse && allTaskForYouList.length === 0">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                <span ng-bind="entity + emptyTaskListMsg | translate"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>  
+            </div>
+        </div>
+    </div>
+    <div ng-if="smartListSelection !== '6' && selectedSmartList.currentNode.type !== 'P'">
+        <div class="row">
+            <div class="col-md-1" ng-if="editCategoryFlag"></div>
+            <div class="form-group">
+                <div class="col-md-4"><h4>{{ entity + taskFromYouHeader | translate}}</h4></div>    
+                <div class="col-xs-8 col-lg-4 pull-right" ng-if="(selectedTaskForYouList.length > 0 || selectedTaskByYouList.length > 0) && smartListSelection === '7'">
+                    <div>
+                        <div class="dropdown col-md-10" style="padding-right: 0px">
+                            <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                                <span class="pull-left">
+                                    {{entity + selectedCategoryLabel|translate}}    
+                                </span>
+                                <span class="caret pull-right no-margin"></span>
+                            </button>
+                            <ul class="dropdown-menu col-md-11 pull-right" role="menu" ng-if="taskCategories.length > 0">
+                                <li ng-repeat="taskCategory in taskCategories">
+                                    <a ng-click="changeTaskCategory(taskCategory)"><span tooltip="{{taskCategory.text}}" tooltip-placement="right" ng-bind="taskCategory.text.length > 20 ? taskCategory.text.substring(0, 20) + '...' :taskCategory.text">{{taskCategory.text}}</span></a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-2" ng-if="(selectedTaskForYouList.length > 0 || selectedTaskByYouList.length > 0) && smartListSelection === '7'"> 
+                            <a href="" ng-click="showCategoryPopupFromView(addCategoryPopupForm)"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add Category"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Task from you table-->
+        <div class="row">
+            <div class="col-md-1" ng-if="editCategoryFlag"></div>
+            <div class="table-responsive" ng-class="{'col-md-11':editCategoryFlag}">
+                <div ng-if="taskResponse && allTaskFromYouList.length > 0" >
+                    <table width="100%" class="table table-hover" ag-data-table="allTaskFromYouList" dt-search='searchTask' dt-options="taskFromYouDtOptions">
+                        <thead>
+                            <tr>
+                                <th class="sorting_asc_disabled col-md-1"></th>
+                                <th class="col-md-2">
+                                    {{ entity + 'To' | translate}}
+                                </th>
+                                <th class="col-md-6">
+                                    {{ entity + 'Task' | translate}}
+                                </th>
+                                <!--                                <th>
+                                                                    {{ entity + 'Due date' | translate}}
+                                                                </th>
+                                                                <th>
+                                                                    {{ entity + 'Status' | translate}}
+                                                                </th>-->
+                                <th class="col-md-3 text-center">
+                                    {{ entity + 'Repititions' | translate}}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="task in allTaskFromYouList" dt-rows>
+                                <td><input type="checkbox" ng-model="task.selected" ng-change="setSelectedTaskList(task, selectedTaskByYouList)"/></td>
+                                <td>
+                                    <span title="{{task.recipientNames}}" tooltip-placement="bottom" class="glyphicon glyphicon-user col-md-12" ng-if="recipientNameSplitMethod(task.recipientNames)"></span>
+                                    <span title="{{task.recipientNames}}" tooltip-placement="bottom" class="col-md-12" ng-if="!recipientNameSplitMethod(task.recipientNames)"><img src="images/multiple-user.png" alt="users" style="height: 20px;width: 20px"/></span>
+                                </td>
+                                <td>
+                                    <a href="" ng-if="(calculateCompleted(task.taskRecipientDetailDataBeanList) !== 100) || (task.repeatTask === true)" ng-click="editTask(task)">
+                                        <span ng-bind="task.taskName.length > 50 ? task.taskName.substring(0, 50) + '...' : task.taskName"></span>
+                                    </a>
+                                    <span ng-if="calculateCompleted(task.taskRecipientDetailDataBeanList) === 100 && (task.repeatTask === false)" ng-bind="task.taskName.length > 25 ? task.taskName.substring(0, 25) + '...' : task.taskName"></span>
+                                    <br/>
+                                    <span title="{{getCategoryNameById(task.taskCategory)}}" ng-bind="(task.taskCategory==undefined || task.taskCategory==0)?(entity+'General'|translate):(getCategoryNameById(task.taskCategory).length > 25 ? getCategoryNameById(task.taskCategory).substring(0, 25) + '...' : getCategoryNameById(task.taskCategory))"></span>
+                                </td>
+                                <!--                                <td><span ng-bind="formatDate(task.dueDate)"/></td>
+                                                                <td><span ng-bind="task.status"/></td>-->
+                                <td class="text-center">
+                                    <a href="" ng-disabled="task.status === 'Completed'" ng-click='checkTaskRepititions(task)'>
+                                        <span ng-if="(task.repeatativeMode === 'M' || task.repeatativeMode === 'W' || task.repeatativeMode === 'D')" ng-bind="task.repetitionCount"></span>
+                                        <span ng-if="(task.repeatativeMode !== 'M' && task.repeatativeMode !== 'W' && task.repeatativeMode !== 'D')">{{entity + 'Non-Repetative' | translate}}</span>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-lg-12 col-md-12 col-xs-12" ng-if="taskResponse && allTaskFromYouList.length === 0">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                <span ng-bind="entity + emptyTaskListMsg | translate"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Task Details-->
+<div ng-show="displayTaskDetails" >
+
+    <div class="form-group">
+        <div class="col-md-4">
+            <h4>
+                {{ entity + 'Task Details' | translate}}
+            </h4>
+        </div>
+
+        <div class="col-md-8 pull-right" ng-if="taskCategories.length > 0" style="padding-right: 0px">
+            <label class="col-md-7 pull-left control-label" style="padding-right: 0px" ng-if="!changeTaskCategoryFlag">
+                {{ entity + 'Category : ' | translate}}
+            </label>
+            <div class="col-md-5 pull-left" style="padding-left: 2px;padding-right: 0px" ng-if="!changeTaskCategoryFlag && selectedTask.taskCategory === 0">
+                <div class="form-control-static">
+                    <div class="col-md-9" style="padding-left: 0px">
+                        <span class="col-md-5 pull-left">General</span>
+                    </div>
+                    <div class="col-md-1 pull-right ">
+                        <a><span class="col-md-1 glyphicon glyphicon-edit pull-right" title="{{entity + 'Change category'|translate}}" ng-click="setTaskCategoryFlag(true)"></span></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 pull-left" style="padding-left: 2px" ng-if="!changeTaskCategoryFlag && selectedTask.taskCategory !== 0">
+                <div class="form-control-static">
+                    <div class="col-md-9" style="padding-left: 0px">
+                        <span class="pull-left" ng-bind="(getCategoryNameById(selectedTask.taskCategory)).length > 20 ? (getCategoryNameById(selectedTask.taskCategory)).substring(0,20) + '...' : getCategoryNameById(selectedTask.taskCategory)"></span>
+                    </div>
+                    <div class="col-md-1 pull-right ">
+                        <a><span class="glyphicon glyphicon-edit pull-right" title="{{entity + 'Change category'|translate}}" ng-click="setTaskCategoryFlag(true)"></span></a>
+                    </div>
+                </div>
+            </div>
+
+            <label class="col-md-6 pull-left control-label" style="padding-right: 0px" ng-if="changeTaskCategoryFlag">
+                {{ entity + 'Category :' | translate}}
+            </label>
+            <div class="col-xs-6 col-lg-6 pull-left" style="padding-left: 0px" ng-if="changeTaskCategoryFlag"> 
+                <div>
+                    <div class="dropdown col-md-10" style="padding-right: 0px">
+                        <button class="dropdown-toggle form-control" data-toggle="dropdown">
+                            <span class="pull-left">
+                                {{entity + selectedCategoryLabel|translate}}
+                            </span>
+                            <span class="caret pull-right no-margin"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-11 pull-right" ng-if="taskCategories.length > 0">
+                            <li ng-repeat="taskCategory in taskCategories">
+                                <a ng-click="changeTaskCategoryFromTaskDetails(selectedTask, taskCategory)"><span tooltip="{{taskCategory.text}}" tooltip-placement="right" ng-bind="taskCategory.text.length > 17 ? taskCategory.text.substring(0, 17) + '...' :taskCategory.text">{{taskCategory.text}}</span></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-2"> 
+                        <a href="" ng-click="showCategoryPopupFromView(addCategoryPopupForm)"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add Category"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <form  class="form-horizontal" name="taskDetailsPopupForm" role='form' novalidate>
+        <div>
+            <div class="form-group">
+                <label for="selectedTask" class="col-md-3 control-label">
+                    {{ entity + 'Task' | translate}}
+                </label>
+                <div class="col-md-8"> 
+                    <p class="form-control-static" id="selectedTask"><span ng-bind="selectedTask.taskName"></span></p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label  class="col-md-3 control-label">
+                    {{ entity + 'Status' | translate}}
+                </label>
+                <div class="col-md-3"> 
+                    <p class="form-control-static"><span ng-bind="selectedTask.taskRecipientDetailDataBeanList[0].status"></span></p>
+                </div>
+                <div ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Completed'">
+                    <label  class="col-md-3 control-label">
+                        {{ entity + 'Completed' | translate}}
+                    </label>
+                    <div class="col-md-3"> 
+                        <p class="form-control-static"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].completedOn)"></span></p>
+                    </div>
+                </div>
+                <div ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Cancelled'">
+                    <label  class="col-md-3 control-label">
+                        {{ entity + 'Cancelled' | translate}}
+                    </label>
+                    <div class="col-md-3"> 
+                        <p class="form-control-static" ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Cancelled' && (selectedTask.repeatativeMode === 'D' || selectedTask.repeatativeMode === 'W' || selectedTask.repeatativeMode === 'M')"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].attendedOn)"></span></p>
+                        <p class="form-control-static" ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Cancelled' && (selectedTask.repeatativeMode !== 'D' && selectedTask.repeatativeMode !== 'W' && selectedTask.repeatativeMode !== 'M')"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].updatedOn)"></span></p>
+                    </div>
+                </div>
+                <div ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Updated'">
+                    <label  class="col-md-3 control-label">
+                        {{ entity + 'Updated' | translate}}
+                    </label>
+                    <div class="col-md-3"> 
+                        <p class="form-control-static"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].updatedOn)"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label  class="col-md-3 control-label">
+                    {{ entity + 'Due Date' | translate}}
+                </label>
+                <div class="col-md-8"> 
+                    <p class="form-control-static"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].dueDate)"></span></p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label  class="col-md-3 control-label">
+                    {{ entity + 'Assigned On' | translate}}
+                </label>
+                <div class="col-md-8"> 
+                    <p class="form-control-static"><span ng-bind="formatDate(selectedTask.taskRecipientDetailDataBeanList[0].onDate)"></span></p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label  class="col-md-3 control-label">
+                    {{ entity + 'Assigned By' | translate}}
+                </label>
+                <div class="col-md-8"> 
+                    <!--<p class="form-control-static">-->
+                    <span ng-bind="selectedTask.assignedBy">
+
+                    </span>
+                    <!--</p>-->
+                </div>
+            </div>
+            <dynamic-form  input-css ="col-md-8 " label-css="col-md-3 control-label" 
+                           db-map="dbType" internationalization-label="{{entity}}" form-name="taskDetailsPopupForm" 
+                           template="genralTaskTemplate" ng-model="addTaskData" ng-if="genralTaskTemplate" submit-flag-name="submitted" edit-flag="true" view-only="true"
+                           >
+
+            </dynamic-form>
+            <div class="col-md-12" >
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-12 pull-right text-right"> 
+                        <a href="" ng-click="hideTaskDetails()">
+                            {{ entity + 'Cancel' | translate}}
+                        </a>&nbsp;
+                        <button ng-if="selectedTask.taskRecipientDetailDataBeanList[0].status === 'Due'" class="btn btn-hkg" ng-click="completeTask()">{{ entity + 'Completed' | translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div ng-if="displayTaskRepitition">
+    <div >
+        <div class="form-group">
+            <label for="taskDetail" class="col-md-3 control-label">
+                {{ entity + 'Task' | translate}}
+            </label>
+            <div class="col-md-8"> 
+                <p class="form-control-static" id="taskDetail"><span ng-bind="selectedTaskForCompletionStatus.taskName"></span></p>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="taskCategory" class="col-md-3 control-label">
+                {{ entity + 'Category' | translate}}
+            </label>
+            <div class="col-md-8"> 
+                <p class="form-control-static" id="taskCategory">
+                    <!--<span ng-bind="getCategoryNameById(selectedTaskForCompletionStatus.taskCategory)"></span>-->
+                    <span ng-bind="(selectedTaskForCompletionStatus.taskCategory == undefined || selectedTaskForCompletionStatus.taskCategory==0)?(entity+'General'|translate):getCategoryNameById(selectedTaskForCompletionStatus.taskCategory)"></span>
+                </p>
+
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="taskRecipients" class="col-md-3 control-label">
+                {{ entity + 'Recipients' | translate}}
+            </label>
+            <div class="col-md-8"> 
+                <p class="form-control-static" id="taskRecipeints">
+                    {{recipientsToDisplay}}
+                </p>
+            </div>
+        </div>
+        <div ng-if="selectedTaskForCompletionStatus.repetitionCount >= 1">
+            <h4>{{entity + "Repetitions"|translate}}</h4>
+        </div>
+        <div ng-if="selectedTaskForCompletionStatus.repetitionCount < 1">
+            <h4>{{entity + "Assigned Task"|translate}}</h4>
+        </div>
+        <div ng-if="repeatitionResponse">
+            <table class="table table-responsive" ag-data-table="selectedTaskForCompletionStatus.repititionTaskRecipeintDetailMap" dt-options="taskRepeatitionDtOptions">
+                <thead>
+                    <tr>
+                        <th class="col-lg-4">{{entity + "Assigned"|translate}}</th>
+                        <th class="col-lg-4">{{entity + "Due Date"|translate}}</th>
+                        <th class="col-lg-2">{{entity + "Status"|translate}}</th>
+                        <th class="col-lg-2">{{entity + "Completed"|translate}}(%)</th>
+                        <th class="col-lg-2">{{entity + "Action"|translate}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="(key, repetition) in selectedTaskForCompletionStatus.repititionTaskRecipeintDetailMap"  dt-rows>
+                        <td>{{formatDate(repetition[0].onDate)}}</td>
+                        <td>{{formatDate(repetition[0].dueDate)}}</td>
+                        <td><span>{{((repetition[0].status !== 'Cancelled') && !compareFloat(calculateCompleted(repetition), '100.00')) ? 'Due' : (repetition[0].status === 'Completed Archived' ? 'Completed' : repetition[0].status)}}</span></td>
+                        <td class="text-center"><a href="" ng-click="showCompletionStatusPopup(repetition)">{{calculateCompleted(repetition)}}</a></td>
+                        <td class="text-center"><span class="glyphicon glyphicon-ban-circle" ng-class="{'text-muted':compareFloat(calculateCompleted(repetition),'100.00') || repetition[0].status === 'Cancelled' || selectedTaskForCompletionStatus.repetitionCount < 1,'text-danger':(!compareFloat(calculateCompleted(repetition),'100.00') && repetition[0].status !== 'Cancelled' && selectedTaskForCompletionStatus.repetitionCount >= 0)}" ng-click="cancelRepeatition(key, repetition)" tooltip="{{entity + 'Cancel repetition'|translate}}" tooltip-placement="left"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-xs-12 col-md-12 col-lg-12" ng-if="!repeatitionResponse">
+            <table class="table table-bordered" >
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + "No task repetitions are available."|translate}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="col-md-12" >
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right"> 
+                    <a href="" ng-click="hideTaskRepitition()">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!--Task Completed status Popup-->
+<div class="modal fade" role="dialog" id="taskCompletedStatus" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="" ng-click="hideTaskCompleteStatusPopup()">&times;</a>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h4 class="modal-title">
+                            {{ entity + 'Completion Status' | translate}}
+                        </h4>
+                    </div>
+                    <!--                    <div class="col-md-4">
+                                            <h5>
+                                                <span ng-if="selectedTaskForCompletionStatus.taskRecipientDetailDataBeanList !== undefined">{{ entity + 'Completed' | translate}}-{{calculateCompleted(selectedTaskForCompletionStatus.taskRecipientDetailDataBeanList)}}%</span>
+                                            </h5>
+                                        </div>-->
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <div class="row">
+                        <div class="col-md-1"></div>
+                        <div  class="col-md-10" ng-if="displayCompletionPopup">
+                            <table class="table" ag-data-table="selectedRepitition">
+                                <thead>
+                                    <tr>
+                                        <th ng-hide="true"></th>
+                                        <th>{{ entity + 'Assigned To' | translate}}</th>
+                                        <th>{{ entity + 'Status' | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="recipient in selectedRepitition| orderBy:['status', 'name']" dt-rows >
+                                        <td ng-hide="true">{{recipient.name}}</td>
+                                        <td>{{recipient.userName}}</td>
+                                        <td>{{(recipient.status === 'Completed Archived' ? 'Completed' : recipient.status)}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-1"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>
+
+<!--Cancel task repittion popup-->
+<div class="modal fade" id="cancelTaskRepatitionPopup" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="removeTaskCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span >{{ entity + "Cancel Repeatition" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="col-lg-12">
+                        {{ entity + "Are you sure you want to cancel this repeatition"|translate}}?
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="cancelRepeatitionCancel()">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="cancelRepeatitionOk()">
+                            {{ entity + "Ok" | translate }}
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Remove Category popup-->
+
+<div class="modal fade" id="removeCategoryPopup" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="removeCategoryCancelPress()">&times;</a>
+                <h4 class="modal-title">
+                    {{ entity + "Remove Category" | translate }}
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div ng-show="isCategoryEmpty">
+                        {{ entity + "Are you sure you want to delete the task category " | translate}}{{categoryName.length > 25 ? categoryName.substring(0, 25) + '...' : categoryName}}?
+                    </div>
+                    <div ng-show="!isCategoryEmpty">
+                        {{ entity + "Category is not empty it cannot be removed." | translate}}
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="" ng-click="removeCategoryCancelPress()">{{ entity + "Cancel" | translate }}</a>
+                <button class="btn btn-hkg" ng-show="!isCategoryEmpty" ng-click="removeCategoryOkPress()">
+                    {{ entity + "Ok" | translate }}
+                </button>
+                <button class="btn btn-hkg" ng-show="isCategoryEmpty" ng-click="removeCategoryRemovePress()">
+                    {{ entity + "Remove" | translate }}
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="addCategoryPopup" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="" ng-click="hideCategoryPopupFromView(addCategoryPopupForm)">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">
+                    {{ entity + 'Manage Task Category' | translate}}
+                </h4>
+            </div >
+            <form  class="form-horizontal" name="addCategoryPopupForm" role='form' novalidate>
+
+                <div class="modal-body">
+                    <div class="form-group required">
+                        <label for="categoryName"  class="col-md-4 control-label">
+                            {{ entity + 'Category Name' | translate}}
+                        </label>
+                        <div class="col-md-6" ng-class="{
+                                    'has-error'
+                                    : addCategoryPopupForm.categoryName.$invalid && (addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted)}"> 
+                            <input type="text" ng-model="category.displayName"  name="categoryName" id="categoryName" typeahead="category.text as category.text for category in taskCategories | filter:{text:$viewValue}" class="form-control" maxlength="100" required ng-change="addCategoryPopupForm.categoryName.$setValidity('exists', true)">
+                            <div class="error,help-block" ng-show="(addCategoryPopupForm.categoryName.$dirty || categoryForm.submitted) && addCategoryPopupForm.categoryName.$invalid">
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.required">{{ entity + 'Category not entered' | translate}}</span>
+                                <span class="help-block" ng-show="addCategoryPopupForm.categoryName.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <dynamic-form  input-css ="col-md-6" label-css="col-md-4 control-label" 
+                                   db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" 
+                                   template="categoryTemplate" ng-model="addCategoryData" ng-if="categoryTemplate" submit-flag-name="categoryForm.submitted"
+                                   >
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-6 pull-right">
+                            <a href="" ng-click="hideCategoryPopupFromView(addCategoryPopupForm)">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="createTaskCategory(addCategoryPopupForm)">{{ entity + 'Save Category' | translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

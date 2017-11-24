@@ -1,0 +1,153 @@
+<div class="row">
+    <div class="col-xs-12" ng-cloak> 
+        <!--breadcrumb-->
+        <div id='pageTop'></div>
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12  col-lg-8" >
+                <ol class="breadcrumb">
+                    <li> {{entity + 'You are here'| translate}}</li>
+                    <li class="active">{{entity + 'Theme'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-12 new-panel" id="mainPanel">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form class="form-horizontal" role="form" >
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </form>
+                </div>
+                <div class="col-xs-12">
+                    <div>
+                        <form class="form-horizontal" role="form" name="theme_form" novalidate>    
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="select_theme" class="col-md-4 control-label">{{entity + 'Theme'|translate}}</label>
+                                            <div class="col-md-3">
+                                                <select class="form-control" id="select_theme" name="select_theme" ng-model="selectedtheme" ng-options="theme.folderName as theme.themeName for theme in themes" ng-change="setTheme()"  >
+                                                </select>                                                
+                                            </div>
+                                            <div class=" form-control-static">
+                                                <a ng-click="resetTheme()">{{entity + 'RESET'| translate}}</a>               
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-xs-12 form-group">
+                        <div>
+                            <h4>
+                                <span>{{entity + 'Wallpapers'|translate}}</span>
+                            </h4>                                                        
+                        </div>                        
+                    </div>
+                    <div class="text-right context-menu"> 
+                        <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                        <a href="" ng-click="showGalleryPopup();">{{entity + 'ADD WALLPAPER'|translate}}</a>
+                    </div>
+                    <div ng-show="photos.length > 0">
+                        <div ng-repeat="photo in photos" class="gallery-box ng-scope" ng-class="{'active-gallery-box': photo.name === defaultWallpaperName}">
+                            <div>
+                                <span class="glyphicon glyphicon-remove pull-right text-danger" tooltip="Click to remove wallpaper" ng-click="removeWallpaper($index, photo.name)">
+                                </span>
+                                <img width="200px" tooltip="Click here to make it your wallpaper" height="200px" ng-src="{{appendAuthToken(photo.src)}}" style="cursor: pointer" ng-click="saveWallpaper(photo.name)">
+
+                            </div> 
+                        </div>
+                    </div>
+                    <div ng-show="photos.length === 0">
+                        <span class="col-md-4" ng-bind="entity + 'No wallpapers available' | translate"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div flow-init="galleryUploadFile" flow-file-added="galleryFileAdded($file, $flow)" flow-file-success="galleryFileUploaded($file,$flow,$message)" flow-files-submitted="$flow.upload()">
+    <form class="form-horizontal" role="form"  name="addPhotoGalleryForm" novalidate> 
+        <div class="modal fade" role="dialog" id="addGalleryPopup" tabindex="-1" aria-hidden="true" >
+            <div class="modal-dialog">
+                <!--style="width:auto;height:auto;max-height:100%"-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" href="" ng-click="hideGalleryPopup(addGalleryPopup)">&times;</a>
+                        <h4 class="modal-title" id="myModalLabel">
+                            {{ entity + 'Select your wallpaper' | translate}}
+                        </h4>
+                    </div>
+                    <div class="modal-body" >
+                        <div>
+                            <br/>
+                            <div class='form-group'>
+                                <div class="row">
+                                    <div class='form-group' >
+                                        <label class="col-md-2 control-label">
+                                            {{ entity + 'Upload' | translate}}
+                                        </label>
+                                        <div class="col-md-10 pull-right">
+                                            <div class="drop" flow-drop="" ng-class="dropClass">
+                                                <button class="btn btn-hkg" name="upload" id="upload" flow-btn="">{{entity + 'Choose File'|translate}}<input type="file" multiple="multiple" style="visibility: hidden; position: absolute;"></button>
+                                            </div>
+                                            <br>
+                                            <div>
+                                                <div ng-repeat="file in $flow.files" class="gallery-box ng-scope" ng-if="$flow.files !== null">
+                                                    <span class="title ng-binding">{{file.name}} </span>
+                                                    <div ng-show="$flow.files.length">
+                                                        <img flow-img="file" src="" width="200px" height="150px">
+                                                    </div><br/>
+                                                    <div class="progress progress-striped" ng-class="{active: file.isUploading()}">
+                                                        <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" ng-style="{width: (file.progress() * 100) + '%'}" style="width: 100%;">
+                                                            <span class="sr-only ng-binding">1% Complete</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row">
+                            <div class="col-md-6 pull-right">
+                                <a href="" ng-click="hideGalleryPopup()">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="hideGalleryPopup()">{{ entity + 'Save' | translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade"  data-backdrop="static" data-keyboard="false" id="activeWallpaperModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <div class="modal-header">
+
+                <button type="button" ng-click="hideModal()" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel"> {{entity + 'Active Wallpaper'| translate }}</h4>
+            </div>
+            <div id="wordRap" class="modal-body"  >
+                <div class="row"> 
+                    <div class="col-md-12"> 
+                        {{entity + 'Wallpaper is active. Can not remove it.'| translate }}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" >
+                <button type="button" class="btn btn-hkg" ng-click="hideModal()"> {{entity + 'OK'| translate }}</button>
+            </div>
+        </div>
+    </div>
+</div>

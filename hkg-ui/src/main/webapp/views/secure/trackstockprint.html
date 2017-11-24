@@ -1,0 +1,92 @@
+<script>
+    function printDiv() {
+        //Get the HTML of div
+        var divElements = document.getElementById('printDiv').innerHTML;
+        //Get the HTML of whole page
+        var oldPage = document.body.innerHTML;
+
+        //Reset the page's HTML with div's HTML only
+        document.body.innerHTML =
+                "<html><head><title></title></head><body>" +
+                divElements + "</body>";
+
+        //Print Page
+        window.print();
+
+        //Restore orignal HTML
+        document.body.innerHTML = oldPage;
+
+
+    }
+
+    function zoomIn()
+    {
+        var Page = document.getElementById('activityFlowFrame');
+        var zoom = parseInt(Page.style.zoom) + 10 + '%';
+        Page.style.zoom = zoom;
+        return false;
+    }
+
+    function zoomOut()
+    {
+        var Page = document.getElementById('activityFlowFrame');
+        var zoom = parseInt(Page.style.zoom) - 10 + '%';
+        if (zoom === 0 + '%') {
+            zoom = 10 + '%';
+        }
+        Page.style.zoom = zoom;
+        return false;
+    }
+
+    function reset() {
+        var Page = document.getElementById('activityFlowFrame');
+        var zoom = 100 + '%';
+        Page.style.zoom = zoom;
+        return false;
+    }
+//    $(document).ready(function() {
+//        document.getElementById("leftmenu").remove();
+//        document.getElementById("header").remove();
+//        jQuery('#content').removeClass('col-xs-offset-2');
+//        jQuery('#content').removeClass('col-xs-10');
+//        jQuery('#content').addClass('col-xs-12');
+//        jQuery('#content').removeClass('right-content-bg');
+//        jQuery('#content').removeAttr("style");
+//    });
+//    window.onscroll = function(event) {
+//        // called when the window is scrolled.
+//        jQuery('#content').removeClass('col-xs-offset-2');
+//        jQuery('#content').removeClass('col-xs-10');
+//        jQuery('#content').addClass('col-xs-12');
+//        jQuery('#content').removeClass('right-content-bg');
+//        jQuery('#content').removeAttr("style");
+//    };
+</script>
+<style>
+    .right-content-bg {
+        min-height:100%;
+        background: none;
+        background-attachment:fixed;
+        /*overflow:auto;*/
+        padding-top:20px;
+        padding-left: 20px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-4">
+        <h4>Print Area</h4>
+    </div>
+    <div class="co-md-4 pull-right col-md-offset-4" style="padding-bottom: 0px">
+        <span id="ZoomIn" class="noselect glyphicon glyphicon-zoom-in btn-lg pointer" onclick="zoomIn();" title="Zoom In"></span>
+        <span class="noselect glyphicon glyphicon-refresh btn-lg pointer" id="reset" onclick="reset()" title="Reset"></span>
+        <span class="noselect glyphicon glyphicon-zoom-out btn-lg pointer" id="ZoomOut" onclick="zoomOut()" title="Zoom Out"></span>
+        <span class="noselect glyphicon glyphicon-print btn-lg pointer" id="print" onclick="printDiv()" title="Print"></span>        
+    </div>
+    <div id="printDiv" style="border: 1px solid #eee;min-height: 500px;height: 100%;width:98%;margin: 10px;overflow: hidden">
+        <div id="activityFlowFrame" style="zoom: 100%">
+            <flow-chart chart="onlyViewModel" id="containerDiv">                
+            </flow-chart>                 
+        </div>   
+    </div>
+</div>

@@ -1,0 +1,281 @@
+<div ng-if="canAccess('holidayAddEdit')">
+    <div class="row">
+        <div class="col-xs-12"> 
+            <!--breadcrumb-->
+
+            <!--breadcrumb-->
+            <div class="col-xs-12">
+                <!--<div id="messages" ng-include src="'templates/messages.html'"></div>-->
+                <div class="form-group">
+                    <li ng-repeat="validationMsg in uploadResponseMsgs">
+                        <div class="list-group-item-text">
+                            <a class="list-group-item" close="closeAlertMessage(0)">
+                                <span class="{{ !validationMsg.responseCode ? 'hkg-validation-success': 'hkg-validation-failure'}}">{{validationMsg.message}}</span>
+                            </a>
+                        </div>
+
+                    </li>
+                </div>
+            </div>
+            <div class="col-xs-12 col-lg-12">
+                <h4 ng-show="!isEdit"><b>{{ entity + "Add Holiday For " | translate}}{{currentYear}}</b></h4>
+                <h4 ng-show="isEdit"><b>{{ entity + "Update Holiday For " | translate}}{{currentYear}}</b></h4>
+            </div>
+
+
+            <!--                <div>
+                                <h4 ng-show="!isEdit"><b>{{ entity + "Add Holiday For" | translate }} {{currentYear}}</b></h4>
+                                <h4 ng-show="isEdit"><b>{{ entity + "Update Holiday For" | translate }} {{currentYear}}</b></h4>
+                            </div>-->
+            <div class="col-xs-12">
+
+                <form method="POST" class="form-horizontal" name="holidayForm" novalidate >
+                    <div ng-init="registerLocationChangeEvent(holidayForm);
+                                        initAddHolidayForm(holidayForm)">
+
+                        <div class="form-group required">
+                            <label for="holidayTitle"  class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + "Reason For Holiday" | translate }} </label>
+                            <div class="col-md-4 col-lg-4 col-sm-10" ng-class="{'has-error': holidayForm.holidayTitle.$invalid && (submitted || holidayForm.holidayTitle.$dirty)}"> 
+                                <!--<div class="input-group">-->
+                                <!--<input  type="text"   name="holidayTitle" id="holidayTitle" class="form-control input-md col-md-12 hkg-nopadding"  ui-select2="distinctHolidayList" ng-model="holiday.title" required />-->
+                                <input  ng-pattern="/^[^.]+$/" ng-model="holiday.title" id="holidayTitle" name="holidayTitle" class="form-control" required maxlength="100"  typeahead="reason.id as reason.id for reason in distinctHoliday | filter:$viewValue | limitTo:8" />
+                                <!--</div>-->
+                                <div class="error,help-block" ng-show="(holidayForm.holidayTitle.$dirty || submitted) && holidayForm.holidayTitle.$invalid">
+                                    <span class="help-block" ng-show="holidayForm.holidayTitle.$error.required">{{ entity + "Reason not entered" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayTitle.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayTitle.$error.pattern">{{ entity + 'Reason for Holiday is invalid ' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="holidayStartDate" class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + "From Date" | translate }}</label>
+                            <div class="col-md-4 col-lg-4 col-sm-10" ng-class="{'has-error': holidayForm.holidayStartDate.$invalid && (submitted || holidayForm.holidayStartDate.$dirty)}">
+                               <div class="input-group" ng-init="setToDate()">
+                                    <input type="text" id="holidayStartDate" name="holidayStartDate" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="holiday.startDt" is-open="datepicker.from" min="minFromDate" max="maxFromDate" required close-text="Close" ng-change="setToDate()"/>
+                                    <span class="input-group-btn">
+                                        <button class="form-control" ng-click="open($event, 'from')">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="error,help-block" ng-show="(holidayForm.holidayStartDate.$dirty || submitted) && holidayForm.holidayStartDate.$invalid">
+                                    <span class="help-block" ng-show="holidayForm.holidayStartDate.$error.required && !(holidayForm.holidayStartDate.$error.date || holidayForm.holidayStartDate.$error.min || holidayForm.holidayStartDate.$error.max)">
+                                        {{ entity + "Start of holiday not selected" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayStartDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayStartDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayStartDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="form-group required">
+                            <label for="holidayEndDate" class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + "To Date" | translate }}</label>
+                            <div class="col-md-4 col-lg-4 col-sm-10" ng-class="{'has-error': holidayForm.holidayEndDate.$invalid && (submitted || holidayForm.holidayEndDate.$dirty)}">
+                                <div class="input-group" >
+                                    <input type="text" id="holidayEndDate" name="holidayEndDate" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="holiday.endDt" is-open="datepicker.end" min="minToDate" max="maxToDate"  ng-required="true" close-text="Close" ng-change="setFromDate()"/>
+
+                                    <span class="input-group-btn">
+                                        <button class="form-control" ng-click="open($event, 'end')">
+                                            <span class="glyphicon glyphicon-calendar"></span>
+                                        </button>
+                                    </span>
+                                </div>
+                                <div class="error,help-block" ng-show="(holidayForm.holidayEndDate.$dirty || submitted) && holidayForm.holidayEndDate.$invalid">
+                                    <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.required && !(holidayForm.holidayEndDate.$error.date || holidayForm.holidayEndDate.$error.min || holidayForm.holidayEndDate.$error.max)">
+                                        {{ entity + "Enter Holiday To Date" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                                    <span class="help-block" ng-show="holidayForm.holidayEndDate.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                                </div>
+                            </div>
+                        </div>
+                      
+                        <div ng-if="isEdit">
+                            <dynamic-form  input-css ="col-md-4 col-lg-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" 
+                                           db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                           ng-if="genralHolidayTemplate"    template="genralHolidayTemplate" ng-model="addHolidayData" edit-flag="{{isEdit}}" is-diamond="false" no-of-field-per-row = "1"
+                                           >
+
+                            </dynamic-form></div>
+                        <div ng-if="!isEdit">
+                            <dynamic-form  input-css ="col-md-4 col-lg-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" 
+                                           db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                           ng-if="genralHolidayTemplate"    template="genralHolidayTemplate" ng-model="addHolidayData" edit-flag="{{isEdit}}" is-diamond="false" no-of-field-per-row = "1"
+                                           >
+
+                            </dynamic-form></div>
+                        <div class="form-group" ng-show="isEdit">
+                            <label for="holidayStatus" class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + "Status" | translate }}</label>
+                            <div class="col-md-4 col-lg-4 col-sm-8">
+                                <select class="form-control" ng-options="o.name as o.name for o in options" ng-model="holiday.status" name="status"> 
+
+                                </select>   
+                            </div>
+                        </div>
+
+                        <div class="form-group" ng-show="!isEdit">
+                            <fieldset class="hkg-fullfieldset"> 
+                                <legend class="hkg-fulllegend">
+                                    <center>{{ entity + "OR" | translate }}</center>
+                                </legend>
+                            </fieldset>
+                            <label for="uploadList" class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + "Upload Holiday List" | translate }}</label>
+                            <div class="col-md-2">
+                                <div flow-init="uploadHolidayConfig" flow-files-submitted="$flow.upload()" flow-file-added="validateExtension($file)" flow-file-error="errorUpload($message)" flow-file-success="successUpload($message,holidayForm)">
+                                    <div class="input-group">
+                                        <button class="btn btn-hkg btn-success" flow-btn >{{ entity + "Choose File" | translate }}
+                                        </button>
+
+                                    </div>
+
+                                    <!--        <div flow-transfers>
+                                            <br/>
+                                            <div ng-repeat="file in transfers">
+                                                <div class="progress progress-striped">
+                                                    <div class="bar" style="width: {{file.progress() * 100}}%;"><b>{{file.progress() * 100}}</b></div>
+                                                </div>
+                                            </div>
+                                        </div>-->
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="form-group" ng-show="!isEdit">
+                            <div class="col-md-offset-2 col-md-4"><input type="text" class="form-control" readonly="true" ng-model="uploadWorksheetFile" /></div>
+                        </div>
+
+                        <!--                            <div class="col-md-8">
+                                                        <div class="col-md-12 col-md-offset-3">
+                                                            <a ng-href="api/holiday/downloadholidaytemplate">{{ entity + "Downlodad holiday list excel formate here" | translate }}</a>
+                                                        </div>
+                                                    </div>-->
+                        <div class="col-xs-12 col-lg-12 text-left context-menu"  ng-show="!isEdit"> 
+                            <span class="glyphicon glyphicon-plus-sign text-primary">
+                            </span>
+                            &nbsp;  <a ng-href="{{appendAuthToken(apipath+'holiday/downloadholidaytemplate')}}">
+                                {{ entity + "Download holiday list excel format here" | translate }}
+                            </a>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="cancelHoliday(holidayForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                        <button ng-show="isEdit" class="btn btn-hkg" ng-click="updateHoliday(holidayForm, holiday)">{{ entity + "Save Holiday" | translate }}</button>
+                                        <button ng-show="!isEdit" class="btn btn-hkg" ng-click="saveHoliday(holidayForm, holiday)">{{ entity + "Add Holiday" | translate }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>    
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <form>
+        <div class="modal fade" id="removeShowId">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" ng-click="removeCancel()">&times;</a>
+                        <h4 class="modal-title">
+                            {{ entity + "Remove Holiday" | translate }}
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div>
+                                <!--{{ entity + "removeMsg" | translate:{holidayName:(holidayName | translate)} }}-->
+                                <span class="wordRap">{{ entity + "Are you sure you want to remove holiday \{\{holidayName\}\} ?"| translate:{holidayName:(holidayName | translate)} }}</span>
+                                <!--:{holiday.title:(holiday.title | translate)} }}-->
+                                <!--{{holidat.title}}-->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="" ng-click="removeCancel()">{{ entity + "Cancel" | translate }}</button>
+                            <button class="btn btn-hkg" ng-click="removeOk()">
+                                {{ entity + "Remove" | translate }}
+                            </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="warningShowId">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" ng-click="proceedCancel()">&times;</a>
+                        <h4 class="modal-title">
+                            {{ entity + "Warning" | translate }}
+                        </h4>
+
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <div>
+                                {{ entity + "Another Holiday Already Exists on Specified Date.Still You Want to proceed." | translate }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="col-xs-12 col-lg-12 text-right">
+                            <a href="" ng-click="proceedCancel()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="proceedOk(holidayForm)"> {{ entity + "Ok" | translate }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="showId">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" ng-click="hideErrorPopup()">&times;</a>
+                        <h4 class="modal-title" ng-show="!uploadStatus">
+                            <b>{{ entity + "Uploaded File Status" | translate}}</b>
+                        </h4>
+                        <h4 class="modal-title" ng-show="uploadStatus">
+                            <b>{{ entity + "File uploaded success" | translate}}</b>
+                        </h4>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="form-group">
+                            <div ng-show="errorMsg.length > 0">
+                                {{  entity + "Following errors occured while trying to upload the file." | translate}}
+                            </div>
+                            <ul>
+                                <li ng-repeat="validationMsg in errorMsg">
+                                    <span class="hkg-validation-failure">{{validationMsg.message}}</span>
+                                </li>
+                            </ul>
+                            <div ng-show="warningMsg.length > 0">
+                                {{ entity + "Following warning occured while trying to upload the file.Stil you want to Add ?" | translate}}
+                            </div>
+                            <ul>
+                                <li ng-repeat="validationMsg in warningMsg">
+                                    <span class="hkg-validation-success">{{validationMsg.message}}</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary"  ng-show="errorMsg.length > 0" ng-click="hideErrorPopup();">{{ entity + "Ok" | translate}}</button>
+                        <button class="btn btn-primary"  ng-show="warningMsg.length > 0 && errorMsg.length == 0" ng-click="forceAddHoliday();">{{ entity + "Add" |translate}}</button>
+                        <button class="btn btn-primary" ng-show="warningMsg.length > 0 && errorMsg.length == 0" ng-click="hideErrorPopup();">{{ entity + "Cancel" | translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+<div ng-if="!canAccess('holidayAddEdit')">
+    {{ entity + "You have no designation to access this feature." | translate}}
+</div>

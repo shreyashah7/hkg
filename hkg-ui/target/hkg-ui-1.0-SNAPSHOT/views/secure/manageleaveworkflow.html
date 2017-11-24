@@ -1,0 +1,371 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" ng-if="!configureWorkFlow">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Manage'| translate}}</li>
+                    <li >{{entity + 'Leave workflow'| translate}}</li>
+                    <li class="active uppercase" ng-show="displayLeaveWorkflowFlag === 'view' && !isEditing">{{entity + 'Add Workflow'| translate }}</li>     
+                    <li class="active uppercase" ng-show="displayLeaveWorkflowFlag === 'view' && isEditing">{{entity + 'Edit Workflow'| translate }}</li>     
+                    <li class="active uppercase" ng-show="displayLeaveWorkflowFlag === 'search'">{{entity + 'View Department'| translate }}</li>     
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span ng-show="isEditing && isAccessWorkflow">
+                    <span class="glyphicon glyphicon-plus-sign text-primary">
+                    </span>&nbsp;
+                    <a ng-click="clearData(workflow_form, workflow_form1)">{{entity + 'Add Workflow'| translate }}</a> 
+                </span>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-9 new-panel" ng-class="{'col-xs-12 col-lg-12':configureWorkFlow}">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-12 col-lg-12 well well-sm" ng-if="!configureWorkFlow">
+                        <div class="input-group">
+                            <div id="scrollable-dropdown-menu">
+                                <input class="typeahead" type="text" ng-model="searchtext" placeholder="Search workflows for departments.." 
+                                       ag-search="{{apipath}}leave/searchDepartment" 
+                                       result-format="displayName" 
+                                       on-select="editWorkflow" 
+                                       on-enter="getSearchedDepartment"
+                                       search-list-array='searchedDepartmentList'
+                                       id="scrollable-dropdown-menu"/>
+                            </div>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-hkg" ng-click="getSearchedDepartment(searchedDepartmentList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                            </span>
+                        </div>  
+                        <span ng-show="isInValidSearch">{{entity + 'No matching results'| translate }}</span>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    <div ng-include src="'views/secure/searchedleaveworkflow.html'" ng-if="displayLeaveWorkflowFlag === 'search'"></div>
+                    <!--ADD WORKFLOW-->
+                    <div ng-show="displayLeaveWorkflowFlag !== 'search'">
+                        <form role="form" class="form-horizontal" novalidate name="workflow_form" >
+                            <div ng-show="!isEditing && (isAccessWorkflow || configureWorkFlow)" ng-init="registerLocationChangeEvent(workflow_form)">
+                                <div ng-if="!configureWorkFlow">
+                                    <div class="form-group required">
+                                        <div class="col-md-3 control-label"> 
+                                            <label for="select_department"> {{entity + 'Select Department'| translate }}</label>
+                                        </div> 
+                                        <div class="col-md-7" ng-class="{'has-error': isDepInvalid === true && submitted}">
+                                            <div class="dropdown">
+                                                <button data-toggle="dropdown" class="dropdown-toggle form-control" id="select_department" >   <span tooltip-placement="top" tooltip="{{selectedInString.toString() !== '' ? selectedInString.toString() : 'Select Department'}}" class="pull-left">{{selectedInString.toString() !== '' ? selectedInString.toString().length > 35 ? selectedInString.toString().substring(0, 35) + '...' : selectedInString.toString() : "Select Department"}}</span><span class="caret pull-right no-margin"></span></button>
+                                                <div class="dropdown-menu col-md-12 hkg-scrollableDropDown-tree">
+
+                                                    <div  ng-click="changeDepartment();
+                                                        $event.stopPropagation();" style="padding-left: 7%;" ng-init="initDept()" >
+
+                                                        <span style="width: 100%">
+
+                                                            <ag-treeview-multiselect  val="multiselecttree" selecteditem="selectedItemList"  ng-show="multiselecttree" >
+                                                            </ag-treeview-multiselect>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="error,help-block" ng-show="isDepInvalid && submitted">
+                                                <span class="help-block">{{ entity + 'Select department' | translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group"> 
+                                        <div class="col-md-3 control-label">
+                                            <label for="select_department_copy">{{entity + 'Make Copy Of'| translate }}</label>
+                                        </div> 
+                                        <div class="col-md-7">
+                                            <div class="dropdown">
+
+                                                <button class="dropdown-toggle form-control" id="select_department_copy" data-toggle="dropdown" >
+                                                    <span class="pull-left" ng-bind="selectedParent1.displayName"></span><span class="caret pull-right no-margin"></span>
+                                                </button>
+
+                                                <div class="dropdown-menu col-md-12">
+                                                    <div ng-click='changeMakeACopyOf(workflow_form);
+                                                        setSelectedParent1(selectedDepartmentDropdown1)'
+                                                         data-angular-treeview="true"
+                                                         data-tree-id="selectedDepartmentDropdown1"
+                                                         ag-treemodel="departmentListDropdown1"
+                                                         entity-name="DPT_NM."
+                                                         >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </div>
+
+                                <div class="form-group required"> 
+                                    <div class="col-md-3 control-label">
+                                        <label for="approver"> {{entity + 'Select Approver'| translate }}</label>
+                                    </div> 
+                                    <div class="col-md-7">
+                                        <div  ng-class="{'has-error': approverInValid && submitted}"> 
+                                            <div class="input-group" >
+
+                                                <input type="text" class="col-xs-12 hkg-nopadding" id="approver" name="approver" value="blank" required ui-select2="autoCompleteApprover" ng-model="workflow.nameApprover"/>
+                                                <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                            </div>
+                                            <div class="error,help-block" ng-show="submitted && approverInValid">
+                                                <span class="help-block">{{entity + 'Select approvers'| translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </div> 
+                                <div class="form-group"> 
+                                    <div class="col-md-3 control-label">
+                                        <label>{{entity + 'Workflow Created'| translate }}</label>
+                                    </div> 
+                                    <!--                                     <div class="form-group " ng-show="list== null">
+                                                                                <div class="col-md-7">
+                                    
+                                                                                   
+                                                                                </div>
+                                                                            </div>-->
+                                    <div class="col-md-7" >
+                                        <div ng-show="list.length === 0">
+                                            <input type="text" readonly class="form-control"  name="Workflow" placeholder="No workflow order created yet.." />
+                                        </div>
+                                        <div class="table-responsive">
+                                            <div ng-show="list.length > 0"   >
+                                                <table class="table table-striped table-responsive" id="dataTable">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>{{entity + 'Workflow Order'| translate }}</th>
+                                                            <th>{{entity + 'Approver'| translate }}</th>
+                                                            <th>{{entity + 'Action'| translate }}</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody ui:sortable ng:model="list">
+                                                        <tr ng-repeat="workflow in list"  style="cursor: move;" dt-rows>
+                                                            <td>
+                                                                <span ng-if="$index != (list.length - 1)">{{$index + 1}}</span>
+                                                                <span ng-if="$index == (list.length - 1)">{{entity + 'Final'| translate }}</span>
+                                                            </td>
+                                                            <td>{{workflow.id}}</td>
+                                                            <td>
+                                                                <a href="" ng-show="list.length > 1" ng-click="deleteRow($index, list)" title="Delete" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-remove"></span></a>
+                                                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                                                <a ng-show="$index == 0">&nbsp;&nbsp;</a>
+                                                                <a href="" ng-click="up($index)" title="Up" ng-show="$index != 0" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                                                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                                                <a href="" ng-click="down($index, $last)" title="Down" ng-show="$index != (list.length - 1)" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-down"></span></a>
+                                                                <a ng-show="$index == (list.length - 1)">&nbsp;&nbsp;</a>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody> 
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-if="!isEditing && reload">
+                                    <dynamic-form db-map="dbType" 
+                                                  internationalization-label="{{i18DynamicForm}}" input-css ="col-md-7" label-css="col-md-3 control-label" form-name="form2" template="generalLeaveWorkflowTemplate" 
+                                                  ng-model="addLeaveWorkflowData" ng-if="generalLeaveWorkflowTemplate"  edit-flag="false" is-diamond="false" no-of-field-per-row = "1"> 
+                                    </dynamic-form>   </div>
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-12 pull-right text-right">
+                                            <a ng-click="clearData(workflow_form, workflow_form1);">{{entity + 'Cancel'| translate }}</a>
+                                            &nbsp;
+                                            <button class="btn btn-hkg" ng-click="save.submit(workflow_form)" >{{entity + 'Add Workflow'| translate }}</button>             
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!--EDIT WORKFLOW-->
+                        <form role="form" class="form-horizontal" novalidate name="workflow_form1">
+                            <div ng-init="registerLocationChangeEvent(workflow_form1)" ng-if="(isEditing && !(isDefault && editworkflow.nameApprover.length == 0) && isAccessWorkflow) || (isEditing && configureWorkFlow)" ng-init="initEditWorkFlowForm(workflow_form1)">
+                                <div ng-if="!configureWorkFlow">
+                                    <div class="form-group" ng-if="editworkflow.departmentName !== null">
+                                        <div class="col-md-3 control-label">
+                                            <label>{{entity + 'Department'| translate }}</label>
+                                        </div> 
+                                        <div class="col-md-7 form-control-static">
+                                            {{entity + editworkflow.departmentName| translate}}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group"> 
+                                    <div class="col-md-3 control-label">
+                                        <label for="approver1">{{entity + 'Select Approver'| translate }}</label>
+                                    </div> 
+                                    <div class="col-md-7">
+                                        <div ng-class="{'has-error': editapproverInValid && submitted}">  
+                                            <div class="input-group">
+
+                                                <input type="text" ng-disabled="isDefault && !configureWorkFlow" class="col-xs-12 hkg-nopadding" id="approver1" name="approver1"  required ui-select2="autoCompleteApprover" ng-model="editworkflow.nameApprover"/>
+                                                <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                            </div>
+                                            <div class="error,help-block" ng-show="editapproverInValid && submitted">
+                                                <span class="help-block">{{entity + 'Select approvers'| translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div>              
+                                </div> 
+                                <div class="form-group" ng-if="!configureWorkFlow">
+                                    <div class="col-md-3 control-label">
+                                        <label>{{entity + 'Status'| translate }}</label>
+                                    </div> 
+                                    <div class="col-md-7 form-control-static">
+                                        <input type="radio" name="status" ng-disabled="isDefault" value="true" required="true" ng-model="editworkflow.status">{{entity + 'Active '| translate }}&nbsp;&nbsp;
+                                        <input type="radio" name="status" ng-disabled="isDefault" value="false" required="true"  ng-model="editworkflow.status" >{{entity + 'Remove workflow '| translate }}
+                                    </div>
+                                </div>
+                                <div class="form-group"> 
+                                    <div class="col-md-3 control-label">
+                                        <label>{{entity + 'Workflow Created'| translate }}</label>
+                                    </div> 
+                                    <div class="col-md-7">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-bordered" id="dataTable1" style="text-align: center;table-layout: fixed;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{{entity + 'Workflow Order'| translate }}</th>
+                                                        <th>{{entity + 'Approver'| translate }}</th>
+                                                        <th ng-if="!isDefault || configureWorkFlow">{{entity + 'Action'| translate }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody ui:sortable ng:model="list">
+                                                    <tr ng-repeat="workflow in list" style="cursor: move;" >
+                                                        <td>
+                                                            <span ng-if="$index != (list.length - 1)">{{$index + 1}}</span>
+                                                            <span ng-if="$index == (list.length - 1)">{{entity + 'Final'| translate }}</span>
+                                                        </td>
+                                                        <td>{{workflow.id}}</td>
+                                                        <td ng-if="!isDefault || configureWorkFlow">
+                                                            <a href="" ng-show="list.length > 1" ng-click="deleteRow($index, list)" title="Delete" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-remove"></span></a>
+                                                            &nbsp;&nbsp;&nbsp;&nbsp;
+                                                            <a ng-show="$index == 0">&nbsp;&nbsp;</a>
+                                                            <a href="" ng-click="up($index)" title="Up" ng-show="$index != 0" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-up"></span></a>
+                                                            &nbsp;&nbsp;&nbsp;&nbsp;
+                                                            <a href="" ng-click="down($index, $last)" title="Down" ng-show="$index != (list.length - 1)" style="cursor: pointer; color: inherit"><span class="glyphicon glyphicon-arrow-down"></span></a>
+                                                            <a ng-show="$index == (list.length - 1)">&nbsp;&nbsp;</a>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div ng-if="isEditing && reload">
+                                    <dynamic-form  input-css ="col-md-7" label-css="col-md-3 control-label" db-map="dbType" 
+                                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLeaveWorkflowTemplate" 
+                                                   ng-model="addLeaveWorkflowData" ng-if="generalLeaveWorkflowTemplate" edit-flag="true" is-diamond="false" no-of-field-per-row = "1">
+                                    </dynamic-form>  </div> 
+                                <div class="col-xs-12" ng-show="!isDefault || configureWorkFlow">
+                                    <div class="row">
+                                        <hr/>
+                                        <div class="col-xs-12 pull-right text-right">
+                                            <a ng-click="clearData(workflow_form, workflow_form1);">{{entity + 'Cancel'| translate }}</a>
+                                            &nbsp;
+                                            <button ng-click="save.submitEdit(workflow_form1)" class="btn btn-hkg">{{entity + 'Save Workflow'| translate }}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="isEditing && isDefault && editworkflow.nameApprover.length == 0 && !configureWorkFlow">
+                                {{entity + 'Default workflow is not configured.'| translate }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Remove Modal-->
+        <div class="modal fade" id="removeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog" >
+                <div class="modal-content" >
+                    <div class="modal-header">
+
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel"> {{entity + 'Remove Workflow'| translate }}</h4>
+                    </div>
+                    <div class="modal-body"  >
+
+                        <div class="row"> <div class="col-md-12"> {{ entity + " \{\{departmentName\}\} will follow the default workflow now onwards " | translate:{departmentName:(editWorkflowDepName | translate)} }}</div></div>
+                        <div class="row"> <div class="col-md-12"> {{entity + 'Are you sure you want to remove workflow?'| translate }}</div></div>
+                    </div>
+                    <div class="modal-footer" >
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a ng-click="hidePanel();">{{entity + 'Cancel'| translate }}</a>
+                                    &nbsp;
+                                    <button type="button" class="btn btn-hkg" ng-click="removeWorkflow(workflow_form, workflow_form1)"> {{entity + 'Remove'| translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--Overrideen Msg Modal-->
+        <div class="modal fade" id="overrideModal" tabindex="-1" role="dialog" aria-labelledby="overrideModalLabel" aria-hidden="true">
+            <div class="modal-dialog" >
+
+                <div class="modal-content" >
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="overrideModalLabel"> {{entity + 'Override Workflow'| translate }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        {{entity + 'Workflow already created for '| translate }}
+                        <br/>
+                        <div ng-repeat="department in overrideDep">
+                            {{entity + department.text| translate}}
+                        </div>
+                        <br/>
+                        {{entity + 'Would you like to override them with this new workflow ?'| translate }}
+                    </div>
+                    <div class="modal-footer" >
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right">
+                                    <button type="button" class="btn btn-hkg" ng-click="noOverrideData()"> {{entity + 'No'| translate }}</button>
+                                    &nbsp;
+                                    <button type="button" class="btn btn-hkg" ng-click="yesOverrideData()"> {{entity + 'Yes'| translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Tree component-->
+        <div class="col-xs-3 tree-bg " ng-if="!configureWorkFlow">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'Existing workflows'| translate }}</strong></span>
+                <hr class="margin-md"/>
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                        <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                    </div>
+                </div>
+                <!--Tree component starts-->
+                <div class="col-xs-12 hkg-nopadding">
+                    <br/>
+                    <div ng-if="departments1" ng-click='openEditWorkflow(selectedDepartment.currentNode, true, false)'
+                         data-angular-treeview="true"
+                         data-tree-id="selectedDepartment"
+                         ag-treemodel="departments1" search-id="searchDepId"
+                         entity-name="DPT_NM."
+                         data-search-query='treeSearchQuery'>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

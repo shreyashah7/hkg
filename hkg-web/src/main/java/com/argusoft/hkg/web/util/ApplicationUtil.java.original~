@@ -1,0 +1,601 @@
+package com.argusoft.hkg.web.util;
+
+import com.argusoft.activity.common.constantutil.ActSystemConstantUtil;
+import com.argusoft.activity.core.ActActivityFlowService;
+import com.argusoft.activity.model.ActServiceEntity;
+import com.argusoft.generic.database.exception.GenericDatabaseException;
+import com.argusoft.hkg.common.constantutil.HkSystemConstantUtil;
+import com.argusoft.hkg.common.functionutil.FolderManagement;
+import com.argusoft.hkg.common.functionutil.PropertyFileReader;
+import com.argusoft.hkg.core.HkFoundationService;
+import com.argusoft.hkg.model.HkCurrencyEntity;
+import com.argusoft.hkg.model.HkMasterEntity;
+import com.argusoft.hkg.model.HkTheme;
+import com.argusoft.hkg.web.bootstrap.ReportBuilderInitializer;
+import com.argusoft.hkg.web.bootstrap.RoleFeatureInitialization;
+import com.argusoft.hkg.web.config.WebApplicationConfig;
+import com.argusoft.hkg.web.config.WebApplicationInitializerConfig;
+import com.argusoft.hkg.web.customfield.transformers.CustomFieldTransformerBean;
+import com.argusoft.hkg.web.internationalization.LabelType;
+import com.argusoft.hkg.web.internationalization.wrapper.InternationalizationServiceWrapper;
+import com.argusoft.hkg.web.usermanagement.databeans.LoginDataBean;
+import com.argusoft.hkg.web.usermanagement.wrapper.UserManagementServiceWrapper;
+import com.argusoft.internationalization.common.core.I18nService;
+import com.argusoft.internationalization.common.exception.I18nException;
+import com.argusoft.internationalization.common.model.I18nCountryEntity;
+import com.argusoft.internationalization.common.model.I18nLabelEntity;
+import com.argusoft.internationalization.common.model.I18nLabelPKEntity;
+import com.argusoft.internationalization.common.model.I18nLanguageEntity;
+import com.argusoft.internationalization.common.model.I18nLanguagePKEntity;
+import com.argusoft.usermanagement.common.core.UMRoleService;
+import com.argusoft.usermanagement.common.core.UMSystemConfigurationService;
+import com.argusoft.usermanagement.common.core.UMUserService;
+import com.argusoft.usermanagement.common.database.UMRoleDao;
+import com.argusoft.usermanagement.common.exception.UMUserManagementException;
+import com.argusoft.usermanagement.common.model.UMCompany;
+import com.argusoft.usermanagement.common.model.UMRole;
+import com.argusoft.usermanagement.common.model.UMUser;
+import com.argusoft.usermanagement.common.model.UMUserRole;
+import com.argusoft.usermanagement.common.model.UMUserRolePK;
+import com.google.gson.JsonObject;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+/**
+ *
+ * @author kelvin
+ */
+@Component
+public class ApplicationUtil {
+
+    @Autowired
+    UserManagementServiceWrapper userManagementServiceWrapper;
+    @Autowired
+    CustomFieldTransformerBean customFieldTransformerBean;
+    @Autowired
+    UMSystemConfigurationService systemConfigurationService;
+    @Autowired
+    UMUserService userService;
+    @Autowired
+    UMRoleService roleService;
+    @Autowired
+    I18nService i18nService;
+    @Autowired
+    InternationalizationServiceWrapper internationalizationServiceWrapper;
+
+    @Autowired
+    RoleFeatureInitialization roleFeatureInitialization;
+    @Autowired
+    ReportBuilderInitializer reportBuilderInitializer;
+    @Autowired
+    HkFoundationService foundationService;
+    @Autowired
+    ActActivityFlowService actActivityFlowService;
+    private Map<String, LoginDataBean> users;
+    private Map<String, String> systemConfigrationMap;
+    private final Logger LOGGER;
+    private Map<Long, Integer> rolePrecedence;
+    private Map<Long, Map<String, Map<String, Object>>> featureFromTemplateMap;
+
+    public static String PROJECT_VERSION = "0.1";
+
+    public ApplicationUtil() {
+        LOGGER = LoggerFactory.getLogger(this.getClass());
+        users = new HashMap<>();
+        PROJECT_VERSION = retrieveProjectVersion();
+    }
+
+    public Map<String, LoginDataBean> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Map<String, LoginDataBean> users) {
+        this.users = users;
+    }
+
+    public Map<String, String> getSystemConfigrationMap() {
+        return systemConfigrationMap;
+    }
+
+    public void setSystemConfigrationMap(Map<String, String> systemConfigrationMap) {
+        this.systemConfigrationMap = systemConfigrationMap;
+    }
+
+    public Map<Long, Map<String, Map<String, Object>>> getFeatureFromTemplateMap() {
+        return featureFromTemplateMap;
+    }
+
+    public void setFeatureFromTemplateMap(Map<Long, Map<String, Map<String, Object>>> featureFromTemplateMap) {
+        this.featureFromTemplateMap = featureFromTemplateMap;
+    }
+
+    @PostConstruct
+    private void initHkApplicationUtil() {
+        roleFeatureInitialization.UpdateFeatureDetailUsingXls();
+        roleFeatureInitialization.createFeatureSectionField();
+        reportBuilderInitializer.createForeignTables();
+        reportBuilderInitializer.fillTableSetWithIsArchiveFieldAbsent();
+        reportBuilderInitializer.updateTabularRelationshipUsingXls();
+        Map<Long, HkCurrencyEntity> currencyMasterMap = null;
+        List<HkCurrencyEntity> allCurrencies = foundationService.retrieveAllCurrency(null, null);
+        if (!CollectionUtils.isEmpty(allCurrencies)) {
+            currencyMasterMap = new HashMap<>();
+            for (HkCurrencyEntity hkCurrencyEntity : allCurrencies) {
+                currencyMasterMap.put(hkCurrencyEntity.getId(), hkCurrencyEntity);
+            }
+        }
+        systemConfigrationMap = systemConfigurationService.retrieveAllSystemConfigurations();
+        
+        try {
+            featureFromTemplateMap = customFieldTransformerBean.retrieveFeatureSectionMap(currencyMasterMap);
+        } catch (GenericDatabaseException ex) {
+            java.util.logging.Logger.getLogger(ApplicationUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        this.initializeRoleAndUser(HkSystemConstantUtil.ROLE.SUPER_ADMIN,
+                Arrays.asList(HkSystemConstantUtil.Feature.MANAGE_FRANCHISE, HkSystemConstantUtil.Feature.MANAGE_FEATURE, HkSystemConstantUtil.Feature.MANAGE_LOCATION),
+                -1, HkSystemConstantUtil.USER.SUPER_ADMIN, "sadmin@123", "Super", null, "Admin");
+
+        userManagementServiceWrapper.createRole(HkSystemConstantUtil.ROLE.HK_ADMIN, 0, 0l);
+
+        this.initializeMasters();
+        this.initializeThemes();
+        this.initializeLocales();
+        rolePrecedence = userManagementServiceWrapper.retrieveDesignationPrecedence();
+
+        //Creating Base Folder for the System
+        FolderManagement.createBaseFolder();
+        this.initializeActActivityService();
+    }
+
+    @PreDestroy
+    private void onDestroyHkApplicationUtil() {
+
+    }
+
+    public void addUser(LoginDataBean hkLoginDataBean) {
+        if (hkLoginDataBean != null && StringUtils.hasText(hkLoginDataBean.getUserId())) {
+            if (!users.containsKey(hkLoginDataBean.getUserId())) {
+                LOGGER.debug(hkLoginDataBean.getUserId() + " added to application. 2" + hkLoginDataBean.toString());
+                LOGGER.debug(hkLoginDataBean.toString());
+                users.put(hkLoginDataBean.getUserId(), hkLoginDataBean);
+            }
+        }
+    }
+
+    public void removeUser(LoginDataBean hkLoginDataBean) {
+        if (hkLoginDataBean != null && StringUtils.hasText(hkLoginDataBean.getUserId())) {
+            if (users.containsKey(hkLoginDataBean.getUserId())) {
+                LOGGER.debug(hkLoginDataBean.getUserId() + " remove from the application.");
+                users.remove(hkLoginDataBean.getUserId());
+            }
+        }
+    }
+
+    public int getPrecedence(long role) {
+        Integer precedence = rolePrecedence.get(role);
+        if (precedence != null) {
+            return precedence;
+        } else {
+            return 1;
+        }
+    }
+
+    public void initializeRoleAndUser(String roleName, List<String> featureList, int precedence,
+            String userId, String password, String firstName, String middleName, String lastName) {
+        Map<String, Object> criteriaMap = new HashMap<>();
+        criteriaMap.put(UMRoleDao.NAME, roleName);
+        List<UMRole> roleList = null;
+        try {
+            roleList = roleService.retrieveRoles(null, criteriaMap, null, null, null);
+        } catch (GenericDatabaseException ex) {
+            java.util.logging.Logger.getLogger(WebApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        UMRole roleEntity = null;
+
+        //  if role doesn't exist, create the one
+        if (CollectionUtils.isEmpty(roleList)) {
+            //  Manage franchise, Manage Designation, Manage Feature
+            roleEntity = userManagementServiceWrapper.createRole(roleName, precedence, featureList, 0L);
+        } else {
+            if (roleList != null) {
+                roleEntity = roleList.get(0);
+            }
+        }
+
+        UMUser userEntity = userService.getUserbyUserName(userId, false, true, false, false, false, true);
+        if (roleEntity != null && userEntity != null) {
+            Set<UMUserRole> userRoleSet = userEntity.getUMUserRoleSet();
+            boolean roleExist = false;
+            if (!CollectionUtils.isEmpty(userRoleSet)) {
+                for (UMUserRole userRole : userRoleSet) {
+                    //  if the found user is superadmin i.e. role id matches superadmin role entity
+                    if (userRole.getuMUserRolePK().getRole() == roleEntity.getId()) {
+                        if (!userRole.getIsActive() || userRole.getIsArchive()) {
+                            userRole.setIsActive(true);
+                            userRole.setIsArchive(false);
+                            try {
+                                userService.updateUserRole(userRole);
+                                break;
+                            } catch (UMUserManagementException ex) {
+                                java.util.logging.Logger.getLogger(WebApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        roleExist = true;
+                        break;
+                    }
+                }
+            }
+            //  if user exist and role doesn't exist, assign the role to him
+            if (!roleExist) {
+                UMUserRole userRoleEntity = new UMUserRole(new UMUserRolePK(userEntity.getId(), roleEntity.getId()));
+                userRoleEntity.setuMUser(userEntity);
+                userRoleEntity.setIsActive(true);
+                userRoleEntity.setIsArchive(false);
+                try {
+                    userService.createUserRole(userRoleEntity);
+                } catch (UMUserManagementException ex) {
+                    java.util.logging.Logger.getLogger(WebApplicationConfig.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } else {
+            userManagementServiceWrapper.createUser(firstName, middleName, lastName, userId, password, roleEntity);
+        }
+    }
+
+    public void initializeMasters() {
+        List<HkMasterEntity> masterEntitys = foundationService.retrieveMasters(0l, (short) 2, HkSystemConstantUtil.MasterType.BUILT_IN);
+        List<HkMasterEntity> finalMasterList = new ArrayList<>();
+        List<String> exsitingcodeList = new LinkedList<>();
+        if (!CollectionUtils.isEmpty(masterEntitys)) {
+            for (HkMasterEntity hkMasterEntity : masterEntitys) {
+                exsitingcodeList.add(hkMasterEntity.getCode());
+            }
+        }
+        for (Map.Entry<String, String> entry : HkSystemConstantUtil.MASTERS_MAP.entrySet()) {
+            String code = entry.getKey();
+            String name = entry.getValue();
+            if (!exsitingcodeList.contains(code)) {
+                HkMasterEntity hkMasterEntity = this.convertMasterMapToMasterEntity(code, name);
+                finalMasterList.add(hkMasterEntity);
+            }
+        }
+        if (!CollectionUtils.isEmpty(finalMasterList)) {
+            foundationService.createAllMasters(finalMasterList);
+        }
+
+    }
+
+    public void initializeThemes() {
+        List<HkTheme> themes = foundationService.retrieveAllThemes(null);
+        if (CollectionUtils.isEmpty(themes)) {
+            List<HkTheme> list = new ArrayList<>();
+            HkTheme hkTheme = new HkTheme();
+            hkTheme.setFolderName("default");
+            hkTheme.setThemeName("Default");
+            hkTheme.setStatus(HkSystemConstantUtil.ACTIVE);
+            HkTheme hkTheme1 = new HkTheme();
+            hkTheme1.setFolderName("rose");
+            hkTheme1.setThemeName("Rose");
+            hkTheme1.setStatus(HkSystemConstantUtil.ACTIVE);
+            list.add(hkTheme);
+            //list.add(hkTheme1);
+            foundationService.createAllThemes(list);
+        }
+    }
+
+    private HkMasterEntity convertMasterMapToMasterEntity(String code, String name) {
+        HkMasterEntity hkMasterEntity = new HkMasterEntity();
+        hkMasterEntity.setCode(code);
+        hkMasterEntity.setCreatedBy(1L);
+        hkMasterEntity.setCreatedOn(new Date());
+        hkMasterEntity.setDescription("");
+        hkMasterEntity.setFranchise(0L);
+        hkMasterEntity.setIsActive(true);
+        hkMasterEntity.setIsArchive(false);
+        hkMasterEntity.setIsSensitive(false);
+        hkMasterEntity.setLastModifiedBy(1L);
+        hkMasterEntity.setLastModifiedOn(new Date());
+        hkMasterEntity.setMasterName(name);
+        hkMasterEntity.setMasterType(HkSystemConstantUtil.MasterType.BUILT_IN);
+        hkMasterEntity.setPrecedence(Short.valueOf(HkSystemConstantUtil.PrecedenceLevel.LEVEL_3_REGULAR));
+        return hkMasterEntity;
+    }
+
+    public void initializeLocales() {
+        I18nCountryEntity countryEntity = null;
+        try {
+            countryEntity = i18nService.retriveCountryByCode(HkSystemConstantUtil.COUNTRY_NZ);
+        } catch (I18nException ex) {
+            java.util.logging.Logger.getLogger(ApplicationUtil.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
+        if (countryEntity == null) {
+            countryEntity = new I18nCountryEntity(HkSystemConstantUtil.COUNTRY_NZ, "India", true, false, 1l, new Date());
+            i18nService.addCountry(countryEntity);
+        }
+
+        List<String> languageStrList = new LinkedList<>();
+        List<I18nLanguageEntity> activeLanguages = i18nService.retriveActiveLanguages();
+        if (!CollectionUtils.isEmpty(activeLanguages)) {
+            for (I18nLanguageEntity languageEntity : activeLanguages) {
+                languageStrList.add(languageEntity.getLanguagePK().getCode());
+            }
+        }
+
+        I18nLanguageEntity languageEntity;
+        if (!languageStrList.contains(HkSystemConstantUtil.I18_LANGUAGE.ENGLISH)) {
+            languageEntity = new I18nLanguageEntity(new I18nLanguagePKEntity(HkSystemConstantUtil.I18_LANGUAGE.ENGLISH, HkSystemConstantUtil.COUNTRY_NZ), "English", true, true, false, 1l, new Date());
+            languageEntity.setCountry1(countryEntity);
+            i18nService.addLanguage(languageEntity);
+            languageStrList.add(HkSystemConstantUtil.I18_LANGUAGE.ENGLISH);
+        }
+
+        if (!languageStrList.contains(HkSystemConstantUtil.I18_LANGUAGE.GUJARATI)) {
+            languageEntity = new I18nLanguageEntity(new I18nLanguagePKEntity(HkSystemConstantUtil.I18_LANGUAGE.GUJARATI, HkSystemConstantUtil.COUNTRY_NZ), "Gujarati", true, true, false, 1l, new Date());
+            languageEntity.setCountry1(countryEntity);
+            i18nService.addLanguage(languageEntity);
+            languageStrList.add(HkSystemConstantUtil.I18_LANGUAGE.GUJARATI);
+        }
+
+        if (!languageStrList.contains(HkSystemConstantUtil.I18_LANGUAGE.HINDI)) {
+            languageEntity = new I18nLanguageEntity(new I18nLanguagePKEntity(HkSystemConstantUtil.I18_LANGUAGE.HINDI, HkSystemConstantUtil.COUNTRY_NZ), "Hindi", true, true, false, 1l, new Date());
+            languageEntity.setCountry1(countryEntity);
+            i18nService.addLanguage(languageEntity);
+            languageStrList.add(HkSystemConstantUtil.I18_LANGUAGE.HINDI);
+        }
+
+        if (!CollectionUtils.isEmpty(languageStrList)) {
+            List<I18nLabelEntity> staticLabels = new LinkedList<>();
+            for (String language : languageStrList) {
+                for (Map.Entry<String, String> entry : HkSystemConstantUtil.I18_NOTIFICATION_MAP.entrySet()) {
+                    String key = entry.getKey();
+                    String message = entry.getValue();
+                    I18nLabelEntity i18nLabelEntity = new I18nLabelEntity(new I18nLabelPKEntity(key, language, HkSystemConstantUtil.COUNTRY_NZ, LabelType.NOTIFICATION.name(), HkSystemConstantUtil.I18_ENTITY.NOTIFICATION, 0l), message, 1l, new Date(), "w");
+                    i18nLabelEntity.setCustom3b(Boolean.FALSE);
+                    i18nLabelEntity.setTranslationPending(Boolean.FALSE);
+                    staticLabels.add(i18nLabelEntity);
+                }
+            }
+            i18nService.updateAllLabels(staticLabels);
+        }
+
+        Map<Long, UMCompany> activeFranchises = userManagementServiceWrapper.retrieveActiveFranchises(true);
+        Map<Long, Map<String, List<I18nLabelEntity>>> franchiseWiseLangmap = new LinkedHashMap<>();
+        List<Long> franchises = new LinkedList<>();
+        franchises.add(0l);
+        if (!CollectionUtils.isEmpty(activeFranchises)) {
+            for (Long franchiseId : activeFranchises.keySet()) {
+                franchises.add(franchiseId);
+            }
+        }
+        List<I18nLabelEntity> i18nLabelEntitys = internationalizationServiceWrapper.retrieveLabelsForFranchises(null, franchises);
+        Map<String, I18nLabelEntity> franchiseZeroExtraDataMap = new LinkedHashMap<>();
+
+        if (!CollectionUtils.isEmpty(i18nLabelEntitys)) {
+            Map<String, List<I18nLabelEntity>> innerMap;
+            for (I18nLabelEntity i18nLabelEntity : i18nLabelEntitys) {
+                Long companyId = i18nLabelEntity.getLabelPK().getCompany();
+                String labelPK = i18nLabelEntity.getLabelPK().toString();
+                if (companyId == 0l) {
+                    franchiseZeroExtraDataMap.put(labelPK, i18nLabelEntity);
+                }
+                if (!franchiseWiseLangmap.containsKey(companyId)) {
+                    innerMap = new LinkedHashMap<>();
+                    List<I18nLabelEntity> tempi18Entitys = new ArrayList<>();
+                    tempi18Entitys.add(i18nLabelEntity);
+                    innerMap.put(i18nLabelEntity.getLabelPK().getLanguage(), tempi18Entitys);
+                } else {
+                    innerMap = franchiseWiseLangmap.get(companyId);
+                    if (!CollectionUtils.isEmpty(innerMap)) {
+                        List<I18nLabelEntity> tempi18Entitys;
+                        if (!innerMap.containsKey(i18nLabelEntity.getLabelPK().getLanguage())) {
+                            tempi18Entitys = new ArrayList<>();
+                        } else {
+                            tempi18Entitys = innerMap.get(i18nLabelEntity.getLabelPK().getLanguage());
+                        }
+                        tempi18Entitys.add(i18nLabelEntity);
+                        innerMap.put(i18nLabelEntity.getLabelPK().getLanguage(), tempi18Entitys);
+                    }
+                }
+                franchiseWiseLangmap.put(companyId, innerMap);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(franchises)) {
+            for (Long franchiseId : franchises) {
+                if (franchiseId != 0) {
+                    Map<String, I18nLabelEntity> franchiseZeroExtraDataMapNew = new LinkedHashMap<>();
+                    franchiseZeroExtraDataMapNew.putAll(franchiseZeroExtraDataMap);
+                    copyNewLabelsFromFranchise(franchiseZeroExtraDataMapNew, franchiseWiseLangmap.get(franchiseId), franchiseId);
+                }
+                writeLocalsInFile(franchiseId, franchiseWiseLangmap, languageStrList);
+            }
+        }
+    }
+
+    private void copyNewLabelsFromFranchise(Map<String, I18nLabelEntity> franchiseZeroExtraDataMap, Map<String, List<I18nLabelEntity>> labelsMap, Long franchise) {
+        if (!CollectionUtils.isEmpty(labelsMap)) {
+            for (String language : labelsMap.keySet()) {
+                List<I18nLabelEntity> labelEntities = labelsMap.get(language);
+                for (I18nLabelEntity labelEntity : labelEntities) {
+                    String labelPK = labelEntity.getLabelPK().toString();
+                    labelPK = labelPK.replaceFirst("company=" + labelEntity.getLabelPK().getCompany(), "company=0");
+                    if (franchiseZeroExtraDataMap.containsKey(labelPK)) {
+                        franchiseZeroExtraDataMap.remove(labelPK);
+                    }
+                }
+            }
+        }
+        List<I18nLabelEntity> newLabels = new LinkedList<>();
+        for (I18nLabelEntity labelEntity : franchiseZeroExtraDataMap.values()) {
+            I18nLabelEntity i18nLabelEntity = new I18nLabelEntity(new I18nLabelPKEntity(labelEntity.getLabelPK().getKey(), labelEntity.getLabelPK().getLanguage(), labelEntity.getLabelPK().getCountry(), labelEntity.getLabelPK().getType(), labelEntity.getLabelPK().getEntity(), franchise), labelEntity.getText(), labelEntity.getLastModifiedBy(), labelEntity.getLastModifiedOn(), labelEntity.getEnvironment());
+            i18nLabelEntity.setCustom3b(labelEntity.getCustom3b());
+            i18nLabelEntity.setTranslationPending(labelEntity.getTranslationPending());
+            newLabels.add(i18nLabelEntity);
+        }
+        internationalizationServiceWrapper.updateLabels(newLabels);
+    }
+
+    private void writeLocalsInFile(Long franchiseId, Map<Long, Map<String, List<I18nLabelEntity>>> franchiseWiseLangmap, List<String> languageStrList) {
+        Map<String, List<I18nLabelEntity>> langEntityMap = franchiseWiseLangmap.get(franchiseId);
+        if (!CollectionUtils.isEmpty(langEntityMap)) {
+            for (String language : languageStrList) {
+                List<I18nLabelEntity> writeForI18nLabelEntitys = langEntityMap.get(language);
+                if (!CollectionUtils.isEmpty(writeForI18nLabelEntitys)) {
+                    String modelEntity;
+                    boolean result = true;
+                    if (!CollectionUtils.isEmpty(langEntityMap) && langEntityMap.containsKey(language)) {
+                        StringBuilder fileNameBuilder = new StringBuilder();
+                        fileNameBuilder.append(WebApplicationInitializerConfig.projectDirectory);
+                        fileNameBuilder.append("/");
+                        fileNameBuilder.append(language.toUpperCase());
+                        fileNameBuilder.append(franchiseId);
+                        fileNameBuilder.append(".json");
+                        File i18File = new File(fileNameBuilder.toString());
+                        if (!i18File.exists()) {
+                            try {
+                                result = i18File.createNewFile();
+
+                            } catch (IOException ex) {
+                                java.util.logging.Logger.getLogger(ApplicationUtil.class
+                                        .getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        if (result) {
+                            JsonObject currentFilesJson = new JsonObject();
+                            for (I18nLabelEntity finalI18nLabelEntity : writeForI18nLabelEntitys) {
+
+                                if (finalI18nLabelEntity.getLabelPK().getEntity().contains(".")) {
+                                    modelEntity = finalI18nLabelEntity.getLabelPK().getEntity();
+                                } else {
+                                    modelEntity = finalI18nLabelEntity.getLabelPK().getEntity() + ".";
+                                }
+                                currentFilesJson.addProperty(modelEntity + finalI18nLabelEntity.getLabelPK().getKey(), finalI18nLabelEntity.getText());
+                            }
+                            try {
+                                Files.write(Paths.get(fileNameBuilder.toString()), currentFilesJson.toString().getBytes());
+
+                            } catch (IOException ex) {
+                                java.util.logging.Logger.getLogger(ApplicationUtil.class
+                                        .getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void copyLocalesOfFranchise(Long franchiseId) {
+
+        List<String> languageStrList = new LinkedList<>();
+        List<I18nLanguageEntity> activeLanguages = i18nService.retriveActiveLanguages();
+        if (!CollectionUtils.isEmpty(activeLanguages)) {
+            for (I18nLanguageEntity languageEntity : activeLanguages) {
+                languageStrList.add(languageEntity.getLanguagePK().getCode());
+            }
+        }
+
+        List<Long> franchises = null;
+        Map<Long, Map<String, List<I18nLabelEntity>>> franchiseWiseLangmap = new LinkedHashMap<>();
+        franchises = new LinkedList<>();
+        franchises.add(franchiseId);
+        List<I18nLabelEntity> i18nLabelEntitys = internationalizationServiceWrapper.retrieveLabelsForFranchises(null, franchises);
+
+        if (!CollectionUtils.isEmpty(i18nLabelEntitys)) {
+            Map<String, List<I18nLabelEntity>> innerMap;
+            for (I18nLabelEntity i18nLabelEntity : i18nLabelEntitys) {
+                if (!franchiseWiseLangmap.containsKey(i18nLabelEntity.getLabelPK().getCompany())) {
+                    innerMap = new LinkedHashMap<>();
+                    List<I18nLabelEntity> tempi18Entitys = new ArrayList<>();
+                    tempi18Entitys.add(i18nLabelEntity);
+                    innerMap.put(i18nLabelEntity.getLabelPK().getLanguage(), tempi18Entitys);
+                } else {
+                    innerMap = franchiseWiseLangmap.get(i18nLabelEntity.getLabelPK().getCompany());
+                    if (!CollectionUtils.isEmpty(innerMap)) {
+                        List<I18nLabelEntity> tempi18Entitys;
+                        if (!innerMap.containsKey(i18nLabelEntity.getLabelPK().getLanguage())) {
+                            tempi18Entitys = new ArrayList<>();
+                        } else {
+                            tempi18Entitys = innerMap.get(i18nLabelEntity.getLabelPK().getLanguage());
+                        }
+                        tempi18Entitys.add(i18nLabelEntity);
+                        innerMap.put(i18nLabelEntity.getLabelPK().getLanguage(), tempi18Entitys);
+                    }
+                }
+                franchiseWiseLangmap.put(i18nLabelEntity.getLabelPK().getCompany(), innerMap);
+            }
+        }
+
+        if (franchiseId != null) {
+            writeLocalsInFile(franchiseId, franchiseWiseLangmap, languageStrList);
+        }
+
+    }
+
+    public final static String retrieveProjectVersion() {
+        PropertyFileReader propertyFileReader = new PropertyFileReader();
+        return propertyFileReader.getPropertyValue("hkg.build.version", "hkg.properties");
+    }
+
+    private ActServiceEntity convertActivityServiceMapToActivityServiceEntity(String servicecode, String servicename) {
+        ActServiceEntity activityServiceEntity = new ActServiceEntity();
+        activityServiceEntity.setCompany(0l);
+        activityServiceEntity.setCreatedBy(1L);
+        activityServiceEntity.setCreatedOn(new Date());
+        activityServiceEntity.setIsArchive(false);
+        activityServiceEntity.setLastModifiedOn(new Date());
+        activityServiceEntity.setLastModifiedBy(1L);
+        activityServiceEntity.setServiceCode(servicecode);
+        activityServiceEntity.setServiceName(servicename);
+        activityServiceEntity.setServiceType(HkSystemConstantUtil.SERVICE_CODE_STATUS_MAP.get(servicecode));
+        activityServiceEntity.setServiceUrl("N/A");
+        activityServiceEntity.setStatus(ActSystemConstantUtil.STATUS.ACTIVE);
+
+        return activityServiceEntity;
+    }
+
+    public void initializeActActivityService() {
+        List<ActServiceEntity> retrieveAllServices = actActivityFlowService.retrieveAllServices(0l, null);
+        List<ActServiceEntity> finalListOfService = new ArrayList<>();
+        List<String> retrievedServiceCodeList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(retrieveAllServices)) {
+            for (ActServiceEntity activityService : retrieveAllServices) {
+                retrievedServiceCodeList.add(activityService.getServiceCode());
+            }
+        }
+        for (Map.Entry<String, String> entry : HkSystemConstantUtil.SERVICE_CODE_NAME_MAP.entrySet()) {
+            String service_code = entry.getKey();
+            String service_name = entry.getValue();
+            if (!retrievedServiceCodeList.contains(service_code)) {
+                ActServiceEntity activityService = this.convertActivityServiceMapToActivityServiceEntity(service_code, service_name);
+                finalListOfService.add(activityService);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(finalListOfService)) {
+            actActivityFlowService.saveAllServices(finalListOfService);
+        }
+
+    }
+}

@@ -1,0 +1,7 @@
+<suite thread-count="5" parallel="false" name="RegressionTest" annotations="JDK">
+    <test name="RegressionTest" junit="false">
+		<classes>
+		    <class name="com.argusoft.hkg.test.SampleTest"/>
+	</classes> 
+    </test>
+</suite> 

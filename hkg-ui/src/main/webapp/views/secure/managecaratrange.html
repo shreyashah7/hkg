@@ -1,0 +1,136 @@
+<div class="row" ng-init="initData()">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg" ng-show="!configureWorkFlow">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li class="active">{{entity + 'Carat Range'| translate }}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href=""  ng-click="addClick();">{{entity + 'Add Carat Range'| translate }}</a>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <form role="form" class="form-horizontal" novalidate name="caratRangeForm" >
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div ng-if="!!noCaratRangeList && noCaratRangeList.length > 0">
+                    <div class="row">
+                        <div class="col-md-4"><span>{{entity + "Carat values that don't fit any range:" | translate}}</span></div>
+                        <div class="row">&nbsp;</div>
+                        <div class="col-md-4">
+                            <table class="table table-bordered" ng-show="!!noCaratRangeList && noCaratRangeList.length > 0">
+                                <tr ng-repeat="carat in noCaratRangeList">
+                                    <td class="col-md-12">
+                                        {{ entity + carat | translate }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered" ng-if="flagNoCarat && caratRangeList.length <= 0">
+                    <tr>
+                        <td class="col-md-12">
+                            {{ entity + "No Carat Range exist" | translate }}
+                        </td>
+                    </tr>
+                </table>
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ng-show="!!caratRangeList && caratRangeList.length > 0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">{{entity + 'Min Value' | translate}}</th>
+                            <th class="text-center">{{entity + 'Max Value'|translate}}</th>
+                            <th class="text-center">{{entity + 'Action'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody >
+                        <tr ng-show="!!caratRangeList && caratRangeList.length > 0" ng-form="caratForm" ng-repeat="caratRange in caratRangeList">                            
+                            <td class="text-center col-md-4" ng-class="{'has-error': (this.caratForm.minVal.$invalid && (this.caratForm.minVal.$dirty || caratRange.editingdone)) || (caratRange.overlappingMin && caratRange.editingdone)}">
+                                <span ng-show="!caratRange.isEditing" class="wordRap" ng-bind="caratRange.minValue"></span>
+                                <input style="text-align: center" class="form-control col-md-3" maxlength="6" ng-show="caratRange.isEditing" ng-blur="formatNumber($index)" type="text" placeholder="00.000" ng-pattern="/^([[0-9]{0,2}(\.[0-9]{0,3})?)$/" name="minVal" required ng-model="caratRange.minValue"/>
+                                <div class="error help-block" ng-show="(this.caratForm.minVal.$dirty || caratRange.editingdone) && this.caratForm.minVal.$invalid">
+                                    <span class="help-block" ng-show="this.caratForm.minVal.$error.required">{{entity + "Enter min value" | translate }}</span>
+                                    <span class="help-block" ng-show='this.caratForm.minVal.$error.pattern'>{{entity + 'Enter valid min value. '| translate }}</span>
+                                </div>
+                                <div class="error help-block" ng-show="caratRange.overlappingMin && caratRange.editingdone">
+                                    <span class="help-block" ng-show="caratRange.overlappingMin && caratRange.editingdone">{{entity + "Value overlapped" | translate }}</span>
+                                </div>
+
+                            </td>
+                            <td class="text-center col-md-4" ng-class="{'has-error': (this.caratForm.maxVal.$invalid && (this.caratForm.maxVal.$dirty || caratRange.editingdone)) || (caratRange.minLessThanMaxFlag && caratRange.editingdone) || (caratRange.overlappingMax && caratRange.editingdone)}">
+                                <span ng-show="!caratRange.isEditing" class="wordRap" ng-bind="caratRange.maxValue"></span>
+                                <input style="text-align: center" class="form-control" maxlength="6" ng-show="caratRange.isEditing" ng-blur="formatNumber($index)" type="text" placeholder="00.000" ng-pattern="/^([[0-9]{0,2}(\.[0-9]{0,3})?)$/" name="maxVal" required ng-model="caratRange.maxValue"/>
+                                <div class="error help-block" ng-show="(this.caratForm.maxVal.$dirty || caratRange.editingdone) && this.caratForm.maxVal.$invalid">
+                                    <span class="help-block" ng-show="this.caratForm.maxVal.$error.required">{{entity + "Enter max value" | translate }}</span>
+                                    <span class="help-block" ng-show='this.caratForm.maxVal.$error.pattern'>{{entity + 'Enter valid max value. '| translate }}</span>
+                                </div>
+                                <div class="error help-block" ng-show="caratRange.minLessThanMaxFlag && caratRange.editingdone">
+                                    <span class="help-block" ng-show="caratRange.minLessThanMaxFlag && caratRange.editingdone">{{entity + "Max value should be less than min value" | translate }}</span>
+                                </div>
+                                <div class="error help-block" ng-show="caratRange.overlappingMax && caratRange.editingdone && !caratRange.minLessThanMaxFlag">
+                                    <span class="help-block" ng-show="caratRange.overlappingMax && caratRange.editingdone">{{entity + "Value overlapped" | translate }}</span>
+                                </div>
+                            </td>
+                            <td style="text-align: center" class="col-md-4"> 
+                                <a ng-show="!caratRange.isEditing"><span  class=" glyphicon glyphicon-edit" ng-click="editCaratRange($index)" title="Edit"></span></a>
+                                <a ><span ng-class="{'col-md-offset-1':!caratRange.isEditing}" class=" text-danger glyphicon glyphicon-remove" ng-click="deleteCaratRange($index)" title="Delete"></span></a>
+                                <a style="color: green" ng-show="caratRange.isEditing" ><span  class="col-md-offset-1 text-right glyphicon glyphicon-ok" ng-click="doneEditing(caratForm, $index)" title="Ok"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="form-group" ng-hide="caratRangeList.length < 1 && (toDelete === null || toDelete.length < 1)">
+                    <div class="col-xs-12 col-lg-12 text-right">
+                        <hr>
+                        <button class="btn btn-hkg pull-right" ng-click="saveAll()">Save</button>
+                        <button class="btn btn-link pull-right" ng-click="initData()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="removeCaratRangeModal">
+    <form name="removeCaratRangeForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideconformationForRemoveCaratRange();">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Remove Carat Range'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">                        
+                        <label for="assetCategory" class="col-md-12">
+                            {{ entity + "Are you sure you want to remove ?" | translate}}  
+                        </label>                                            
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideconformationForRemoveCaratRange();">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="removecaratrange();">
+                                        {{entity + 'Remove'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>        
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

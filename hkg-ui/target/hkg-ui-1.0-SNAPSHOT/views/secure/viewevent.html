@@ -1,0 +1,406 @@
+
+<form  class="form-horizontal" name="editCategoryForm" role='form' novalidate>
+    <div novalidate ng-if="editCategory">
+        <div class="row">
+            <div><h4> <span ng-show="parentCategoryHeader !== 'None'">{{parentCategoryHeader}}></span>{{childCategoryHeader}}</h4></div>    
+        </div>
+        <div class="form-group">
+            <label for="eventCategory"  class="col-md-2 control-label">
+                <span>{{ entity + 'Parent category' | translate}}</span>
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': addEventForm.eventCategory.$invalid}"> 
+                <div class="dropdown" >
+                    <button class="dropdown-toggle form-control text-left" id="eventCategorys" data-toggle="dropdown" >
+                        {{$parent.parentEventCategory.displayName.length > 20 ? $parent.parentEventCategory.displayName.substring(0, 20) + '...' :$parent.parentEventCategory.displayName}}<span class="text-right caret"></span>
+                    </button>
+                    <ul class="dropdown-menu col-xs-12" role="menu" aria-labelledby="eventCategorys">
+                        <div ng-click='editCategoryDropdownClick()'
+                             data-angular-treeview="true"
+                             data-tree-id="editEventCategoryDropdown"
+                             ag-treemodel="editCategoryEventCategoryListDropdown" search-id="parentId" entity-name="EVNTCTG_NM.">
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="categoryName"  class="col-md-2 control-label">
+                <span style="color: red">*</span>{{ entity + 'Title' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': editCategoryForm.categoryName.$invalid}"> 
+                <input type="text" ng-model="category.displayName"  name="categoryName" id="categoryName" class="form-control" maxlength="100" required ng-change="editCategoryForm.categoryName.$setValidity('exists', true)" ng-blur="checkCategoryUniqueName(editCategoryForm)">
+                <div class="error,help-block" ng-show="(editCategoryForm.categoryName.$dirty || categoryForm.submitted) && editCategoryForm.categoryName.$invalid">
+                    <span class="help-block" ng-show="editCategoryForm.categoryName.$error.required">{{ entity + 'Category not entered' | translate}}</span>
+                    <span class="help-block" ng-show="editCategoryForm.categoryName.$error.exists">{{ entity + "categoryExistsMsg" | translate}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="status"  class="col-md-2 control-label">
+                {{ entity + 'Status' | translate}}
+            </label>
+            <div class="col-md-6" ng-class="{'has-error': editCategoryForm.status.$invalid}" id="status"> 
+                <label class="radio-inline">
+                    <input type="radio" name="categoryStatus" ng-model="category.status" value="Active">{{ entity + 'Active' | translate}}
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="categoryStatus" ng-model="category.status" value="Remove">{{ entity + 'Remove category' | translate}}
+                </label>
+            </div>
+        </div>
+
+        <dynamic-form  input-css ="col-md-6" label-css="col-md-2 control-label" db-map="dbTypeForCategory" 
+                       internationalization-label="{{entity}}" form-name="form2" template="categoryTemplate" 
+                       ng-model="addCategoryData" ng-if="categoryTemplate" submit-flag-name="categoryForm.submitted">
+        </dynamic-form>  
+
+    </div>
+    <div>
+        <div class="row">
+            <div><h4> {{ entity + 'Upcoming Events' | translate}}</h4></div>    
+        </div>
+        <div >
+            <div class="table-responsive">
+                <div ng-if="eventResponse && allUpcomingEvents.length > 0">
+                    <table class="table table-striped col-md-12"  ag-data-table="allUpcomingEvents" dt-options="upcomingEventsDtOptions">
+                        <thead>
+                            <tr>
+                                <th class="col-md-1">
+                                    {{ entity + 'No' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'Banner ' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'Event' | translate}}
+                                </th>
+                                <th class="col-md-1" style=" white-space: nowrap;">
+                                    {{ entity + 'Event Date' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                    {{ entity + 'Status' | translate}}
+                                </th>
+                                <th class="col-md-1">
+                                    {{ entity + 'Registration(s)' | translate}}
+                                </th>
+                                <th class="col-md-2">
+                                </th>
+                                <th class="text-center col-md-1">
+                                    {{ entity + 'Actions' | translate}}
+                                </th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="event in allUpcomingEvents" dt-rows>
+
+                                <td class="col-md-1 draggable text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                
+                                <td class="col-md-1"><img ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name='+getThumbnailPath(event.bannerImageName))}}" style="height: 40px; width: 50px" ng-if='event.bannerImageName !== null' ng-click='bannerImagePopup(event.bannerImageName)'/></td>
+                                <td class="col-md-2"><span class="pointer" ng-bind="event.eventTitle.length > 10 ? event.eventTitle.substring(0, 10) + '.' : event.eventTitle" title="{{event.eventTitle}}" ng-click="viewRegistrationDetails(event)"></span></td>
+                                <td class="col-md-1"><span ng-bind="event.fromDate | date:dateFormat"></span></td>
+                                <td class="col-md-2"><span ng-bind="event.status"></span></td>
+                                <td class="col-md-1">
+                                    <!--<div ng-bind='entity + "ON" | translate' ng-if='event.status === "Upcoming"' popover-template="'partial.tpl.html'"  popover-placement="bottom" popover-trigger="mouseenter"></div>-->
+                                    <div ng-if='event.status === "Upcoming" && event.registrationType !== "OFLN"' rel="popover" ag-popover='mouseover'><span ng-bind='entity + "ON" | translate' ng-if='event.registrationLastDate >= todayDate'></span><span ng-bind='entity + "Closed" | translate' ng-if='event.registrationLastDate < todayDate'></span> -{{(event.employeeCount - event.pendingCount) > 0?(event.employeeCount - event.pendingCount):0}} {{entity + "done"|translate}}</div>
+                                    <div ng-if='event.status === "Upcoming" && event.registrationType === "OFLN"'><span ng-bind='entity + "Offline" | translate'></span></div>
+                                    <div class="hide popper-content" role="tooltip">
+                                        <div class="row">&nbsp;</div>
+                                        <div class="row">
+                                            <div class='col-md-8'>{{entity + "Employees"|translate}}:</div>
+                                            <div class='col-md-4'>{{event.employeeCount}}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class='col-md-8'>{{entity + "Adults"|translate}}:</div>
+                                            <div class='col-md-4'>{{event.recipientAdultCount}}</div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class='col-md-8'>{{entity + "Children"|translate}}:</div>
+                                            <div class='col-md-4'>{{event.recipientChildCount}}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class='col-md-8'>{{entity + "Pending"|translate}}:</div>
+                                            <div class='col-md-4'>{{event.pendingCount}}</div>
+                                        </div>
+
+                                    </div>
+                                    <div  ng-if='event.status !== "Upcoming" && event.registrationType !== "OFLN"'>
+                                        <span ng-bind='entity + "Not started" | translate' ng-if="event.registrationLastDate > todayDate"></span>
+                                        <span ng-bind='entity + "Closed" | translate' ng-if="event.registrationLastDate < todayDate" ></span><span ng-if="event.registrationLastDate < todayDate"> -{{(event.employeeCount - event.pendingCount) > 0?(event.employeeCount - event.pendingCount):0}} {{entity + "done"|translate}}</span>
+                                        <span ng-bind='entity + "ON" | translate' ng-if='event.registrationLastDate === todayDate'></span><span ng-if='event.registrationLastDate === todayDate'>-{{(event.employeeCount - event.pendingCount) > 0?(event.employeeCount - event.pendingCount):0}} {{entity + "done"|translate}}</span>
+                                    </div> 
+                                    <div ng-bind='entity + "Offline" | translate' ng-if='event.status !== "Upcoming" && event.registrationType === "OFLN"'></div> 
+                                </td>
+
+                                <td class='text-center col-md-2 hkg-nopadding' style="vertical-align: middle" >
+                                    <div class="row" ng-if="event.registrationStatus != undefined">
+                                        <div title="{{entity + 'Edit Registration'|translate}}">
+                                            <a class="btn btn-link col-md-1"  id="edit"  ng-disabled="checkDate(event)"><span class="glyphicon glyphicon-pencil"  ng-click="registerForEvent(event, true)"></span></a>
+                                        </div>
+                                        <div title="{{entity + 'Cancel Registration'|translate}}">
+                                            <a class="btn btn-link col-md-1"  id="cancel" ng-disabled="checkDate(event)"><span class="text-danger glyphicon glyphicon-remove" title="{{entity + 'Cancel Registration'|translate}}" ng-click="cancelRegistration(event)"></span></a>
+                                        </div>
+                                    </div>
+                                    <div class="row" ng-if="event.registrationStatus == undefined" title="{{entity + 'Register'|translate}}">
+                                        <a id="register" class="btn btn-link" ng-disabled="checkDate(event)" title="{{entity + 'Register'|translate}}">
+                                            <span class="glyphicon glyphicon-registration-mark big-font"  ng-click="registerForEvent(event, false)"></span>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class='text-center'>
+                                    <div class="pull-left">
+                                        <a id="templates" class="btn btn-link" title="{{entity + 'Invitation Card'|translate}}" ng-disabled="{{!(event.invitationTemplatePath !== null && enableCard(event))}}" ><span class="glyphicon glyphicon-certificate"  ng-click="showPreviewPopup(event);"></span></a>
+                                        <a ng-if="canAccess('eventsAddEdit') && checkFranchise(event) && event.status !== 'Ongoing'"><span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="editEvent(event.id)"></span></a>
+                                        <a class="btn btn-link hkg-nopadding" ng-if="canAccess('eventsAddEdit') && event.status === 'Ongoing'" ng-disabled="event.status === 'Ongoing' " title="{{entity + 'Edit'|translate}}">
+                                            <span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="editEvent(event.id)"></span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row" ng-if="eventResponse && allUpcomingEvents.length === 0">
+                <div class="col-lg-12 col-md-12 col-xs-12">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                                <span ng-bind="entity + 'No upcoming events' | translate"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>  
+        </div>
+
+        <div ng-if="!editCategory">
+            <div class="row">
+                <div ><h4> {{ entity + 'Completed Events' | translate}}</h4></div>    
+            </div>
+            <div class="table-responsive">
+                <div ng-if="eventResponse && allCompletedEvents.length > 0">
+                    <table class="table table-striped table-responsive" ag-data-table="allCompletedEvents" dt-options="completedEventsDtOptions">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {{ entity + 'No' | translate}}
+                                </th>
+                                <th>
+                                    {{ entity + 'Banner' | translate}}
+                                </th>
+                                <th>
+                                    {{ entity + 'Event' | translate}}
+                                </th>
+                                <th style=" white-space: nowrap;">
+                                    {{ entity + 'Event Date' | translate}}
+                                </th>
+
+                                <th class="text-center">
+                                    {{ entity + 'Action' | translate}}
+                                </th>
+                            </tr>
+
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="event in allCompletedEvents" dt-rows>
+                                <td class="col-md-1 draggable text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                <td class="col-md-2"><img ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name='+getThumbnailPath(event.bannerImageName))}}" style="height: 40px; width: 50px" ng-if='event.bannerImageName !== null' ng-click='bannerImagePopup(event.bannerImageName)'/></td>
+                                <td class="col-md-4"><span ng-bind="event.eventTitle.length > 20 ? event.eventTitle.substring(0, 20) + '.' : event.eventTitle" title="{{event.eventTitle}}"></span></td>
+                                <td class="col-md-2"><span ng-bind="event.fromDate | date:dateFormat"></span></td>
+                                <td class="col-md-2 text-center">
+                                    <a href="" ng-click="viewPhotoGallery(event); createPhotoGallery(event)
+                                       "><span title="View Image" class="glyphicon glyphicon-picture"></span></a>
+                                    <!--<button class="btn btn-link" ng-disabled="{{event.folderName === null}}" ng-click="galleryPopup(event.id);"><span class="glyphicon glyphicon-picture"></span></button>-->
+                                    <button class="btn btn-link" ng-disabled="checkCreator(event)"><span class="glyphicon glyphicon-remove text-danger"  ng-click='archieveEvent($index)' title="{{entity + 'Delete'|translate}}"></span></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row" ng-if="eventResponse && allCompletedEvents.length === 0">
+                    <div class="col-lg-12 col-md-12 col-xs-12">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    <span ng-bind="entity + 'No completed events' | translate"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>  
+            </div>
+        </div>
+        <div class="col-md-12" ng-if="editCategory">
+            <div class="row">
+                <hr/>
+                <div class="col-xs-12 pull-right text-right"> 
+                    <a href="" ng-click="initManageEvent()">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="saveEventCategory(editCategoryForm)">
+                        <span ng-bind="entity + 'Save Category' | translate" ></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!--Banner image popup-->
+        <div class="modal fade" role="dialog" id="bannerImagePopup" tabindex="-1" aria-hidden="true" >
+            <div class="modal-dialog">
+                <img ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name='+selectedBannerImageName)}}" height="400px" width="560px" ng-if="selectedBannerImageName !== undefined"/>
+            </div>
+        </div>
+
+        <!--        <div class="modal fade" role="dialog" id="galleryPopup" tabindex="-1" aria-hidden="true" >
+                    <div class="modal-dialog">
+        
+                        <div class="row">
+                            <div ng-if="photos != null">
+        
+                                <div id="checks" class="slider-gallery">
+        
+                                     enumerate all photos 
+                                    <img ng-repeat="photo in photos" class="slide-gallery img-responsive" style="height: 100%;width: 100%" ng-swipe-right="showPrev()" ng-swipe-left="showNext()" ng-show="isActive($index)" ng-src="{{photo.src}}" />
+                                    <a class="close" href="" ng-click="hideSlidergalleryPopup()">&times;</a>
+                                     prev / next controls 
+                                    <a id="prev" class="arrow-gallery prev-gallery" ng-click="showPrev()"></a>
+                                    <a id="next" class="arrow-gallery next-gallery" ng-click="showNext()"></a>
+                                </div>                     
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>-->
+
+        <div flow-init="uploadFile" flow-file-added="backgroundFileAdded($file, $flow)" flow-file-success="backgroundFileUploaded($file,$flow,addEventForm,$message)" flow-files-submitted="$flow.upload()">
+            <div class="modal fade" role="dialog" id="invitationCardPopup" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-hidden="true" >
+                <div class="modal-dialog">
+                    <div class="modal-content" style="width: 700px" >
+                        <div class="modal-header">
+                            <a class="close" href="" ng-click="hideInvitationCardPopup()">&times;</a>
+                            <h4 class="modal-title" id="myModalLabel">
+                                {{ entity + 'Invitation Card Preview' | translate}}
+                            </h4>
+                        </div>
+                        <!--</div>-->
+                        <!--<div class="col-md-8">-->
+                        <div  ng-if="event.invitationTemplatePath != null">
+                            <div ng-include src="getTemplateName()" id='templateModal'></div>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="row">
+                                <div class="col-md-6 pull-right">
+                                    <a target="_self" class="btn btn-hkg" href="{{appendAuthToken(apipath + 'event/generatepdfforself?eventId='+eventsId)}}">{{ entity + "Generate" | translate }}</a>
+                                </div>
+                            </div> 
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+</form>
+<!--<div flow-init="galleryUploadFile" flow-file-added="galleryFileAdded($file, $flow)" flow-file-success="galleryFileUploaded($file,$flow,$message)" flow-files-submitted="$flow.upload()">
+    <form class="form-horizontal" role="form"  name="addPhotoGalleryForm" novalidate> 
+        <div class="modal fade" role="dialog" id="addGalleryPopup" tabindex="-1" aria-hidden="true" >
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <a class="close" href="" ng-click="hideGalleryPopup(addGalleryPopup)">&times;</a>
+                        <h4 class="modal-title" id="myModalLabel">
+                            {{ entity + 'Manage event Gallery' | translate}}
+                        </h4>
+                    </div>
+                    <div class="modal-body" >
+                        <div class='form-group' >
+                            <label for="galleryUpload"  class="col-md-3 control-label">
+                                {{ entity + 'Gallery Upload' | translate}}
+                            </label>
+                            <div class="drop" flow-drop="" ng-class="dropClass">
+                                <button class="btn btn-hkg" flow-btn="">{{entity + 'Choose File'|translate}}<input type="file" multiple="multiple" style="visibility: hidden; position: absolute;"></button>
+                                <button class="btn btn-hkg" flow-btn="" flow-directory="" ng-show="$flow.supportDirectory">{{entity + 'Choose Folder'|translate}}<input type="file" multiple="multiple" webkitdirectory="webkitdirectory" style="visibility: hidden; position: absolute;"></button>
+                            </div>
+                            <br>
+                            <div>
+                                <div ng-repeat="file in $flow.files" class="gallery-box ng-scope" ng-if="$flow.files !== null">
+                                    <span class="title ng-binding">{{file.name}} </span>
+                                    <div class="thumbnail" ng-show="$flow.files.length">
+                                        <img flow-img="file" src="">
+                                    </div>
+                                    <div class="progress progress-striped" ng-class="{active: file.isUploading()}">
+                                        <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" ng-style="{width: (file.progress() * 100) + '%'}" style="width: 100%;">
+                                            <span class="sr-only ng-binding">1% Complete</span>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn btn-xs btn-danger" ng-click="file.cancel()">
+                                            Remove
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="row">
+                                <div class="col-md-6 pull-right">
+                                    <a href=""  ng-click="cancelGallery($flow)">{{ entity + 'Cancel' | translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="submitFilesAndSaveGallery($flow, addPhotoGalleryForm)">{{ entity + 'Save Gallery' | translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>-->
+
+<!--Remove event category popup-->
+<div class="modal fade" id="removeEventCategoryPopup" ng-if="editCategory">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="removeCategoryCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "Remove Event Category" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="col-md-12">
+                        {{ entity + "Are you sure you want to remove category "|translate }}{{ categoryName}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="removeCategoryCancel()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="removeAndSaveCategory(editCategoryForm)">
+                            {{ entity + "Remove" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+            document.onkeydown = checkKey;
+            function checkKey(e) {
+
+            e = e || window.event;
+                    if (e.keyCode == '37') {
+            // left arrow
+            $('#prev').click();
+            }
+            else if (e.keyCode == '39') {
+            // right arrow
+            $('#next').click();
+            }
+            }
+</script>

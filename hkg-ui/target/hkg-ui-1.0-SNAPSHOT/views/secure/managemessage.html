@@ -1,0 +1,322 @@
+
+
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Manage'|translate}}</li>
+                    <li >{{entity + 'Messaging'| translate}}</li>
+                    <li class="active uppercase" ng-show="!searchFlag && !isViewPage && isAccessSendMessage">{{entity + 'Compose Message'| translate }}</li>      
+                    <li class="active uppercase" ng-show="!searchFlag && isViewPage">{{entity + 'View Message'| translate }}</li>
+                    <li class="active uppercase" ng-show="searchFlag">{{entity + 'Search Message'| translate }}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span ng-show="searchFlag || isViewPage && isAccessSendMessage">
+                    <span class="glyphicon glyphicon-plus-sign text-primary">
+                    </span>&nbsp;
+                    <a ng-click="clear();
+                        resetSelected();">{{entity + 'Compose Message'| translate }} </a> 
+                </span>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-9 new-panel">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-xs-12 col-lg-12 well well-sm">
+                        <div class="input-group ">
+                            <div id="scrollable-dropdown-menu">
+                                <input class="typeahead" type="text"  placeholder="Search message by message,sender,receiver,date and/or year" 
+                                       ag-search="{{apipath}}messaging/searchByMessage" 
+                                       result-format="shortMessage,createdBy,nameRecipient" 
+                                       on-select="setMessageForEdit" 
+                                       on-enter="getSearchedMessage"
+                                       search-list-array='searchedMessageList'
+                                       id="scrollable-dropdown-menu"/>
+                            </div>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-hkg" ng-click="getSearchedMessage(searchedMessageList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                            </span>
+                        </div>
+                        <span ng-show="isInValidSearch">{{entity + 'No matching results'| translate }}</span>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </div>
+            </div>
+            <div class="row" ng-show="!displayMessageDetails">
+                <form role="form" name="messaging" class="form-horizontal" novalidate ng-submit="save.submit(messaging)">
+                    <div class="col-xs-12" ng-init="registerLocationChangeEvent(messaging);" ng-show="!isViewPage && !searchFlag && isAccessSendMessage"> 
+                        <div ng-mouseleave="setZero();">
+                            <div class="form-group required">
+
+                                <div class="col-md-3 control-label">
+
+                                    <label for="messagearea">
+                                        {{entity + 'Message'| translate }}
+                                    </label>
+                                </div>
+                                <div class="col-md-7">
+                                    <div class="row">
+                                        <div class="col-xs-10" ng-class="{'has-error': (messaging.message.$dirty || submitted) && messaging.message.$invalid}">
+                                            <textarea name="message" id="messagearea" rows="8" ng-trim="false" class="form-control" maxlength="500" required ng-model="message.messageBody" placeholder="Start typing your message here..." ng-change="retrieveMessageTemplates();"></textarea>
+                                            <div id="messagecounter" class="pull-right center">{{500 - message.messageBody.length}}&nbsp;  {{entity + 'characters left'| translate }}</div> 
+                                            <div class="error,help-block" ng-show="(messaging.message.$dirty || submitted) && messaging.message.$invalid">
+                                                <span class="help-block" ng-show="messaging.message.$error.required">{{ entity + 'Enter message' | translate }}</span>
+                                            </div>                   
+                                        </div>
+                                        <div class="col-xs-2" >
+                                            <span class="hkg-input-img glyphicon glyphicon-star-empty" tooltip-html-unsafe="{{entity + prioritytooltip|translate}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom" ng-if="!message.hasPriority" ng-click="setpriority();"></span>
+                                            <span class="hkg-input-img glyphicon glyphicon-star" tooltip-html-unsafe="{{entity + prioritytooltip|translate}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom" ng-if="message.hasPriority" ng-click="setpriority();"></span>                                      
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group" ng-show="totalItems > 0" class="ng-modal-overlay" >
+                                <div class="col-md-3 control-label">
+                                    <label for="templates">
+                                        {{entity + 'Available Templates'| translate }}
+                                    </label>
+                                </div>
+                                <div class="col-md-7">
+                                    <div>  
+                                        <div class="hkg-input-img-container">
+                                            <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="filteredmessages">
+                                                <thead>
+                                                    <tr>
+                                                        <th>{{ entity + 'Send To' | translate }}</th>
+                                                        <th>{{ entity + 'Message' | translate }}</th>
+                                                        <th>{{ entity + 'Action' | translate }}</th>
+                                                        <th>{{entity + 'Priority'|translate}}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr ng-repeat="msg in filteredmessages" style="cursor: pointer" dt-rows>
+                                                        <td>
+                                                            <div class="list-group-item-text" ng-click="setSelectedMessage(msg, $index)" ><span style="white-space:pre-wrap;">{{msg.nameRecipient}}</span></div>
+                                                        </td>
+                                                        <td>
+                                                            <div  ng-show="msg.messageBody.length <= 20"  class="list-group-item-text" ng-click="setSelectedMessage(msg, $index)" >{{msg.messageBody}}</div>
+                                                            <div  ng-show="msg.messageBody.length > 20" class="list-group-item-text" ng-click="setSelectedMessage(msg, $index)" >{{msg.shortMessage}}....</div>                                                       
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="glyphicon  glyphicon-remove text-center" title="Archive" ng-click="archiveMessage(msg, $index)"></span>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="star-image glyphicon glyphicon-star-empty text-center" tooltip-html-unsafe="{{entity + prioritytooltip|translate}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom" ng-if="!msg.hasPriority"></span>
+                                                            <span class="star-image glyphicon glyphicon-star text-center" tooltip-html-unsafe="{{entity + prioritytooltip|translate}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom" ng-if="msg.hasPriority"></span>                                      
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>              
+                            </div>
+                            <div class="form-group required" ng-show="totalItems == 0">
+                                <div class="col-md-3 control-label">
+                                    <label for="recipients">
+                                        {{entity + 'Send To'| translate }}
+                                    </label>
+                                </div>
+                                <div class="col-md-6">
+                                    <div ng-class="{'has-error': !recipientValid && submitted}">  
+                                        <div class="input-group">
+                                            <input type="text" class="col-xs-12 hkg-nopadding" name="recipients" id="recipients" value="blank" required ui-select2="autoCompleteRecipient" ng-model="message.nameRecipient"/>
+                                            <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                        </div>
+                                        <div class="error,help-block" ng-show="(!recipientValid && submitted)">
+                                            <span class="help-block" ng-show="(!recipientValid)">{{entity + 'Select recipients'| translate }}</span>
+                                        </div>
+                                    </div>
+                                </div>              
+                            </div>
+                            <div>
+                                <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" db-map="dbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalMessageTemplate" 
+                                               ng-model="addMessageData" ng-if="generalMessageTemplate" edit-flag="false" is-diamond="false" no-of-field-per-row = "1">
+                                </dynamic-form>   
+                            </div>
+                        </div>
+                        <br/>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a ng-click="clear();">{{entity + 'Cancel'| translate }}</a>
+                                    &nbsp;
+                                    <button class="btn btn-hkg" ng-click="message.isTemplate = false">{{entity + 'Send Message'| translate }}</button>
+                                </div>
+                            </div>
+                        </div>                       
+                    </div>
+                </form>
+            </div>
+            <div class="row" ng-show="!displayMessageDetails">
+                <div class="col-xs-12" ng-show="isViewPage && !searchFlag">
+                    <table width class="table table-bordered" ng-show="!(treeMessages.length > 0)">
+                        <tr>
+                            <td>
+                                {{entity + "No messages "| translate}}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div ng-if="treeMessages.length > 0">
+                        <form class="form-horizontal" role="form" novalidate>
+                            <h4><span> {{entity + selectedType| translate }}</span></h4>
+                            <br/>
+                            <div class="col-xs-12 col-lg-12 ">
+                                <button class="btn btn-hkg" ng-disabled="checkedCount == 0" ng-click="archieveMessages()">{{entity + 'Delete'| translate }}</button>
+                                <br/><br/>
+                                <div ng-show="treeMessages.length > 0" class="table-responsive">
+                                    <table class="table" ag-data-table="treeMessages">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input type="checkbox" ng-model="temp.allChecked" ng-change="onSelectCheckboxAll()">
+                                                </th>
+                                                <th>
+                                                    <span ng-show="selectedMsgType == 'Inbox' || selectedMsgType == 'Priority'">{{ entity + "From" | translate }}</span>
+                                                    <span ng-show="selectedMsgType == 'Sent'">{{ entity + "To" | translate }}</span>
+                                                </th>
+                                                <th>{{ entity + "Message" | translate }}</th>
+                                                <th>{{ entity + "On" | translate }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!--dt-rows--> 
+                                            <tr ng-repeat="msg in treeMessages| filter: search" style="cursor: pointer;font-weight:{{msg.isAttended?'normal':'bold'}}" ng-class="{'row-color-change' : checkDate(msg.createdOn) }" dt-rows>
+                                                <td class="col-md-1">
+                                                    <input type="checkbox" ng-model="msg.isChecked" ng-change="onSelectCheckbox(msg)"/>
+                                                </td>
+                                                <td class="col-md-3">
+                                                    <div class="col-md-1">
+                                                        <div ng-show="{{msg.hasPriority}}">
+                                                            <span style="top: 0px" class="hkg-input-img glyphicon glyphicon-star" tooltip-html-unsafe="{{entity + hasprioritytooltip|translate}}"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span>
+                                                        </div>
+                                                    </div>
+                                                    <span ng-show="msg.fullname == null" ng-bind="msg.nameRecipient.length > 15 ? msg.nameRecipient.substring(0, 15)+ '...' : msg.nameRecipient" tooltip="{{ entity + msg.nameRecipient| translate}}" tooltip-trigger="mouseenter" tooltip-placement="right" ></span>
+                                                    <span ng-show="msg.fullname.length > 0" tooltip="{{ entity + msg.fullname| translate}}" tooltip-trigger="mouseenter" tooltip-placement="right" >{{msg.nameRecipient}}...</span>
+                                                </td>
+                                                <td> 
+                                                    <span ng-show="msg.messageBody.length <= 10" ng-click="retrieveMessageDetailsById(msg)">{{msg.messageBody}}</span>
+                                                    <span ng-show="msg.messageBody.length > 10"  tooltip="{{entity + msg.messageBody| translate}}" tooltip-trigger="mouseenter" tooltip-placement="right" ng-click="retrieveMessageDetailsById(msg)">{{msg.shortMessage}}...</span>
+                                                </td>
+                                                <td class="col-md-2">
+                                                    <span>{{formatDate(msg.createdOn)}}</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!--Message Details-->
+            <div ng-show="displayMessageDetails">
+
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <h4>
+                            {{ entity + 'Message Details' | translate}}
+                        </h4>
+                    </div>
+                </div>
+                <form  class="form-horizontal" name="MessageDetailsPopupForm" role='form' novalidate>
+                    <div>
+                        <div class="form-group">
+                            <label for="selectedMessage" class="col-md-3 control-label">
+                                {{ entity + 'Message' | translate}}
+                            </label>
+                            <div class="col-md-8"> 
+                                <p class="form-control-static" id="selectedMessage"><span ng-bind="selectedMessage.messageBody"></span></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label  class="col-md-3 control-label">
+                                {{ entity + 'Recieved On' | translate}}
+                            </label>
+                            <div class="col-md-3"> 
+                                <p class="form-control-static"><span>{{selectedMessage.createdOn| date:'mediumDate'}} {{selectedMessage.createdOn| date:'shortTime'}}</span></p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label  class="col-md-3 control-label">
+                                {{ entity + 'Recieved By' | translate}}
+                            </label>
+                            <div class="col-md-8"> 
+                                <p class="form-control-static"><span ng-bind="selectedMessage.createdBy"></span></p>
+                            </div>
+                        </div>
+                        
+                        <dynamic-form  input-css ="col-md-6" label-css="col-md-3 control-label" db-map="dbType" 
+                                       internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalMessageTemplate" 
+                                       ng-model="addMessageData" ng-if="generalMessageTemplate" edit-flag="false" is-diamond="false" no-of-field-per-row = "1" view-only="true">
+                        </dynamic-form> 
+                        <div class="col-md-12" >
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> 
+                                    <a href="" ng-click="markClosedMsg(selectedMessage)">
+                                        {{ entity + 'Cancel' | translate}}
+                                    </a>&nbsp;
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="row">
+                <div class="col-xs-12" ng-show="searchFlag">
+                    <div ng-include src="'views/secure/searchedmessages.html'"></div>
+                </div>
+            </div>
+        </div>
+
+        <!--Tree component-->
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'Existing messages'| translate }}</strong></span>
+                <hr class="margin-md"/>
+                <div ng-if="messageTreeListOption" ng-click='openViewPage(selectedTreeMessage.currentNode, true)'
+                     data-angular-treeview="true"
+                     data-tree-id="selectedTreeMessage"
+                     ag-treemodel="messageTreeListOption">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" role="dialog" id="showmsgmodal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    <b>{{entity + 'Messages'|translate}}</b>
+                </h4>
+                <div class="list-group list-special">
+                    <a class="row list-group-item" ng-repeat="message in unreadMessages">
+                        <div class="col-xs-2 text-center notification-image-icon">
+                            <span class="glyphicon glyphicon-user"></span>
+                        </div>
+                        <div class="col-xs-10">
+                            <div class="col-xs-10"><label class="control-label">{{message.createdBy}}</label></div>
+                            <div class="col-xs-2 text-right" ng-show="{{message.status === 'P'}}"><button class="btn-hkg pull-right" ng-click="markClosedMsg(message, $index)" ng-disabled="alert.$invalid">{{entity + 'Close'| translate }}</button></div>
+                            <div class="col-xs-12"><label class="control-label">{{message.createdOn| date:'mediumDate'}} {{message.createdOn| date:'shortTime'}}</label></div>
+                            <div id="wordRap" class="col-xs-12"  ng-show="{{message.messageBody !== null}}">
+                                {{message.messageBody}}
+                            </div>
+                        </div>
+                    </a>
+                </div>                        
+            </div>
+        </div >
+    </div>
+</div>

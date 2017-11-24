@@ -1,0 +1,545 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 new-panel">
+            <div ng-form="regForm">
+                <form method="POST" class="form-horizontal" name="regForm" novalidate>
+                    <div class="col-xs-12 col-lg-12">
+                        <h4>
+                            <div class="col-xs-12 hkg-bold">
+                                <span style="word-break: break-all">{{selectedEventForRegistration.eventTitle}}</span>
+                            </div> 
+                        </h4>
+                    </div>
+                    <div class="col-md-12" ng-if="(selectedEventForRegistration.bannerImageName !== null) && (selectedEventForRegistration.bannerImageName !== undefined) && (selectedEventForRegistration.bannerImageName !== '')">
+                        <img class="col-md-12" ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name=' + selectedEventForRegistration.bannerImageName)}}" style="height: 300px"/> 
+                    </div>
+                    &nbsp;&nbsp;&nbsp;
+                    <div class='clearfix'></div>
+                    <div class='col-md-12'>
+                        <div>
+                            <h4>
+                                <div class="col-md-12">
+                                    {{entity + 'Description'|translate}}
+                                </div>
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <span style="word-break: break-all">{{selectedEventForRegistration.description}}</span>
+                        </div>
+                    </div>
+                    &nbsp;&nbsp;
+                    <div class='clearfix'></div>
+                    <div class='col-md-12'>
+                        <div>
+                            <h4>
+                                <div class="col-md-12">
+                                    {{entity + 'Venue'|translate}}
+                                </div>
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <span style="word-break: break-all"> {{selectedEventForRegistration.address}}</span>
+                        </div>
+                    </div>
+                    &nbsp;&nbsp;
+                    <div class='clearfix'></div>
+                    <div class='col-md-12'>
+                        <div>
+                            <h4>
+                                <div class="col-md-12">
+                                    <span style="word-break: break-all" ng-bind="entity + 'Schedule' | translate"></span>
+                                </div>
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            {{selectedEventForRegistration.fromDate|date:dateFormat}}
+                            to {{selectedEventForRegistration.toDate|date:dateFormat}}
+                            <br>
+                            {{selectedEventForRegistration.strtTime|date:" h:mma"}} onwards
+                        </div>
+                    </div>
+                    &nbsp;&nbsp;
+                    <div class='col-md-12' ng-if="!viewRegistrationDetail">
+                        <div>
+                            <h4>
+                                <div class="col-md-12">
+                                    {{entity + 'Register Now'|translate}}
+                                </div>
+                            </h4>
+                        </div>
+                        <div class="pull-right">
+                            <label class="checkbox-inline">
+                                <input type="checkbox"  name="notAttending" ng-model="reg.notAttending" >{{ entity + 'Will Not Be Attending' | translate}}
+                            </label>
+                        </div>
+                        <br>
+                        <div ng-if="reg.notAttending" ng-form="reasonForm" class='form-group required'>
+                            <label for="reason" class="col-md-2 control-label">{{entity + 'Reason'| translate}}</label>
+                            <div class="col-md-8" ng-class="{'has-error': reasonForm.reason.$invalid && (reasonForm.reason.$dirty || formSubmitted)}">                    
+                                <textarea required rows="5" maxlength="500" id="reason" name="reason" ng-required="true" class="form-control" ng-model="reg.reason" ></textarea>                                
+                                <div style="text-align: right;">{{500 - reg.reason.length}} {{ entity + "characters remains" | translate }}</div>
+                                <div class="error,help-block" ng-show="(reasonForm.reason.$dirty || formSubmitted) && reasonForm.reason.$invalid">
+                                    <span class="help-block" ng-show="reasonForm.reason.$error.required">{{ entity + "Reason not entered" | translate }}</span>
+                                    <span class="help-block" ng-show="reasonForm.reason.$error.maxlength">{{ entity + "Maximum 500 characters" | translate }}</span>
+                                </div>
+                            </div> 
+                        </div>
+                        <div ng-if="!reg.notAttending">
+                            <div ng-form="countForm">
+                                <div class='form-group required'>
+
+                                    <label for="No.of adults"  class="col-md-3 control-label">
+                                        {{ entity + 'No.Of Adults' | translate}}
+                                    </label>
+
+
+                                    <div ng-class="{'has-error': countForm.adults.$invalid && (countForm.adults.$dirty || formSubmitted)}" class="col-md-5">
+                                        <input type="number" min="0" ng-model="reg.adults" name="adults" required class="form-control" placeholder="{{entity + 'No of Adults'|translate}}" max='50'/>
+                                        <div class="error,help-block" ng-show="(countForm.adults.$dirty || formSubmitted) && countForm.adults.$invalid">
+                                            <span class="help-block" ng-show="countForm.adults.$error.required">{{ entity + 'Adult count not entered' | translate}}</span>                                        
+                                            <span class="help-block" ng-show="countForm.adults.$error.max">{{ entity + "Maximum 50 is allowed" | translate }}</span>
+                                            <span class="help-block" ng-show="countForm.adults.$error.min">{{ entity + "Negative number is not allowed" | translate }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='form-group required'>
+
+                                    <label for="No.of children"  class="col-md-3 control-label">
+                                        {{ entity + 'No.Of Children' | translate}}
+                                    </label>
+
+                                    <div ng-class="{'has-error': countForm.children.$invalid && (countForm.children.$dirty || formSubmitted)}" class="col-md-5">
+                                        <input type="number" min="0" ng-model="reg.children" name="children" required class="form-control" placeholder="{{entity + 'No of Child'|translate}}" max='50'/>
+                                        <div class="error,help-block" ng-show="(countForm.children.$dirty || formSubmitted) && countForm.children.$invalid">
+                                            <span class="help-block" ng-show="countForm.children.$error.required">{{ entity + 'Child count not entered' | translate}}</span>   
+                                            <span class="help-block" ng-show="countForm.children.$error.max">{{ entity + "Maximum 50 is allowed" | translate }}</span>
+                                            <span class="help-block" ng-show="countForm.adults.$error.min">{{ entity + "Negative number is not allowed" | translate }}</span>
+                                        </div>
+                                    </div><br/>
+                                </div>
+
+                                <div ng-repeat="field in selectedEventForRegistration.registrationFieldsDataBean">
+                                    <div class="form-group">
+                                        <label class="col-md-3 control-label">
+                                            <span style="color: red" ng-if="field.validationPattern === 'required'">*</span>{{field.fieldName}}
+                                        </label>
+                                        <div ng-class="{'has-error': countForm.fieldValue.$invalid && (countForm.fieldValue.$dirty || formSubmitted)}" class="col-md-5">
+                                            <input type="text" id="fieldValue" name="fieldValue" ng-required="field.validationPattern === 'required'" class="form-control" ng-model="field.value" placeholder="{{entity + 'Value of the field'|translate}}" max='50'/>
+                                            <div class="error,help-block" ng-show="(countForm.fieldValue.$dirty || formSubmitted) && countForm.fieldValue.$invalid">
+                                                <span class="help-block" ng-show="countForm.fieldValue.$error.required">{{ entity + 'Value not entered' | translate}}</span>   
+                                                <span class="help-block" ng-show="countForm.fieldValue.$error.max">{{ entity + "Maximum 50 is allowed" | translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <h4>
+                                <div class=" col-lg-12">
+                                    {{entity + 'Guest Information'|translate}}
+                                </div>
+                            </h4>
+                            <div class="clearfix"></div>
+                            <div class="panel panel-default">
+                                <div class="panel-body ">
+                                    <div class='form-group' ng-form="newGuestForm">
+                                        <label for="Name"  class="col-md-2 pull-left control-label">
+                                            {{ entity + 'Guest Name'| translate}}
+                                        </label>
+                                        <div ng-class="{'has-error': newGuestForm.gname.$invalid && (newGuestForm.gname.$dirty || newFieldFormSubmitted)}"  class="col-md-3">
+                                            <input type="text" ng-model="regGuest.gname" name="gname" required class="form-control" placeholder="{{entity + 'Name of guest'|translate}}" maxlength="50"/>
+                                            <div class="error,help-block" ng-show="(newGuestForm.gname.$dirty || newFieldFormSubmitted) && newGuestForm.gname.$invalid">
+                                                <span class="help-block" ng-show="newGuestForm.gname.$error.required">{{ entity + 'Guest name not entered' | translate}}</span>                                        
+                                            </div>
+                                        </div>
+                                        <label for="Relationship"  class="col-md-3 pull-left control-label">
+                                            {{ entity + 'Guest Relation' | translate}}
+                                        </label>
+                                        <div ng-class="{'has-error': newGuestForm.grel.$invalid && (newGuestForm.grel.$dirty || newFieldFormSubmitted)}" class="col-md-3">
+                                            <input type="text" ng-model="regGuest.grel" name="grel" required class="form-control" placeholder="{{entity + 'Relation with guest'|translate}}" maxlength="50"/>
+                                            <div class="error,help-block" ng-show="(newGuestForm.grel.$dirty || newFieldFormSubmitted) && newGuestForm.grel.$invalid">
+                                                <span class="help-block" ng-show="newGuestForm.grel.$error.required">{{ entity + 'Relationship not entered' | translate}}</span>                                        
+                                            </div>
+                                        </div>
+                                        <span class="col-md-1 glyphicon-plus-sign glyphicon big-font" ng-click="addGuest(newGuestForm, regGuest)"></span>
+                                    </div>
+                                </div>                   
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="panel panel-default" ng-repeat="guest in guests">
+                                <div class="panel-body">
+                                    <div class='form-group' ng-form="addedGuestForm">
+                                        <label for="Name"  class="col-md-2 pull-left control-label">
+                                            {{ entity + 'Name'| translate}}
+                                        </label>
+                                        <div ng-class="{'has-error': addedGuestForm.gname.$invalid && addedGuestForm.gname.$dirty}" class="col-md-3">
+                                            <input type="text" ng-model="guest.name" name="gname" required class="form-control" placeholder="{{entity + 'Name of guest'|translate}}" max='50'/>
+                                            <div class="error,help-block" ng-show="(addedGuestForm.gname.$dirty) && addedGuestForm.gname.$invalid">
+                                                <span class="help-block" ng-show="addedGuestForm.gname.$error.required">{{ entity + 'Guest name not entered' | translate}}</span>                                        
+                                            </div>
+                                        </div>
+                                        <label for="Relationship"  class="col-md-2 pull-left control-label">
+                                            {{ entity + 'Relationship' | translate}}
+                                        </label>
+                                        <div ng-class="{'has-error': addedGuestForm.grel.$invalid && addedGuestForm.grel.$dirty}" class="col-md-3">
+                                            <input type="text" ng-model="guest.relation" name="grel" required class="form-control" placeholder="{{entity + 'Relation with guest'|translate}}" max='50'/>
+                                            <div class="error,help-block" ng-show="(addedGuestForm.grel.$dirty) && addedGuestForm.grel.$invalid">
+                                                <span class="help-block" ng-show="addedGuestForm.grel.$error.required">{{ entity + 'Relationship not entered' | translate}}</span>                                        
+                                            </div>
+                                        </div>
+                                        <span class=" col-md-2 glyphicon-remove text-danger glyphicon big-font" ng-click="removeGuest($index)"></span>
+                                    </div>
+                                </div>                   
+                            </div>
+                            &nbsp;
+                        </div> 
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="cancel(regForm)">{{ entity + "Cancel"|translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="register(regForm, reg)" ng-if="!selectedEventForRegistration.registrationStatus">{{ entity + "Register"|translate}}</button>
+                                    <button class="btn btn-hkg" ng-click="register(regForm, reg)" ng-if="selectedEventForRegistration.registrationStatus">{{ entity + "Update"|translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12" ng-if="viewRegistrationDetail && !viewMeetingDetailsPopup">
+                        <div>
+                            <h4>
+                                <div class="col-md-12">
+                                    {{entity + 'Registration Details'|translate}}
+                                </div>
+                            </h4>
+                        </div>
+
+                        <div class='form-group'>
+                            <label for="totalCount"  class="col-md-3 control-label">
+                                {{ entity + 'Total' | translate}}
+                            </label>
+                            <div class="col-md-6"> 
+                                <span  class="col-md-3 control-label">
+                                    <a><span>{{totalCount}}</span></a>
+                                </span>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <label for="attendeeCount"  class="col-md-3 control-label">
+                                {{ entity + 'Attending' | translate}}
+                            </label>
+                            <div class="col-md-6"> 
+                                <label  class="col-md-3 control-label">
+                                    <a style="text-decoration: underline"><span ng-click="showEventDetailsPopup(selectedEventForRegistration, 'Attending')">{{attendeeCount}}</span></a>
+                                </label>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <label for="notAttendeeCount"  class="col-md-3 control-label">
+                                {{ entity + 'Not Attending' | translate}}
+                            </label>
+                            <div class="col-md-6"> 
+                                <label  class="col-md-3 control-label">
+                                    <a style="text-decoration: underline"><span ng-click="showEventDetailsPopup(selectedEventForRegistration, 'NonAttending')">{{notAttendingCount}}</span></a>
+                                </label>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <label for="awaitingResponseCount"  class="col-md-3 control-label">
+                                {{ entity + 'Awaiting Response' | translate}}
+                            </label>
+                            <div class="col-md-6"> 
+                                <label  class="col-md-3 control-label">
+                                    <a style="text-decoration: underline"><span ng-click="showEventDetailsPopup(selectedEventForRegistration, 'AwaitingResponse')">{{awaitingResponseCount}}</span></a>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> 
+                                    <a ng-click="cancel(regForm)">{{ entity + "Return"|translate}}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12" ng-if="viewMeetingDetailsPopup">
+                        <h4>
+                            <span>{{ entity + "View Event Details" | translate }}</span>
+                        </h4>
+                        <br/>
+                        <br/>
+                        <div class="form-group row">
+                            <label for="attendeeStatus"  class="col-md-2 control-label">
+                                <span>{{ entity + 'Status' | translate}}</span>
+                            </label>
+                            <div class="col-md-6" >
+                                <select ng-change="retrieveAttendeeListOnStatus(attendee.status)" class="form-control" ng-options="status.id as status.label for status in attendeeStatus" ng-model="attendee.status" name="attendeeStatus"> 
+                                </select>   
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" ng-if="attendee.status !== 'NonAttending'">
+                            <div ng-if="regResponse && attendeesOnstatus.length > 0">
+                                <table class="table table-striped table-responsive" ag-data-table="attendeesOnstatus">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                {{ entity + 'Sr. No' | translate}}
+                                            </th>
+                                            <th>
+                                                {{ entity + 'Employee Name' | translate}}
+                                            </th>
+                                            <th>
+                                                {{ entity + 'Adults' | translate}}
+                                            </th>
+                                            <th>
+                                                {{ entity + 'Children' | translate}}
+                                            </th>
+
+                                            <th>
+                                                {{ entity + 'Guests' | translate}}
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="attendee in attendeesOnstatus" dt-rows>
+                                            <td class="text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                            <td><span class="pointer" ng-bind="attendee.empName" ng-click="openRegDetails(selectedEventForRegistration, attendee)"></span></td>
+                                            <td class="text-right"><span ng-bind="attendee.adultCount"></span></td>
+                                            <td class="text-right"><span ng-bind="attendee.childCount"></span></td>
+                                            <td>
+                                                <span ng-if="attendee.guests.length > 0" ng-repeat="guest in attendee.guests">{{guest.name}}- {{guest.relation}}<br/></span>
+                                                <span ng-if="attendee.guests === null">{{entity + 'N/A'|translate}}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div ng-if="regResponse && attendeesOnstatus.length === 0">
+                                <span ng-bind="entity + 'No Invitees available' | translate"></span>
+                            </div>
+                        </div><br/>
+
+                        <div class="table-responsive" ng-if="attendee.status === 'NonAttending'">
+                            <div ng-if="regResponse && attendeesOnstatus.length > 0">
+                                <table class="table table-striped table-responsive" ag-data-table="attendeesOnstatus">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                {{ entity + 'Sr. No' | translate}}
+                                            </th>
+                                            <th>
+                                                {{ entity + 'Employee Name' | translate}}
+                                            </th>
+                                            <th>
+                                                {{entity + 'Reason' | translate}}
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="attendee in attendeesOnstatus" dt-rows>
+                                            <td class="text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                            <td><span ng-bind="attendee.empName"></span></td>
+                                            <td><span ng-bind="attendee.reason"></span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div ng-if="regResponse && attendeesOnstatus.length === 0">
+                                <span ng-bind="entity + 'No Invitees available' | translate"></span>
+                            </div>
+                        </div><br/>
+
+
+                        <div class="form-group" ng-if="selectedEventForRegistration.invitationTemplateName">
+                            <label for="export"  class="col-md-3 control-label">
+                                <span>{{ entity + 'Export Invitations: ' | translate}}</span>
+                            </label>
+                            <div class="col-md-3" ng-init="setDefaultPrintType()">
+                                <select ng-change="exportChange(printType)" class="form-control" ng-model="printType" ng-options="printType.id as printType.label for printType in printTypeList" name="printType">
+                                </select>   
+                            </div>
+                            <div class="col-md-3" >
+                                <a target="_self" class="btn btn-hkg" ng-disabled="disablePdf" href="{{appendAuthToken(apipath + 'event/generatepdf?eventId=' + eventsId + '&printType=' + printType)}}">{{ entity + "Generate" | translate }}</a>&nbsp;
+                                <a href="" ng-click="hideMeetingDetailCancel()">
+                                    {{ entity + 'Cancel' | translate}}
+                                </a>
+                            </div>
+                        </div><br/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="registrationDetailsOfUserPopup" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hideRegDetialsOfUserCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{regDtls.empName}}'s - {{ entity + "Registration Details" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class='form-group row'>
+                    <label for="noOfAdults"  class="col-md-4 control-label">
+                        {{ entity + 'No of Adults' | translate}}
+                    </label>
+                    <div class="col-md-8"> 
+                        <span class="col-md-3 control-label">
+                            <span>{{regDtls.adults}}</span>
+                        </span>
+                    </div>
+                </div>
+                <div class='form-group row'>
+                    <label for="noOfChildren"  class="col-md-4 control-label">
+                        {{ entity + 'No of Children' | translate}}
+                    </label>
+                    <div class="col-md-8"> 
+                        <span  class="col-md-3 control-label">
+                            <span>{{regDtls.children}}</span>
+                        </span>
+                    </div>
+                </div>
+                <div ng-repeat="field in regDetails.registrationFieldsDataBean">
+                    <div class="form-group row">
+                        <label class="col-md-4 control-label">
+                            {{field.fieldName}}
+                        </label>
+                        <div class="col-md-8"> 
+                            <span class="col-md-3 control-label" ng-if="field.value !== undefined && field.value !== null">
+                                <span>{{field.value}}</span>
+                            </span>
+                            <span class="col-md-3 control-label" ng-if="field.value === undefined || field.value === null">
+                                <span>N/A</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped table-responsive" ng-if="guestsDtls.length > 0" ag-data-table="guestsDtls">
+                    <thead>
+                        <tr>
+                            <th>
+                                {{ entity + 'Sr. No' | translate}}
+                            </th>
+                            <th>
+                                {{ entity + 'Guest Name' | translate}}
+                            </th>
+
+                            <th>
+                                {{ entity + 'Guest Relation' | translate}}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="guest in guestsDtls" dt-rows>
+                            <td><span>{{$index + 1}}</span></td>
+                            <td><span ng-bind="guest.name"></span></td>
+                            <td><span ng-bind="guest.relation"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="row" ng-if="guestsDtls.length === 0">
+                    <div class="col-lg-12 col-md-12 col-xs-12">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    <span ng-bind="entity + 'No Guests coming' | translate"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--<div class="modal fade" role="dialog" id="viewMeetingDetailsPopup" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hideMeetingDetailCancel()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "View Event Details" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body" >
+                <div class="form-group row">
+                    <label for="attendeeStatus"  class="col-md-2 control-label">
+                        <span>{{ entity + 'Status' | translate}}</span>
+                    </label>
+                    <div class="col-md-6" >
+                        <select ng-change="retrieveAttendeeListOnStatus(attendee.status)" class="form-control" ng-options="status.id as status.label for status in attendeeStatus" ng-model="attendee.status" name="attendeeStatus"> 
+                        </select>   
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <div ng-if="regResponse && attendeesOnstatus.length > 0">
+                        <table class="table table-striped table-responsive" ag-data-table="attendeesOnstatus" dt-options="attendeeDtOptions">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {{ entity + 'Sr. No' | translate}}
+                                    </th>
+                                    <th>
+                                        {{ entity + 'Employee Name' | translate}}
+                                    </th>
+                                    <th>
+                                        {{ entity + 'Adults' | translate}}
+                                    </th>
+                                    <th>
+                                        {{ entity + 'Children' | translate}}
+                                    </th>
+
+                                    <th>
+                                        {{ entity + 'Guests' | translate}}
+                                    </th>
+                                </tr>
+
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="attendee in attendeesOnstatus" dt-rows>
+                                    <td><span ng-bind="{{$index + 1}}"></span></td>
+                                    <td><span ng-bind="attendee.empName" ng-click="openRegDetails(selectedEventForRegistration)"></span></td>
+                                    <td><span ng-bind="attendee.adultCount"></span></td>
+                                    <td><span ng-bind="attendee.childCount"></span></td>
+                                    <td>
+                                        <span ng-if="attendee.guests.length > 0" ng-repeat="guest in attendee.guests">{{guest.name}}- {{guest.relation}}<br/></span>
+                                        <span ng-if="attendee.guests === null">{{entity + 'N/A'|translate}}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div ng-if="regResponse && attendeesOnstatus.length === 0">
+                        <span ng-bind="entity + 'No Invitees available' | translate"></span>
+                    </div>
+                </div><br/>
+                <div class="form-group" ng-if="selectedEventForRegistration.invitationTemplateName">
+                    <label for="export"  class="col-md-3 control-label">
+                        <span>{{ entity + 'Export Invitations: ' | translate}}</span>
+                    </label>
+                    <div class="col-md-3" ng-init="setDefaultPrintType()">
+                        <select ng-change="exportChange(printType)" class="form-control" ng-model="printType" ng-options="printType.id as printType.label for printType in printTypeList" name="printType">
+                        </select>   
+                    </div>
+                                        <div class="col-md-3" >
+                                            <select ng-init="setDefaultExportType()"  class="form-control" ng-options="export.id as export.label for export in exportTypeList" ng-model="exportType" name="exportType"> 
+                                            </select>   
+                                        </div>
+                    <div class="col-md-2" >
+                        <a target="_self" class="btn btn-hkg" ng-disabled="disablePdf" href="{{appendAuthToken(apipath + 'event/generatepdf?eventId=' + eventsId + '&printType=' + printType)}}">{{ entity + "Generate" | translate }}</a>
+                    </div>
+                </div><br/>
+            </div>
+        </div>
+    </div>
+</div>-->

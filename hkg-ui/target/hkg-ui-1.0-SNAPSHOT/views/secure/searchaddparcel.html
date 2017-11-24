@@ -1,0 +1,47 @@
+<form method="POST" class="form-horizontal" name="addParcelForm" novalidate>
+    <div ng-init="registerLocationChangeEvent(addParcelForm);
+            initAddParcelForm(addParcelForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Add'|translate}}</li>
+                    <li class="active">{{entity + 'Parcel'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div>
+                <h5>Add Parcel</h5>
+            </div>
+            <div class="col-md-offset-1">
+                <h5 ng-if="generaInvoiceTemplate">Invoice</h5>
+                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                               ng-model="invoiceCustom" ng-if="generaInvoiceTemplate" >
+                </dynamic-form>
+            </div>
+            <div class="col-md-offset-1">
+                <h5 ng-if="generaParcelTemplate">Parcel</h5>
+                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                               ng-model="parcelCustom" ng-if="generaParcelTemplate" >
+                </dynamic-form>
+            </div>
+            <div class="col-md-offset-4" ng-if="flag.customFieldGenerated">
+                <div class="row">
+                    <hr/>
+                    <a href="" ng-click="onCanel(addParcelForm)">
+                        {{ entity + 'Cancel' | translate}}
+                    </a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="saveParcel(addParcelForm)">
+                        <span ng-bind="entity + 'Save' | translate"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

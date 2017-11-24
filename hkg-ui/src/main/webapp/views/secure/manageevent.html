@@ -1,0 +1,98 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{ entity + 'You are here' | translate}}</li>
+                    <li>{{ entity + 'Manage' | translate}}</li>
+                    <li>{{ entity + 'Events' | translate}}</li>
+                    <li class="active uppercase" ng-show="eventOperation === 'manageEvent'">{{ entity + 'Manage Event' | translate}}</li>
+                    <li class="active uppercase" ng-show="eventOperation === 'addEvent'">{{ entity + 'Add Event' | translate}}</li>
+                    <li class="active uppercase" ng-show="editFlag">{{ entity + 'Edit Event' | translate}}</li>
+                    <li class="active uppercase" ng-show="configForm">{{entity + 'Configure Registration Form'| translate}}</li>
+                    <li class="active uppercase" ng-show="eventOperation === 'registerEvent'">{{entity + 'Register Event'| translate}}</li>
+                </ol>
+
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="canAccess('eventsAddEdit') && eventOperation !== 'addEvent'"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a class="pull-right" ng-click="setEventOperation('addEvent')">{{entity + 'ADD EVENT'| translate}}</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+        <div class="col-xs-9 new-panel">
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="col-xs-12 col-lg-12 well well-sm">
+                        <!--                                                <div class="input-group ">
+                                                                            <input type="search" ng-model="searchEvent" class="form-control" placeholder="{{ entity + 'Search for events by name,date,category,status' | translate}}..">
+                                                                            <span class="input-group-btn">
+                                                                                <button class="btn btn-hkg" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                                                                            </span> 
+                                                                        </div>
+                                                                        <span ng-show="isInValidSearchTask">{{ entity + 'No matching results' | translate}}</span>-->
+                        <div class="input-group ">
+                            <div id="scrollable-dropdown-menu">
+                                <input class="typeahead" type="text"  placeholder="Search for events by name,date,category,status" 
+                                       ag-search="{{apipath}}event/searchevent" 
+                                       result-format="eventTitle,fromDate,status,categoryName" 
+                                       on-select="editEvent" 
+                                       on-enter="redirectToSearchedPage"
+                                       search-list-array='searchedEventList'
+                                       id="scrollable-dropdown-menu"/>
+                            </div>
+                            <span class="input-group-btn">
+                                <button class="btn btn-default btn-hkg" ng-click="redirectToSearchedPage(searchedEventList)" tooltip-html-unsafe="{{searchpopover}}" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                            </span>
+                        </div>
+                        <!-- input-group --> 
+                    </div>
+                    <div class="clearfix"></div>
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    <div ng-if="eventOperation === 'manageEvent' && !configForm" class="col-md-12">
+                        <div ng-include src="'views/secure/viewevent.html'"></div>
+                    </div>
+                    <div ng-if="(eventOperation === 'addEvent' || eventOperation === 'editEvent') && canAccess('eventsAddEdit')" class="col-md-12">
+                        <div ng-include src="'views/secure/addevent.html'" ng-show="!configForm"></div>
+                        <div ng-show="configForm">
+                            <div ng-include src="'views/secure/configureregform.html'"></div>
+                        </div>
+                    </div>
+                    <div ng-if="eventOperation === 'searchedEvent'" class="col-md-12">
+                        <div ng-include src="'views/secure/searchedevent.html'"></div>
+                    </div>
+                    <div ng-if="eventOperation === 'registerEvent'" class="col-md-12">
+                        <div ng-include src="'views/secure/registerevent.html'"></div>
+                    </div>
+                    <div ng-if="eventOperation === 'photoGallery'" class="col-md-12">
+                        <div ng-include src="'views/secure/photoGallery.html'"></div>
+                    </div>
+                </div>
+                <!--
+                            Tree view component
+                            <div class="col-md-3" >
+                
+                            </div>-->
+
+            </div>
+        </div>
+        <div class="col-xs-3 tree-bg" ng-show="canAccess('eventsAddEdit')">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{ entity + 'EXISTING EVENT CATEGORIES' | translate}}</strong></span>
+                <hr class="margin-md"/>
+
+                <div>
+                    <div  ng-show="existingEventCategoryList.length > 0" ng-click='setEventCategory()' 
+                          data-angular-treeview="true"
+                          data-tree-id="selectedEventCategory"
+                          ag-treemodel="existingEventCategoryList" display-count="true" entity-name="EVNTCTG_NM.">
+                    </div>
+                    <div ng-show="existingEventCategoryList.length <= 0">
+                        {{ entity + 'No event categories exist' | translate}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

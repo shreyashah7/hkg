@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<div>
+    <!--| orderBy:'gymName'-->
+    <div class="row">&nbsp;</div>
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12  col-lg-8"> 
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate }}</li>
+                <li>{{entity + 'Manage'| translate }}</li>
+                <li>{{entity + 'Location'| translate }}</li>
+                <li class="active uppercase" ng-show="addLocations && !(displaySearchedLocation === 'search')">{{entity + 'Add location'| translate }}</li>
+                <li class="active uppercase" ng-show="editlocations && !(displaySearchedLocation === 'search')">{{entity + 'Edit location'| translate }}</li>
+                <li class="active uppercase" ng-show="editlocations && displaySearchedLocation === 'search'">{{entity + 'View location'| translate }}</li>
+            </ol>
+        </div>
+        <div class="col-xs-12 col-lg-4 text-right context-menu" ng-show="!addLocations"> 
+            <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a class="pull-right" ng-click="addTheLocation()">{{ entity + 'Add Location' | translate}}</a>
+        </div>
+    </div>
+    <div class="col-xs-9 new-panel">
+        <!--Search box implementation------------------------------------>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <form class="form-horizontal" role="form">
+                    <div class="col-xs-12 col-lg-12">
+                        <!--                        <div class="input-group ">
+                                                    <div id="scrollable-dropdown-menu">
+                                                        <input class="typeahead" type="text"  placeholder="Search location" 
+                                                               ag-search="api/location/searchByLocationName" 
+                                                               result-format="locationName" 
+                                                               on-select="editSearchedLoc" 
+                                                               on-enter="getSearchedLocation"
+                                                               search-list-array='searchedLocationList'
+                                                               id="scrollable-dropdown-menu"/>
+                                                    </div>
+                                                    <span class="input-group-btn">
+                                                        <button class="btn btn-default btn-hkg" ng-click="getSearchedLocation(searchedLocationList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                                                    </span>
+                                                </div>
+                                            </div>  -->
+                        <div class="clearfix"></div>
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div id="addLocation" class="col-md-12" ng-show="addLocations && !(displaySearchedLocation === 'search')">
+                <form method="POST" name="addLocationForm" role="form" class="form-horizontal" novalidate>
+                    <div class="form-group" ng-init="registerLocationChangeEvent(addLocationForm);
+                            initAddLocationForm(addLocationForm)"></div>
+                    <div class="form-group required">
+                        <label class='col-md-3 control-label'>{{entity + 'Select Hierarchy'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.hierachy.$dirty || submitted) && (addLocationForm.hierachy.$invalid)}">
+                            <select  ng-model="selectHierarchy" class="form-control" name="hierachy" id="hierachy" required ng-options="h for h in hierarchies" ng-change="setPristine()"  > 
+                                <option value=''>{{entity + 'Select'| translate }}</option>
+                            </select>
+                            <div class="error,help-block" ng-show="(addLocationForm.hierachy.$dirty || submitted) && (addLocationForm.hierachy.$invalid)">
+                                <span class="help-block" ng-show="(addLocationForm.hierachy.$error.required && addLocationForm.hierachy.$dirty) || submitted">{{entity + 'Select Hierarchy'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="defaultButtons && !editlocations">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button type="submit" ng-click="createLocation(location)" class="btn btn-hkg">{{entity + 'Create Location '| translate }}</button></div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="addCountry">
+                        <label class='control-label col-md-3'>{{entity + 'Country Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.countryName.$dirty || submitted) && (addLocationForm.countryName.$invalid)}">
+                            <input ng-pattern="/^[^.]+$/" type='text' class="form-control" name="countryName" required  id='countryName' placeholder="Value" ng-model="$parent.location.locationName"  />
+                            <div class="error,help-block" ng-show="(addLocationForm.countryName.$dirty || submitted) && (addLocationForm.countryName.$invalid)">
+                                <span class="help-block" ng-show="(addLocationForm.countryName.$error.required && addLocationForm.countryName.$dirty) || submitted">{{entity + 'Country name is required  '| translate }}</span>
+                                <span class="help-block" ng-show="addLocationForm.countryName.$error.pattern">{{ entity + 'Country name is invalid ' | translate}}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="addCountry">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button type="submit" ng-click="createLocation(location)" class="btn btn-hkg">{{entity + 'Create Location '| translate }}</button></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required" ng-if="addState">
+                        <label class='col-md-3 control-label' >{{entity + 'Select Country'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid}">
+                            <select name="selectCountry" ng-model="$parent.countryId" class="form-control" required ng-options="country.value as country.label for country in countryList"><option value=''>{{entity + 'Select'| translate }}</option> </select>
+                            <div class="error,help-block" ng-show="(addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectCountry.$error.required">{{entity + 'Select country name  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='form-group required' ng-if="addState">
+                        <label class='col-md-3 control-label'>{{entity + 'State Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.stateName.$dirty || submitted) && addLocationForm.stateName.$invalid}">
+                            <input ng-pattern="/^[^.]+$/" type='text' class="form-control" name="stateName" required  id='stateName' placeholder="Value" ng-model="$parent.location.locationName"/> 
+                            <div class="error,help-block" ng-show="(addLocationForm.stateName.$dirty || submitted) && addLocationForm.stateName.$invalid">
+                                <span class="help-block" ng-show="(addLocationForm.stateName.$error.required && addLocationForm.stateName.$dirty) || submitted">{{entity + 'State name is required  '| translate }}</span>
+                                <span class="help-block" ng-show="addLocationForm.stateName.$error.pattern">{{ entity + 'State name is invalid ' | translate}}</span>
+                            </div>
+                        </div> 
+                    </div>
+                    <div class="col-xs-12" ng-if="addState">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button type="submit" ng-click="createLocation(location)" class="btn btn-hkg" >{{entity + 'Create Location'| translate }}</button></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required" ng-if="addDistrict">
+                        <label class='col-md-3 control-label'>{{entity + 'Select Country'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid}">
+                            <select name="selectCountry"  ng-model="$parent.countryId" class="form-control" required ng-change="getChilds(countryId, 'S')" ng-options="country.value as country.label for country in countryList"><option value="">{{entity + 'Select'| translate }}</option></select> 
+                            <div class="error,help-block" ng-show="(addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectCountry.$error.required">{{entity + 'Select country name. '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='form-group required' ng-if="addDistrict">
+                        <label class='col-md-3 control-label'>{{entity + 'Select State'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error':(addLocationForm.selectState.$dirty || submitted) && addLocationForm.selectState.$invalid}">
+                            <select name="selectState" ng-model="$parent.stateId" class="form-control" required ng-options="state.value as state.label for state in stateByCountry"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(addLocationForm.selectState.$dirty || submitted) && addLocationForm.selectState.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectState.$error.required">{{entity + 'Select state name. '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="addDistrict">
+                        <label class='col-md-3 control-label'>{{entity + 'District Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.districtName.$dirty || submitted) && addLocationForm.districtName.$invalid}">
+                            <input ng-pattern="/^[^.]+$/" type='text' class="form-control" name="districtName" required  id='key' placeholder="Value" ng-model="$parent.location.locationName"/>
+                            <div class="error,help-block" ng-show="(addLocationForm.districtName.$dirty || submitted) && addLocationForm.districtName.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.districtName.$error.required">{{entity + 'District name is required  '| translate }}</span>
+                                <span class="help-block" ng-show="addLocationForm.districtName.$error.pattern">{{ entity + 'District name is invalid ' | translate}}</span>
+                            </div>
+                        </div> 
+                    </div>
+                    <div class="col-xs-12" ng-if="addDistrict">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button type="submit" ng-click="createLocation(location)" class="btn btn-hkg">{{entity + 'Create Location'| translate }}</button></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required" ng-if="addCity">
+                        <label class='col-md-3 control-label'>{{entity + 'Select Country'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid}">
+                            <select name="selectCountry" ng-model="$parent.countryId" class="form-control" required ng-change="getChilds(countryId, 'S')" ng-options="country.value as country.label for country in countryList"><option value="">{{entity + 'Select'| translate }}</option></select> 
+                            <div class="error,help-block" ng-show="(addLocationForm.selectCountry.$dirty || submitted) && addLocationForm.selectCountry.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectCountry.$error.required">{{entity + 'Select country name. '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='form-group required' ng-if="addCity">
+                        <label class='col-md-3 control-label'>{{entity + 'Select State'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.selectState.$dirty || submitted) && addLocationForm.selectState.$invalid}">
+                            <select name="selectState"  ng-model="$parent.stateId" class="form-control" ng-change="getChilds(stateId, 'D')" required ng-options="state.value as state.label for state in stateByCountry"> <option value="">{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(addLocationForm.selectState.$dirty || submitted) && addLocationForm.selectState.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectState.$error.required">{{entity + 'Select state name.'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="addCity">
+                        <label class='col-md-3 control-label'>{{entity + 'Select District'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.selectDistrict.$dirty || submitted) && addLocationForm.selectDistrict.$invalid}">
+                            <select name="selectDistrict" ng-model="$parent.districtId" class="form-control" required ng-options="district.value as district.label for district in districtByState"> <option value="">{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(addLocationForm.selectDistrict.$dirty || submitted) && addLocationForm.selectDistrict.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.selectDistrict.$error.required">{{entity + 'Select district name. '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class='form-group required' ng-if="addCity">
+                        <label class='col-md-3 control-label'>{{entity + 'City Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (addLocationForm.cityName.$dirty || submitted) && addLocationForm.cityName.$invalid}">
+                            <input ng-pattern="/^[^.]+$/" type='text' class="form-control" name="cityName" required  id='key' placeholder="Value" ng-model="$parent.location.locationName"/> 
+                            <div class="error,help-block" ng-show="(addLocationForm.cityName.$dirty || submitted) && addLocationForm.cityName.$invalid">
+                                <span class="help-block" ng-show="addLocationForm.cityName.$error.required">{{entity + 'City name is required  '| translate }}</span>
+                                <span class="help-block" ng-show="addLocationForm.cityName.$error.pattern">{{ entity + 'City name is invalid ' | translate}}</span>
+                            </div>
+                        </div> 
+                    </div>
+                    <div class="col-xs-12" ng-if="addCity">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button type="submit" ng-click="createLocation(location)" class="btn btn-hkg">{{entity + 'Create Location'| translate }}</button></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="managelocation" class="col-md-12" ng-show="managelocations">
+                <form name="manageLocationsForm" role="form" class="form-horizontal" novalidate>
+                    <div class="form-group required">
+                        <div class='col-md-3'>
+                            <label class='control-label pull-right'>{{entity + 'Select Hierarchy'| translate }}</label>
+                        </div>
+                        <div class='col-md-5'>
+                            <select  ng-model="selectHierarchy" class="form-control"  ng-options="h for h in hierarchies" > 
+                                <option value=''>{{entity + 'Select'| translate }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2"><label>{{entity + 'Show All'| translate }}</label> <input type="checkbox"  ng-model="activate" /></div>
+                    </div>
+                    <div class="" ng-show="updateCountry">
+
+                        <div class="form-group">
+                            <div class="col-md-3"><label class='control-label pull-right'>{{entity + 'Select Country'| translate }}</label></div>
+                            <div class="col-md-5">
+                                <div ng-class="{'has-error': manageLocationsForm.selectCountry.$invalid && submitted}">
+                                    <select name="selectCountry" ng-model="country" class="form-control" ng-click="getChildsUpdate(country, 'S')" ng-options="country as country.label for country in countryList" >
+                                        <option value=''>{{entity + 'Select'| translate }}</option> </select>
+                                    <div class="error,help-block" ng-show="(manageLocationsForm.selectCountry.$dirty || submitted) && manageLocationsForm.selectCountry.$invalid">
+                                        <span class="help-block" ng-show="manageLocationsForm.selectCountry.$error.required">{{entity + 'Select country name  '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <div class="col-md-3" ng-show="addState || addDistrict || addCity">
+                                <label class='control-label pull-right'>{{entity + 'Select State'| translate }}</label>
+                            </div>
+                            <div class="col-md-5" ng-show="addState || addDistrict || addCity">
+                                <div ng-class="{'has-error': manageLocationsForm.selectState.$invalid && submitted}">
+                                    <select name="selectState"  ng-model="state" class="form-control" ng-click="getChildsUpdate(state, 'D')"  ng-options="state as state.label for state in stateByCountry"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                                    <div class="error,help-block" ng-show="(manageLocationsForm.selectState.$dirty || submitted) && manageLocationsForm.selectState.$invalid">
+                                        <span class="help-block" ng-show="manageLocationsForm.selectState.$error.required">{{entity + 'Select state name  '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="form-group">
+                            <div class="col-md-3" ng-show="addDistrict || addCity">  
+                                <label class='control-label pull-right'>{{entity + 'Select District'| translate }}</label>
+                            </div>
+                            <div class="col-md-5" ng-show="addDistrict || addCity"> 
+                                <div ng-class="{'has-error': manageLocationsForm.selectDistrict.$invalid && submitted}">
+                                    <select name="selectDistrict" ng-model="district" class="form-control"  ng-click="getChildsUpdate(district, 'T')" ng-options="district as district.label for district in districtByState"><option value=''>{{entity + 'Select'| translate }}</option> </select>
+                                    <div class="error,help-block" ng-show="(manageLocationsForm.selectDistrict.$dirty || submitted) && manageLocationsForm.selectDistrict.$invalid">
+                                        <span class="help-block" ng-show="manageLocationsForm.selectDistrict.$error.required">{{entity + 'Select district name  '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='form-group'>
+                            <div class="col-md-3" ng-show="addCity">
+                                <label class='control-label pull-right'>{{entity + 'Select City'| translate }}</label>
+                            </div>
+                            <div class="col-md-5" ng-show="addCity">
+                                <div ng-class="{'has-error': manageLocationsForm.selectCityName.$invalid && submitted}">
+                                    <select name="selectCityName" ng-model="city" class="form-control"  ng-click="getChildsUpdate(city, 'C')"  ng-options="city as city.label for city in cityByDistrict" ><option value=''>{{entity + 'Select'| translate }}</option></select>
+                                    <div class="error,help-block" ng-show="(manageLocationsForm.selectCityName.$dirty || submitted) && manageLocationsForm.selectCityName.$invalid">
+                                        <span class="help-block" ng-show="manageLocationsForm.selectCityName.$error.required">{{entity + 'Select city name  '| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div  ng-show="showTable">
+                            <div class="form-group">
+                                <div class="col-md-2">
+                                    <label class='control-label pull-right'>{{entity + 'Name'| translate }}</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <div ng-class="{'has-error': manageLocationsForm.cityName.$invalid && submitted}">
+                                        <input name="cityName" type='text' class="form-control" required  id='key'  ng-model="selectedValue.label"/>
+                                        <div class="error,help-block" ng-show="(manageLocationsForm.cityName.$dirty || submitted) && manageLocationsForm.cityName.$invalid">
+                                            <span class="help-block" ng-show="manageLocationsForm.cityName.$error.required">{{entity + 'name is required  '| translate }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="control-label pull-right">{{entity + 'Status'| translate }}</label>
+                                </div>
+                                <div class="col-md-3">
+                                    <div ng-class="{'has-error': manageLocationsForm.isActive.$invalid && submitted}">
+                                        <select name="isActive" ng-model="selectedValue.isActive" class="form-control" required ng-options="s.id as s.name for s in status"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                                        <div class="error,help-block" ng-show="(manageLocationsForm.isActive.$dirty || submitted) && manageLocationsForm.isActive.$invalid">
+                                            <span class="help-block" ng-show="manageLocationsForm.isActive.$error.required">{{entity + 'Select one  '| translate }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                &nbsp;
+                            </div>
+                            <div class="row">
+                                <div class="col-md-5">&nbsp;</div>
+                                <div class="col-md-7">
+                                    <button type="submit"  ng-click="updateLocation(selectedValue)" class="btn btn-hkg" name="managelocation" >{{entity + 'Update Location'| translate }}</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                &nbsp;
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="editLocation" class="col-md-12" ng-if="editlocations">
+                <div ng-include src="'views/secure/searchedlocations.html'" ng-if="displaySearchedLocation === 'search'"></div>   
+                <form method="POST" name="editLocationForm" role="form" class="form-horizontal" novalidate ng-show="displaySearchedLocation !== 'search'" >
+                    <!--class="solid panel panel-default"-->
+                    <div class="form-group" ng-init="registerLocationChangeEvent(editLocationForm);
+                            initEditLocationForm(editLocationForm)"></div>
+                    <div class="form-group required" ng-if="countryHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'Country Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.countryName.$dirty || submitted) && editLocationForm.countryName.$invalid}">
+                            <input type="text" ng-model="newLocation.currentNode.locationName" name="countryName" required class="form-control"/>
+                            <div class="error,help-block" ng-show="(editLocationForm.countryName.$dirty || submitted) && editLocationForm.countryName.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.countryName.$error.required">{{entity + 'Enter country name  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="countryHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'Active'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid}">
+                            <select ng-model="newLocation.currentNode.isActive" name="isActive" class="form-control" required ng-options="s.id as s.name for s in status"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.isActive.$error.required">{{entity + 'Select one  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="countryHierarchy">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class='btn btn-hkg' ng-click="editLoc(newLocation);">{{entity + 'Update Location'| translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required" ng-if="stateHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'State Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.stateName.$dirty || submitted) && editLocationForm.stateName.$invalid}">
+                            <input type="text" ng-model="newLocation.currentNode.locationName" required name="stateName" class="form-control"/>
+                            <div class="error,help-block" ng-show="(editLocationForm.stateName.$dirty || submitted) && editLocationForm.stateName.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.stateName.$error.required">{{entity + 'Enter state name  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="stateHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'Active'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid}">
+                            <select ng-model="newLocation.currentNode.isActive" name="isActive" class="form-control" required ng-options="s.id as s.name for s in status"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.isActive.$error.required">{{entity + 'Select one  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="stateHierarchy" >
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class='btn btn-hkg' ng-click="editLoc(newLocation);">{{entity + 'Update Location'| translate }}</button>
+                            </div>
+                        </div>        
+                    </div>
+
+                    <div class="form-group required" ng-if="districtHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'District Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.districtName.$dirty || submitted) && editLocationForm.districtName.$invalid}">
+                            <input type="text" name="districtName" required ng-model="newLocation.currentNode.locationName" class="form-control"/>
+                            <div class="error,help-block" ng-show="(editLocationForm.districtName.$dirty || submitted) && editLocationForm.districtName.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.districtName.$error.required">{{entity + 'Enter district name  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="districtHierarchy" >
+                        <label class="control-label col-md-3">{{entity + 'Active'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid}">
+                            <select ng-model="newLocation.currentNode.isActive" name="isActive" class="form-control" required ng-options="s.id as s.name for s in status"> <option value=''>{{entity + 'Select'| translate }}</option></select>
+                            <div class="error,help-block" ng-show="(editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.isActive.$error.required">{{entity + 'Select one  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="districtHierarchy" >
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class='btn btn-hkg' ng-click="editLoc(newLocation);">{{entity + 'Update Location'| translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required" ng-if="cityHierarchy" >
+                        <label class="col-md-3 control-label">{{entity + 'City Name'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.cityName.$dirty || submitted) && editLocationForm.cityName.$invalid}">
+                            <input type="text" name="cityName" required ng-model="newLocation.currentNode.locationName" class="form-control"/>
+                            <div class="error,help-block" ng-show="(editLocationForm.cityName.$dirty || submitted) && editLocationForm.cityName.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.cityName.$error.required">{{entity + 'Enter city name  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="cityHierarchy" >
+                        <label class="control-label col-md-3">{{entity + 'Active'| translate }}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': (editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid}">
+                            <select name="isActive" ng-model="newLocation.currentNode.isActive" class="form-control" required ng-options="s.id as s.name for s in status"> <option value=''>{{entity + 'Select'| translate }}</option></select >
+                            <div class="error,help-block" ng-show="(editLocationForm.isActive.$dirty || submitted) && editLocationForm.isActive.$invalid">
+                                <span class="help-block" ng-show="editLocationForm.isActive.$error.required">{{entity + 'Select one  '| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12" ng-if="cityHierarchy">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right">
+                                <a href="" ng-click="cancelAddLocForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class='btn btn-hkg' ng-click="editLoc(newLocation);">{{entity + 'Update Location'| translate }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-xs-3 tree-bg">        
+    <div class="col-xs-12  fit-content col-md-12"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;
+        <span class="text-hkg"><strong>{{entity + 'EXISTING LOCATIONS'| translate }}</strong></span>
+        <hr class="margin-md"/>
+        <div class="col-xs-12">
+            <div class="input-group">
+                <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+            </div>
+        </div>
+        <!--Tree component starts-->
+        <div class="col-xs-12 hkg-nopadding">
+            <br/>
+            <div ng-show="locationTree && locationTree.length > 0" ng-click="treeEditLocation(locationval)"
+                 data-angular-treeview="true"
+                 data-tree-id="locationval"
+                 ag-treemodel="locationTree" entity-name="LCT_NM."
+                 data-search-query='treeSearchQuery'>
+            </div>
+        </div>
+        <div ng-show="locationTree.length === 0">
+            {{entity + 'No location exist'| translate }}
+        </div>
+    </div>
+    <div class="clearfix"></div>
+</div>    
+<div class="modal fade" role="dialog" id="overridePopUp" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/managelocation" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel" ng-show="activeChildren">{{entity + 'Remove Location'| translate }}</h4>
+                <h4 class="modal-title" id="myModalLabel" ng-show="!parentActived">{{entity + 'Activate Location'| translate }}</h4>
+            </div >
+            <div class="modal-body">
+                <div class="form-group">
+                    <div ng-show="activeChildren">
+                        {{entity + "You can not remove "| translate }}{{newLocation.currentNode.locationName}}.
+                    </div>
+                    <div ng-show="!parentActived">
+                        {{entity + "You can not activate "| translate }}{{newLocation.currentNode.locationName}}.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="pull-right text-right"> 
+                                <button class="btn btn-hkg" ng-click="hidePopUp()">
+                                    {{ entity + "Ok" | translate }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,171 @@
+<div class="row" ng-init="initData()">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg" ng-if="!configureWorkFlow">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li class="active">{{entity + 'Manage Goal'| translate }}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="col-xs-12 col-lg-12 well well-sm">
+                <div class="input-group ">
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search for goal template by name" 
+                               ag-search="{{apipath}}goal/retrieveActiveGoalTemplatesBySearch" 
+                               result-format="name,nameOfAssociation" 
+                               on-select="editFromSearch" 
+                               on-enter="getSearchedDesignationRecords"
+                               search-list-array='searchedList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedDesignationRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+                </div>
+                <span ng-show="isInValidSearchDesig">{{entity + 'No matching results'| translate }}</span>
+            </div>
+            <div ng-include src="'views/secure/searchedgoaltemplate.html'" ng-if="displaySearchedGoalTemplate === 'search'"></div>
+            <form role="form" class="form-horizontal" novalidate name="goalForm">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-show="displaySearchedGoalTemplate === 'view'"> 
+                    <div class="form-group required">
+                        <label for="type" class="col-md-3 col-lg-3 col-sm-6 control-label">{{entity + 'Manage Goals By'| translate }}</label>
+                        <div class="col-md-5 col-lg-5 col-sm-6" ng-class="{'has-error': (goalForm.type.$dirty || submitted) && goalForm.type.$invalid}">
+                            <select name="type" id="type"  class="form-control" required ng-model="goal.type" ng-change="clearSelection()">
+                                <option value="" >--Select--</option>
+                                <option value="1" ng-show="mapOfGoalPermission['S'] != null">{{entity + "Activity-Service" | translate }}</option>
+                                <option value="2" ng-show="mapOfGoalPermission['R'] != null">{{entity + "Designation" | translate}}</option>
+                                <option value="3" ng-show="mapOfGoalPermission['D'] != null">{{entity + "Department" | translate}}</option>
+                            </select>
+                            <div class="error,help-block" ng-show="(goalForm.type.$dirty || submitted) && goalForm.type.$invalid">
+                                <span class="help-block" ng-show="goalForm.type.$error.required">{{ entity + 'Select type' | translate }}</span>
+                            </div>                   
+                        </div>
+                    </div>
+                    <div ng-show="goal.type == '1'" class="form-group required">
+                        <label for="service" class="col-md-3 col-lg-3 col-sm-6 control-label">{{entity + 'Service'| translate }}</label>
+                        <div class="col-md-5 col-lg-5 col-sm-6" ng-class="{'has-error': (goalForm.service.$dirty || submitted) && goalForm.service.$invalid}">
+                            <select name="service" id="service"  class="form-control" required ng-model="goal.service" ng-options="service.id as service.text for service in serviceList" ng-change="retrieveGoalTemplatesByService()">
+                                <option value="" >{{entity + "Select" | translate}}</option>
+                            </select>
+                            <div class="error,help-block" ng-show="(goalForm.service.$dirty || submitted) && goalForm.service.$invalid">
+                                <span class="help-block" ng-show="goalForm.service.$error.required">{{ entity + 'Select service' | translate }}</span>
+                            </div>                   
+                            <div class="row">&nbsp;</div>
+                            <div class="row">
+                                <div class="col-xs-10" >
+                                    <input type="text" class="form-control" disabled ng-model="designationName"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-show="goal.type == '2'" class="form-group required">
+                        <label for="designation" class="col-md-3 col-lg-3 col-sm-6 control-label">{{entity + 'Designation'| translate }}</label>
+                        <div class="col-md-5 col-lg-5 col-sm-6" ng-class="{'has-error': (goalForm.designation.$dirty || submitted) && goalForm.designation.$invalid}">
+                            <select name="designation" id="designation"  class="form-control" required ng-model="goal.designation" ng-options="designation.id as designation.displayName for designation in designationList" ng-change="retrieveGoalTemplatesByDesignation()">
+                                <option value="" >{{entity + "Select" | translate}}</option>
+                            </select>
+                            <div class="error,help-block" ng-show="(goalForm.designation.$dirty || submitted) && goalForm.designation.$invalid">
+                                <span class="help-block" ng-show="goalForm.designation.$error.required">{{ entity + 'Select designation' | translate }}</span>
+                            </div>                   
+                        </div>
+                    </div>
+                    <div ng-show="goal.type == '3'" class="form-group required">
+                        <label for="dropdownMenu1" class="col-md-3 col-lg-3 col-sm-6 control-label">{{entity + 'Department'| translate }}</label>
+                        <div class="col-md-5 col-lg-5 col-sm-6" ng-class="{'has-error': (goalForm.department.$dirty || submitted) && goalForm.department.$invalid}">
+                            <div class="dropdown ">
+                                <button class="dropdown-toggle form-control" data-toggle="dropdown" >
+                                    <span class="pull-left" ng-show="selectedParent.displayName.length > 0" ng-bind="selectedParent.displayName"></span>
+                                    <span ng-hide="selectedParent.displayName.length > 0" class="pull-left">{{entity +"Department" | translate}}</span>
+                                    <span class="caret pull-right no-margin"></span>
+                                </button>
+                                <div class="dropdown-menu " style="width:280px">
+                                    <div ng-click='setSelectedParent(selectedDepartmentDropdown)'
+                                         data-angular-treeview="true"
+                                         data-tree-id="selectedDepartmentDropdown"
+                                         ag-treemodel="departmentList"
+                                         entity-name="DPT_NM.">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-show="!!goal.service || !!goal.designation || !!selectedParent" class="form-group required">
+                        <label for="goalTemplates" class="col-md-3 col-lg-3 col-sm-6 control-label">{{entity + 'Select Goal Templates'| translate }}</label>
+                        <div class="col-md-7 col-lg-7 col-sm-6">
+                            <div ng-class="{'has-error': (submitted && (goalTemplatesList === undefined || goalTemplatesList === null || goalTemplatesList.length === 0))}">
+                                <input type="text" required class="col-md-10 hkg-nopadding" id="goalTemplates" name="goalTemplates" value="goal.goalTemplates" ui-select2="autoCompleteApprover" ng-model="goal.goalTemplates"/>
+                                <a href="" class="col-md-2" ng-click="addNewTemplate()"><span class="glyphicon glyphicon-plus-sign text-primary" tooltip="Add new template"  tooltip-trigger="mouseenter" tooltip-placement="bottom"></span></a>
+                            </div>
+                            <br/>
+                            <br/>
+                            <div ng-class="{'has-error': (submitted && (goalTemplatesList === undefined || goalTemplatesList === null || goalTemplatesList.length === 0))}">
+                                <div class="error,help-block" ng-show="submitted && (goalTemplatesList === undefined || goalTemplatesList === null || goalTemplatesList.length === 0)">
+                                    <span class="help-block">{{ entity + 'Select goal templates' | translate }}</span>
+                                </div>  
+                            </div>
+                        </div>
+                        <div class="row" ng-if="goalTemplatesList != null && goalTemplatesList.length > 0">
+                            <div class="col-md-12">
+                                <h4>{{entity + 'Selected goals:'| translate }}</h4>
+                            </div>
+                            <div class="row">&nbsp;</div>
+                            <div class="col-md-12">
+                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="goalTemplatesList">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">{{entity + 'Sr No'|translate}}</th>
+                                            <th class="text-center">{{entity + 'Goal'|translate}}</th>
+                                            <th class="text-center">{{entity + 'Rule For Goal Validation'|translate}}</th>
+                                            <th class="text-center">{{entity + 'Action'|translate}}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="tempGoalTemplate in goalTemplatesList" dt-rows>                            
+                                            <td class="text-center"><span class="wordRap">{{$index+1}}</span></td>
+                                            <td class="text-center"><span class="wordRap" ng-bind="tempGoalTemplate.name"></span></td>
+                                            <td>
+                                                <div class="text-center" ng-if="!!!tempGoalTemplate.isValGoalAchieved && !!!tempGoalTemplate.isValGoalNotAchieved">
+                                                    <span > N/A </span>
+                                                </div>
+                                                <div>
+                                                    <ul>
+                                                        <li ng-if="tempGoalTemplate.isValGoalAchieved">
+                                                            {{entity + "IF goal achieved, then value should be " | translate}}{{tempGoalTemplate.valgoalachievedtype}} {{tempGoalTemplate.valgoalachievedvalue}}
+                                                        </li>
+                                                        <li ng-if="tempGoalTemplate.isValGoalNotAchieved">
+                                                            {{entity + "IF goal not achieved, then value should be " | translate }}{{tempGoalTemplate.valgoalnotachievedtype}} {{tempGoalTemplate.valgoalnotachievedvalue}}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                            <td class="text-center" align="center"><a><span  class="glyphicon glyphicon-edit" ng-click="editGoalTemplate(tempGoalTemplate.id)" title="Edit"></span></a></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="form-group" >
+                            <div class="col-xs-12">
+                                <div class="row">
+                                    <hr/>
+                                    <div class="col-xs-12 pull-right text-right"> 
+                                        <button class="btn btn-link" ng-click="cancelGoal()">{{i18Locales + "Cancel"| translate}}</button>&nbsp;
+                                        <button type="button"  class="btn btn-hkg" ng-click="saveGoals()">{{i18Locales + "Save"| translate}}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

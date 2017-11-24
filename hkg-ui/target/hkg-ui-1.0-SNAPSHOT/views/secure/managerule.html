@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12  col-lg-8" >
+                <ol class="breadcrumb">
+                    <li>{{entity+'You are here'|translate}} </li>
+                    <li>{{entity+'Manage'|translate}} </li>
+                    <li >{{entity+'Rule'|translate}}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="(editFlag||displayFlag!=='create')"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href="" ng-click="makeEditFlagFalse();">{{entity+'ADD Rule'|translate}}</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-9 new-panel">
+            <!--<div class="row">-->
+            <div class="col-xs-12  well well-sm">
+                <div class="input-group ">
+
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search rule by name, category" 
+                               ag-search="{{apipath}}asset/searchByAssetName" 
+                               result-format="modelName,parentCategory" 
+                               on-select="setAssetForEdit" 
+                               on-enter="getSearchedAsset"
+                               search-list-array='searchedAssetList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedAsset(searchedAssetList)" tooltip-html-unsafe="{{searchpopover}}" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+                </div>
+                <!-- input-group --> 
+            </div>
+            <form class="form-horizontal" role="form">
+                <div class="clearfix"></div>
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+            </form>
+            <div ng-include src="'views/secure/addrule.html'" ng-if="displayFlag==='create'"></div>
+
+        </div>
+        <!--</div>-->
+        <!--</div>-->
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>EXISTING</strong></span>
+                <hr class="margin-md"/>
+                <!--Tree component starts-->                
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>

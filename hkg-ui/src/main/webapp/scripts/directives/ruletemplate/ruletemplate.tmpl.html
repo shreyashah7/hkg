@@ -1,0 +1,220 @@
+<div class="col-md-12 hkg-nopadding rule-template">
+    <ng-form  class="form-horizontal"  name="addRuleForm"  novalidate  >
+        <div class="form-group" ng-show="onlyCriteria === false">
+            <label for="ruleCombo" class="col-xs-4 col-lg-3 text-right control-label">{{entity + 'Rules'|translate}}</label>
+            <div class="col-md-4" >
+                <select class="form-control"  name="ruleCombo" id="ruleCombo"  ng-options="rule as rule.ruleName for rule in allRules" ng-model="selectedRule" ng-mouseup="onRuleChange(addRuleForm)">
+                    <option value="" >{{entity + 'Select Rule To Edit'|translate}}</option>
+                </select>
+            </div>
+            <span class="help-block" title="{{entity + 'Add Rule'| translate}}">
+                <a class=" glyphicon glyphicon-plus-sign text-primary" ng-click="reset(addRuleForm)" ></a>
+            </span> 
+        </div>
+        <div class="well"  style="" ng-style="{height: onlyCriteria ? 'auto':'350px', overflow: onlyCriteria ? 'visible':'auto'}" ng-if="!!selectedRule || addFlag || onlyCriteria">
+            <div class="col-xs-12" ng-show="onlyCriteria === false">
+                <div class="row">
+                    <div class="col-xs-12 pull-right text-right">
+                        <a href="" ng-click="resetCancel(addRuleForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+                        <button class="btn btn-hkg" ng-click="save(addRuleForm)">{{ entity + "Save" | translate }}</button>
+                    </div>
+                </div>
+            </div>   
+            <div class='form-group required' ng-if="onlyCriteria === false">
+                <label for="rulesName"  class="col-md-3 control-label" ng-bind=" entity + 'Rule name' | translate">
+
+                </label>
+
+                <div class="col-md-6" ng-class="{'has-error': addRuleForm.rulesName.$invalid && (addRuleForm.rulesName.$dirty || ruleSubmitted)}"> 
+                    <input  type='text'    ng-model="ruleObject.ruleName" id="rulesName" name="rulesName" class="form-control"  ng-required="true" maxlength="100"/>
+                    <div class="error,help-block"  ng-show="(addRuleForm.rulesName.$dirty || ruleSubmitted) && addRuleForm.rulesName.$invalid">
+                        <span class="help-block" ng-show="addRuleForm.rulesName.$error.required" ng-bind=" entity + 'Rule name not entered' | translate"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group required" > 
+                <label for="apply" class="col-md-3 control-label" ng-bind="entity + 'Apply' | translate"></label>
+                <div class="col-md-2" ng-class="{'has-error': (addRuleForm.apply.$dirty) && addRuleForm.apply.$invalid}">    
+                    <select id="apply"  name="apply" class="form-control"  ng-options="option for option in applyList" required ng-model="ruleObject.apply">
+                        <option value="" ng-bind="entity + 'Select' | translate"> </option>
+                    </select>
+                    <div class="error,help-block" ng-show="(addRuleForm.apply.$dirty) && addRuleForm.apply.$invalid">
+                        <span class="help-block" ng-show="addRuleForm.apply.$error.required" ng-bind="entity + 'Select apply' | translate"></span>                    
+                    </div>
+                </div>
+
+                <label class="col-md-2 control-label" ng-show="onlyCriteria === false">{{entity + 'Status'| translate }}</label>
+
+                <div ng-show="onlyCriteria === false" class="col-md-2 col-lg-2 col-sm-4" ng-class="{'has-error': (addRuleForm.isActive.$dirty || ruleSubmitted) && addRuleForm.isActive.$invalid}">
+                    <select ng-model="ruleObject.isActive" name="isActive" class="form-control"  ng-options="s.id as s.name for s in status"> </select>
+
+                </div>
+            </div>
+            <div class="form-group required" ng-if="ruleObject.ruleNumber && onlyCriteria === false"> 
+
+                <label for="ruleNumber" class="col-md-3 control-label">{{entity + 'Rule Number'| translate }}</label>
+
+                <div class="col-md-2 col-lg-2 col-sm-4" ng-class="{'has-error': (addRuleForm.ruleNumber.$dirty || ruleSubmitted) && addRuleForm.ruleNumber.$invalid}">
+                    <span ng-bind="ruleObject.ruleNumber"></span>
+                </div>
+            </div>
+
+            <table  class="table" >
+
+                <tr  ng-form="rowForm" ng-repeat="rules in ruleObject.ruleList">                    
+                    <!--                            <td class="col-md-2" ng-class="{'has-error': rowForm.priority.$invalid&&rules.rowsubmitted}"> 
+                    
+                                                    <select id="priority" required  name="priority" class="form-control"  ng-options="p for p in priorityList" ng-model="rules.priority">
+                                                        <option value="">{{entity+'Select priority'| translate }}</option>
+                                                    </select>
+                                                    <div class="error,help-block" ng-show="(rowForm.priority.$invalid&&rules.rowsubmitted)">
+                                                        <span class="help-block" ng-show="rowForm.priority.$error.required">{{ entity+"Select priority" | translate }}</span>                    
+                                                    </div>
+                                                </td>-->
+                    <td class="col-md-2"  ng-class="{'has-error': rowForm.entityName.$invalid && rules.rowsubmitted}">                            
+                        <select id="entityName" ng-disabled="(ruleObject.apply === null || ruleObject.apply === undefined)" required name="entityName" class="form-control" ng-change="onEntityChange($index)"  ng-options="k as v for (k, v) in entityList" ng-model="rules.entity">
+                            <option value="">{{entity + 'Select entity'| translate }}</option>
+                        </select>
+                        <div class="error,help-block" ng-show="(rowForm.entityName.$invalid && rules.rowsubmitted)">
+                            <span class="help-block" ng-show="rowForm.entityName.$error.required">{{ entity + "Select entity" | translate }}</span>                    
+                        </div>
+
+                    </td>
+
+                    <td class="col-md-2" ng-class="{'has-error': rowForm.fieldName.$invalid && rules.rowsubmitted}" ng-hide="rules.entity < 0">
+                        <select ng-disabled="((ruleObject.apply === null || ruleObject.apply === undefined))" id="fieldName" ng-required="rules.entity > 0" name="fieldName" class="form-control" ng-change="onFieldChange($index)" ng-options="field.oldLabelName for field in rules.fieldList" ng-model="rules.field">
+                            <option value="">{{entity + 'Select field'| translate }}</option>
+                        </select>
+
+                        <div class="error,help-block" ng-show="(rowForm.fieldName.$invalid && rules.rowsubmitted)">
+                            <span class="help-block" ng-show="rowForm.fieldName.$error.required">{{ entity + "Select field" | translate }}</span>                    
+                        </div>
+
+                    </td>
+
+                    <td class="col-md-1 text-center">
+                        {{ entity + "is" | translate }}
+                    </td>
+
+                    <td class="col-md-2"   ng-class="{'has-error':rowForm.operator.$invalid && rules.rowsubmitted}">    
+                        <select  ng-disabled="(ruleObject.apply === null || ruleObject.apply === undefined)"  required id="operator" ng-change="onOperatorClick($index)" name="operator" class="form-control"   ng-options="operator.label for operator in rules.operatorList" ng-model="rules.operator">
+                            <option value="">{{entity + 'Select operator'| translate }}</option>
+                        </select>
+                        <div class="error,help-block" ng-show="rowForm.operator.$invalid && rules.rowsubmitted">
+                            <span class="help-block" ng-show="rowForm.operator.$error.required">{{ entity + "Select operator" | translate }}</span>                    
+                        </div>
+
+                    </td>
+
+                    <td id="test" class="col-md-3" >
+                        <div ng-class="{'has-error':rowForm.multiselect.$invalid && rules.rowsubmitted}">
+                            <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+
+                            </div>
+                            <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectSingleComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+
+                            </div>
+                            <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                            </div>
+                        </div>
+                        <div ng-class="{'has-error':rowForm.usermultiselect.$invalid && rules.rowsubmitted}">
+                            <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userMultiselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+                            </div>
+                            <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userSingleselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+                            </div>
+                            <div class="error,help-block" ng-show="rowForm.usermultiselect.$invalid && rules.rowsubmitted">
+                                <span class="help-block" ng-show="rowForm.usermultiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                            </div>
+                        </div>
+                        <div ng-class="{'has-error':rowForm.dropdown.$invalid && rules.rowsubmitted}">
+                            <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+
+                            </div>
+                            <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownSingleSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-minlength="1" required/> 
+
+                            </div>
+                            <div class="error,help-block" ng-show="rowForm.dropdown.$invalid && rules.rowsubmitted">
+                                <span class="help-block" ng-show="rowForm.dropdown.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                            </div>
+                        </div>
+
+                        <div ng-class="{'has-error':rowForm.pointer.$invalid && rules.rowsubmitted}">
+                            <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                            </div>
+                            <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerSingleSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                            </div>
+                            <div class="error,help-block" ng-show="rowForm.pointer.$invalid && rules.rowsubmitted">
+                                <span class="help-block" ng-show="rowForm.pointer.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                            </div>
+                        </div>
+                        <div ng-class="{'has-error':rowForm.subentity.$invalid && rules.rowsubmitted}">
+                            <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntityMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                            </div>
+                            <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntitySingleSelectComponent" class="col-xs-12 hkg-nopadding "  ng-model="rules.values"  ng-required="true"/> 
+
+                            </div>
+                            <div class="error,help-block" ng-show="rowForm.subentity.$invalid && rules.rowsubmitted">
+                                <span class="help-block" ng-show="rowForm.subentity.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                            </div>
+                        </div>
+                        <div ng-if="rules.showtemplate === true">
+                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type !== 'MultiSelect' && rules.field.type !== 'Pointer' && rules.field.type !== 'SubEntity' && rules.field.type !== 'UserMultiSelect' && rules.field.type !== 'Dropdown'">
+
+                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.type}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                            </div>
+
+                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'Pointer' && rules.field.pointertype !== 'MultiSelect' && rules.field.pointertype !== 'Dropdown'">
+
+                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.pointertype}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                            </div>
+                            <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'SubEntity' && rules.field.subentityDropListType === 'Date'">
+                                <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.subEntityType}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                            </div>
+
+
+
+                        </div>
+                    </td>
+
+                    <td class="col-md-1">
+                        <a href=""  ng-click="addRule(rowForm, $index);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                        <a href="" ng-click="remove($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                    </td>
+                </tr>  
+            </table>
+
+            <div class='form-group ' ng-if="onlyCriteria === false">
+                <label for="remarks"  class="col-md-3 control-label">
+                    {{ entity + 'Remarks' | translate}}
+                </label>
+                <div class="col-md-6"> 
+                    <textarea rows="5"  ng-model="ruleObject.remarks" id="remarks" name="remarks" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="col-xs-12" ng-show="onlyCriteria === false">
+                <div class="row">
+                    <div class="col-xs-12 pull-right text-right">
+                        <a href="" ng-click="resetCancel(addRuleForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+
+                        <button class="btn btn-hkg" ng-click="save(addRuleForm)">{{ entity + "Save" | translate }}</button>
+
+                    </div>
+                </div>
+            </div>     
+        </div>
+    </ng-form>
+</div>

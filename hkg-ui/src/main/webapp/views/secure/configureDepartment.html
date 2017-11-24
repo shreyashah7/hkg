@@ -1,0 +1,480 @@
+<style>
+    .list-main:nth-child(even) .list-header{
+        background-color: rgb(249, 249, 249);
+        border-top: rgb(219, 213, 218) solid 1px;
+        padding: 10px 0px 10px 0px;
+    }
+    .list-main:nth-child(odd) .list-header{
+        background-color: rgb(243, 241, 245);
+        border-top: rgb(219, 213, 218) solid 1px;
+        padding: 10px 0px 10px 0px;
+    }
+    .list-content-odd{
+        border: rgb(237, 234, 234) solid 1px;
+        border-top: 0px;
+        background-color: rgb(255, 255, 255);
+    }
+    .list-content-even{
+        border: rgb(243, 241, 245) solid 1px;
+        border-top: 0px;
+        background-color: rgb(253, 253, 253);
+    }
+    .modal.zoom-effect .modal-dialog {
+        -webkit-transform: scale(0.1);
+        -moz-transform: scale(0.1);
+        -ms-transform: scale(0.1);
+        transform: scale(0.1);
+        opacity: 0;
+        -webkit-transition: all 0.3s;
+        -moz-transition: all 0.3s;
+        transition: all 0.3s;
+    }
+
+    .modal.zoom-effect.in .modal-dialog {
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+        opacity: 1;
+    }
+    #springydemo-print{
+        position: absolute;
+        opacity: 0.7;
+        margin-right: 7px;
+        margin-top: 7px;
+        right: 20px;
+        -webkit-transition: all 0.3s ease-in-out;
+        -moz-transition: all 0.3s ease-in-out;
+        transition: all 0.3s ease-in-out;
+    }
+    #springydemo-print:hover{
+        opacity: 1;
+    }
+</style>
+
+<div class="row" ng-init="showRightColumn = true;">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'|translate}} </li>
+                    <li>{{entity + 'Manage'|translate}} </li>
+                    <li class="active">
+                        {{entity + 'Department Configurator'|translate}}
+                    </li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <!--<span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;-->
+                <span title="Department Flow" style="cursor: pointer;"><a target="_blank" href="#/printflow"><i class="fa fa-sitemap"></i></a></span>&nbsp;
+                <a target="_blank" href="#/printflow">{{entity + 'DEPARTMENT FLOW'|translate}}</a>&nbsp;&nbsp;
+                <span title="Toggle Existing Departments" id="right-column-toggle" ng-click="showRightColumn = !showRightColumn" class="" style="cursor: pointer">
+                    <!--                    <i ng-show="showRightColumn" class="fa fa-chevron-right"></i>
+                                        <i ng-show="!showRightColumn" class="fa fa-chevron-left"></i>-->
+                    <i class="glyphicon glyphicon-chevron-down"></i>
+                </span>
+            </div>
+        </div>
+        <!--breadcrumb-->
+        <hr class="margin-md" />
+        <div class="clearfix"></div>
+        <!--breadcrumb-->
+
+
+        <form class="form-horizontal" role="form"  name="configForm" novalidate id="configForm">
+            <div class="new-panel slide-transition col-xs-9" id="left-column">
+                <div class="col-xs-12 col-lg-12 well well-sm">
+
+                    <div class="input-group ">
+
+                        <div id="scrollable-dropdown-menu">
+                            <input class="typeahead" type="text"  placeholder="Search  department by name" ng-model="customLabel"
+                                   ag-search="{{apipath}}configdept/searchDepartmentForConfiguration" 
+                                   result-format="departmentName" 
+                                   on-select="editDepartmentFromSearchBox" 
+                                   on-enter="getSearchedDepartmentRecords"
+                                   search-list-array='searchedList'
+                                   id="scrollable-dropdown-menu"/>
+                        </div>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-hkg" ng-click="getSearchedDepartmentRecords(searchedList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                        </span>
+
+                        <!-- input-group --> 
+                    </div>
+                </div>
+                <!--col-xs-12 endds here--> 
+                <div class="clearfix"></div> 
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+
+
+                <div class="form-group" ng-if="config.displaySearchedDepartment === 'search'">
+                    <div class="col-xs-12">
+                        <div ng-show="!searchRecords || searchRecords.length == 0">
+                            {{ entity + "No matching results found" | translate }}
+                        </div>
+                        <h4 ng-if="searchRecords.length > 0">{{entity + 'Searched Departments'|translate}}</h4>
+                        <div class="table-responsive">
+                            <div ng-show="(searchRecords.length) > 0">
+                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ entity + "Department Name" | translate }}</th>
+                                            <th>{{ entity + "Stock Room" | translate }}</th>
+                                            <th>{{ entity + "Flow Mode" | translate }}</th>
+                                            <th>{{ entity + "Associated Departments" | translate }}</th>
+                                            <th>{{ entity + "Associated Designations" | translate }}</th>
+                                            <th>{{ entity + "Actions" | translate }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="dep in searchRecords" dt-rows>
+                                            <td>{{dep.departmentName}}</td>
+                                            <td>{{dep.stockDeptName === null? 'N/A': dep.stockDeptName}}</td>
+                                            <td>{{dep.flowMode === null? 'N/A': dep.flowMode}}</td>
+                                            <td>{{dep.numberOfAssociatedDepartments === null? 'N/A': dep.numberOfAssociatedDepartments}}</td>
+                                            <td>{{dep.numberOfAssociatedDesignation === null? 'N/A': dep.numberOfAssociatedDesignation}}</td>
+                                            <td>
+                                                <a class="col-md-offset-1" ng-click="editDepartmentFromSearchBox(dep.id)"><i class="glyphicon glyphicon-edit" title="Edit"></i></a>
+
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div ng-if="(config.displaySearchedDepartment === 'view' || config.displaySearchedDepartment === 'flow') && selectedDepartment">
+                    <h4 ng-if="selectedDepartment">Configure Department For {{ entity + selectedDepartment.displayName | translate}}</h4>
+                    <div class="clearfix"></div>
+                    <h4>{{ entity + 'General Section' | translate}}</h4>
+                    <div class="form-group">
+                        <label for="associatedStockDept" class="col-xs-4 col-lg-3 control-label">{{ entity + 'Associated Stock Room' | translate}}</label>
+                        <div class="col-xs-8 col-lg-7" ng-class="{'has-error': configForm.associatedStockDept.$invalid && (configForm.associatedStockDept.$dirty || config.configSubmitted)}">
+                            <select id="associatedStockDept" name="associatedStockDept" class="form-control col-md-12" ng-options="department.id as department.displayName for department in departmentListToSelect" ng-model="config.assocStckDept">
+                                <option value="">Select </option>
+                            </select>
+                            <!--                            <div class="error,help-block"  ng-show="(configForm.associatedStockDept.$dirty || config.configSubmitted) && configForm.associatedStockDept.$invalid">
+                                                            <span class="help-block" ng-show="configForm.associatedStockDept.$error.required" ng-bind=" entity + 'Associated stock room not selected' | translate"></span>
+                                                        </div>-->
+                        </div>
+                    </div>
+                    <div class="form-group" ng-if="loadMultiselect === true">
+                        <label for="associatedDept" class="col-xs-4 col-lg-3 text-right control-label">{{ entity + 'Associated Department' | translate}}</label>    
+
+                        <div class="col-xs-8 col-lg-7" ng-class="{'has-error': configForm.associatedDept.$invalid && (configForm.associatedDept.$dirty || config.configSubmitted)}">               
+                            <input type="text" class="col-md-12 hkg-nopadding" id="associatedDept" name="associatedDept" ui-select2="autoCompleteAssociteDept" ng-model="config.associatedDepartments"/>                    
+                            <!--                            <div class="error,help-block"  ng-show="(configForm.associatedDept.$dirty || config.configSubmitted) && configForm.associatedDept.$invalid">
+                                                            <span class="help-block" ng-show="configForm.associatedDept.$error.required" ng-bind=" entity + 'Associated departments not selected' | translate"></span>
+                                                        </div>-->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="associatedStockDept" class="col-xs-4 col-lg-3 control-label" style="padding-top: 0px;">{{ entity + 'Not working on physical diamond' | translate}}</label>
+                        <div class="col-xs-8 col-lg-7">
+                            <input type="checkbox" style="vertical-align: middle;" ng-model="config.noPhysicalDiamonds"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group required">
+                        <label for="status" class="col-xs-4 col-lg-3 control-label">{{ entity + 'Status' | translate}}</label>
+                        <div class="col-xs-3 col-lg-3" ng-class="{'has-error': configForm.status.$invalid && (configForm.status.$dirty || config.configSubmitted)}">
+                            <select id="status" name="status" class="form-control col-md-12" ng-model="config.status" ng-change="checkStatusOfConfig();">
+                                <option value="A">{{entity + 'Active'| translate }}</option>
+                                <option value="I">{{entity + 'Inactive'| translate }}</option>
+                            </select>
+                            <div class="error,help-block"  ng-show="(configForm.status.$dirty || config.configSubmitted) && configForm.status.$invalid">
+                                <span class="help-block" ng-show="configForm.status.$error.required" ng-bind=" entity + 'Status not selected' | translate"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group required">
+                        <label class="col-xs-4 col-lg-3 text-right control-label">{{ entity + 'Flow Mode' | translate}}</label>    
+                        <div class="col-xs-3 col-lg-3">
+                            <div class="btn-group">
+                                <button type="button" name="flowMode" class="btn btn-default btn-sm" ng-model="config.flowMode" btn-radio="'A'">{{entity + "Auto"| translate}}</button>
+                                <button type="button" name="flowMode" class="btn btn-default btn-sm" ng-model="config.flowMode" btn-radio="'M'">{{entity + "Manual"| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="!!associatedDeptList && associatedDeptList.length > 0" id="associatedDepartments">
+                        <div class="col-md-12">
+                            <h4>{{entity + 'SELECTED ASSOCIATED DEPARTMENT'| translate }}</h4>
+                        </div>
+                        <div class="col-md-12">
+                            <table class="table table-striped table-responsive" cellspacing="0" width="100%" style="margin-bottom:0px;">
+                                <thead>
+                                    <tr>                      
+                                        <th class="col-md-1 text-right">{{entity + 'Sr No'|translate}}</th> 
+                                        <th class="col-md-3 text-left" style="padding-left: 15px;padding-right: 15px;">{{entity + 'Name'|translate}}</th>
+                                        <th class="col-md-3 text-center">{{entity + 'Medium'|translate}}</th>
+                                        <th class="col-md-3 text-center">{{entity + 'Default Department'|translate}}</th>
+                                        <th class="col-md-2">{{entity + 'Action'|translate}}</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <ul class="list-unstyled">    
+                                <li ng-repeat="item in associatedDeptList" class="list-main" ng-form="departmentForm">
+                                    <div class="col-md-12 list-header">
+                                        <div class="col-md-1 text-right">
+                                            <span class="wordRap" ng-bind="$index + 1"></span>
+                                        </div>
+                                        <div class="col-md-3 text-left">
+                                            <span class="wordRap" ng-bind="item.name"></span>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <div class="col-md-12" ng-class="{'has-error': departmentForm.medium.$invalid && (departmentForm.medium.$dirty || config.configSubmitted)}">
+                                                <select name="medium" class="form-control" ng-options="medium.id as medium.text for medium in mediums" ng-model="item.medium" required>
+                                                    <option value="">Select </option>
+                                                </select>
+
+                                            </div>
+                                            <div class="error,help-block" ng-class="{'has-error': departmentForm.medium.$invalid && (departmentForm.medium.$dirty || config.configSubmitted)}"  ng-show="(departmentForm.medium.$dirty || config.configSubmitted) && departmentForm.medium.$invalid">
+                                                <span class="help-block" ng-show="departmentForm.medium.$error.required" ng-bind=" entity + 'Medium not selected' | translate"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-center">
+                                            <!--<input type="checkbox" id="isDefault" name="isDefault"  ng-model="item.isDefault" ng-change="checkDefaultDepartment($index, item.isDefault);" />-->
+                                            <input type="checkbox" id="isDefault" name="isDefault"  ng-model="item.isDefault" />
+                                        </div>
+                                        <div class="col-md-2">
+                                            <a data-toggle="collapse" data-target="#adiv{{$index}}">
+                                                <span class="glyphicon glyphicon-cog" title=" Configure rule"></span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div id="adiv{{$index}}" class="collapse col-md-12" ng-class="{'list-content-even':$even,'list-content-odd':$odd}">
+                                        <div class="col-md-12">&nbsp;</div>
+                                        <!--                                        <label for="barcode" class="col-md-2 col-lg-2 col-sm-4 control-label-static">{{entity + 'Rule Type'| translate}}</label>
+                                                                                <div class="col-md-2">
+                                                                                    <input type="radio" name="barcode" ng-value="true" ng-model="rules.typeOfRule"> {{entity + 'Pre'| translate}}
+                                                                                    <div class="pull-right">
+                                                                                        <input type="radio" name="barcode" ng-value="false" ng-model="rules.typeOfRule"> {{entity + 'Post'| translate}}
+                                                                                    </div>                                       
+                                                                                </div>-->
+
+                                        <div class="clearfix"></div>
+                                        <rule-template ruleset-object="item.ruleSet"></rule-template>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+
+
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <h4>{{entity + 'Related Designations'| translate }}</h4>
+                        </div>
+                        <div class="col-md-12" ng-if="config.designationList.length > 0">
+                            <table class="table table-striped table-responsive" cellspacing="0" width="100%" style="margin-bottom:0px;">
+                                <thead>
+                                    <tr>
+                                        <th class="col-md-1 text-right">{{entity + 'Sr No'|translate}}</th> 
+                                        <th class="col-md-6 text-left" style="padding-left: 15px;padding-right: 15px;">{{entity + 'Name'|translate}}</th>    
+                                        <th class="col-md-2 text-right" style="padding-left: 15px;padding-right: 15px;">{{entity + 'Level'|translate}}</th>
+                                        <th class="col-md-1">&nbsp;</th>  
+                                        <th class="col-md-2">{{entity + 'Action'|translate}}</th>                                   
+                                    </tr>
+                                </thead>
+                            </table>
+                            <ul class="list-unstyled">   
+                                <li ng-repeat="item in config.designationList" class="list-main" ng-form="configDesignationForm">                             
+                                    <div class="col-md-12 list-header">
+                                        <div class="col-md-1 text-right"><span ng-bind="$index + 1"></span></div>
+                                        <div class="col-md-6 text-left"><span class="wordRap" ng-bind="item.name"></span></div>
+                                        <!--                                        <div class="col-md-3 " style="padding-left: 0px;" ng-class="{'has-error': configDesignationForm.level.$invalid && (configDesignationForm.level.$dirty || config.configSubmitted)}">
+                                                                                    <input style="width: 32%;" id="level" required name="level" maxlength="2" class="form-control" type="text" numbers-only="numbers-only" ng-model="item.level" min="0"/>
+                                                                                    <div class="error,help-block"  ng-show="(configDesignationForm.level.$dirty || config.configSubmitted) && configDesignationForm.level.$invalid">
+                                                                                        <span class="help-block" ng-show="configDesignationForm.level.$error.required">{{entity + 'Level not entered'|translate}}</span>
+                                                                                    </div>
+                                                                                </div>-->
+                                        <div class="col-md-2 text-right">
+                                            <span ng-bind="item.level"></span>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <span>&nbsp;</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <a data-toggle="collapse" data-target="#designationDiv{{$index}}"><span class="glyphicon glyphicon-cog" title="Configure feature"></span></a>
+                                        </div>
+                                    </div>
+
+                                    <div id="designationDiv{{$index}}" class="col-md-12 collapse"  ng-class="{'list-content-even':$even,'list-content-odd':$odd}">
+                                        <!--<designation-template diamond-system-feature-list="item.features" unique-index="{{$index}}" feature-field-map="item.featureFieldMap" designation-id="{{item.id}}" feature-modifier-map="item.featureModifierMap"></designation-template>-->
+                                        <!--                                    <div class="col-md-12">
+                                                                                <h4>{{entity + 'Diamond Related Features'| translate }}</h4>
+                                                                            </div>
+                                        
+                                                                            <div class="col-md-12 well">
+                                                                                <span ng:repeat="diamondSystemFeature in diamondSystemFeatureList| orderBy:'name'" ng-show="diamondSystemFeatureList.length > 0">
+                                                                                    <div class="col-md-4" ng-show="$index % 3 == 0">
+                                                                                        <label class="checkbox-inline">
+                                                                                            <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox" ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                                                                        </label>
+                                                                                        <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+                                                                                    </div>
+                                                                                    <div class="col-md-4" ng-show="$index % 3 == 1">
+                                                                                        <label class="checkbox-inline">
+                                                                                            <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)">{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                                                                        </label>
+                                                                                        <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+                                                                                    </div>
+                                                                                    <div class="col-md-4" ng-show="$index % 3 == 2">
+                                                                                        <label class="checkbox-inline">
+                                                                                            <input ng-disabled="diamondSystemFeature.type === 'DEI'" type="checkbox"  ng-model="diamondSystemFeature.checked" ng-change="checkUncheckDiamondIA(diamondSystemFeature)"/>{{diamondSystemFeature.name}}&nbsp;&nbsp;
+                                                                                        </label>
+                                                                                        <span ng-class="{cogred : diamondSystemFeature.checked, coggreen: diamondSystemFeature.configure}" class="glyphicon glyphicon-cog small" title="Configure" ng-click="configureFeature(diamondSystemFeature)"></span>
+                                                                                    </div>
+                                                                                </span>
+                                                                                <div ng-show="diamondSystemFeatureList.length <= 0">{{entity + 'No diamond features exists'| translate }}</div>
+                                                                            </div>-->
+                                    </div>
+                                    <div class="row">&nbsp;</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div ng-if="config.designationList.length === 0" class="col-md-12">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No designations found to be configured'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <h4>{{entity + 'Default Rule'| translate }}</h4>&nbsp;
+                            <!--                        <a data-toggle="collapse" data-target="#ruleConfig">
+                                                        <span class="glyphicon glyphicon-cog" title=" Configure rule"></span>
+                                                    </a>-->
+                        </div>
+                        <div class="clearfix"></div>
+                        <div id="ruleConfig">
+                            <rule-template ruleset-object="config.ruleSet"></rule-template>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div class="col-md-12 pull-right text-right">
+                        <a href="" ng-click="initializePage();">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+
+                        <button ng-if="isDepartmentSelected !== true" class="btn btn-hkg" disabled="">{{ entity + "Save" | translate }}</button>
+                        <button ng-if="isDepartmentSelected === true" class="btn btn-hkg" ng-click="checkParameters(configForm)">{{ entity + "Save" | translate }}</button>
+
+                    </div>
+                </div>
+                <div ng-if="selectedDepartment === undefined && config.displaySearchedDepartment !== 'search'">  
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Select or Search a department to continue'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>    
+            <div class="col-xs-3 tree-bg" id="right-column" >
+                <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING DEPARTMENTS'|translate}}</strong></span>
+                    <hr class="margin-md"/>
+                    <div class="col-xs-12">
+                        <div class="input-group">
+                            <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                            <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                        </div>
+                    </div>
+                    <!--Tree component starts-->
+                    <div class="col-xs-12 hkg-nopadding">
+                        <br/>
+                        <div style="max-height: 400px;overflow: auto;" ng-show="departmentList.length > 0">
+                            <div ng-click='editDepartment(selectedDept)'
+                                 data-angular-treeview="true"
+                                 data-tree-id="selectedDept"
+                                 ag-treemodel="departmentList" 
+                                 exist-flag="isConfigExists"
+                                 data-search-query='treeSearchQuery'>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="departmentList.length === 0">
+                        {{entity + 'No departments are available.'|translate}} 
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </form>
+
+    </div>
+</div>`
+
+<div class="modal fade " data-backdrop="static" data-keyboard="false" id="defaultWarningPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <div class="modal-header">
+                <!--<span ng-click="cancelDefaultWaringPopup();scrollToElement('associatedDepartments');" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</span>-->
+                <h4 class="modal-title" id="myModalLabel"> {{entity + 'No Default Department Selected'| translate }}</h4>
+            </div>
+            <div id="wordRap" class="modal-body"  >
+                <div>
+                    {{ entity + "You have not selected any default department" | translate}}.&nbsp;{{ entity + "Do you want to continue" | translate}}&nbsp;?
+                </div>
+            </div>
+            <div class="modal-footer" >
+                <a href=""  ng-click="cancelDefaultWaringPopup();
+                    scrollToElement('associatedDepartments');"> {{entity + 'Cancel'| translate }}</a>
+                <button type="button" class="btn btn-hkg" ng-click="cancelDefaultWaringPopup();
+                    prepareModelDataAndSave(null)"> {{entity + 'Proceed'| translate }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade " data-backdrop="static" data-keyboard="false" id="deactivatePopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" >
+        <div class="modal-content" >
+            <div class="modal-header">
+                <span ng-click="cancelDeactivatePopup();" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+                <h4 class="modal-title" id="myModalLabel"> {{entity + 'Deactivate Configuration'| translate }}</h4>
+            </div>
+            <div id="wordRap" class="modal-body"  >
+                <div>
+                    {{ entity + "You are about to deactivate configuration" | translate}}.&nbsp;{{ entity + "Do you want to continue" | translate}}&nbsp;?
+                </div>
+            </div>
+            <div class="modal-footer" >
+                <a href=""  ng-click="cancelDeactivatePopup();"> {{entity + 'Cancel'| translate }}</a>
+                <button type="button" class="btn btn-hkg" ng-click="cancelDeactivatePopup(true);"> {{entity + 'Proceed'| translate }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--<div class="modal fade zoom-effect" data-backdrop="static" data-keyboard="false" id="departmentFlowPopup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" >
+        <div class="modal-content" >
+            <div class="modal-header text-center">
+                <span ng-click="hideDepartmentFlowPopup();" type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+                <h4 class="modal-title" id="myModalLabel"> {{entity + 'Department Flow'| translate }}</h4>
+            </div>
+            <div class="modal-body"  >
+                <button title="Print" class="btn btn-info" id="springydemo-print" onclick="printCanvasIframe()"><i class="glyphicon glyphicon-print"></i></button>
+                <div>
+                    <canvas id="springydemo" style="background-color: rgb(241, 241, 241);"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>-->
+<!--<iframe id="printf" name="printf" style="display: none;"></iframe>-->

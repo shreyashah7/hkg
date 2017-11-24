@@ -1,0 +1,309 @@
+<svg 
+    class="draggable-container"
+    xmlns="http://www.w3.org/2000/svg"
+    ng-mousedown="mouseDown($event, chart.isreadonly);"
+    ng-mousemove="mouseMove($event, chart.isreadonly);"
+    >    
+    <g ng-if="!chart.isreadonly"
+       ng-repeat="group in chart.groups"
+       ng-mousedown="groupMouseDown($event, group);"
+       ng-attr-transform="translate({{group.x()}}, {{group.y()}})"
+       >        
+        <rect 
+            ng-attr-class="{{group.selected() && 'selected-group-rect' || (group === mouseOverGroup && 'mouseover-group-rect' || 'group-rect')}}"
+            ry="5" 
+            rx="5" 
+            x="0" 
+            y="0" 
+            ng-attr-width="{{group.width()}}" 
+            ng-attr-height="{{group.height()}}"             
+            ng-dblclick="editGroupConfiguration(group)"
+            >
+            <title>{{entity + 'Select activity and press DEL to delete or double-click to edit configuration'|translate}} </title>
+        </rect>   
+        <text
+            class="group-text"            
+            x="35"
+            y="20"                        
+            ng-dblclick="editGroupConfiguration(group)">
+            {{group.name()}}
+            <title>{{entity + 'Select activity and press DEL to delete or double-click to edit configuration'|translate}}</title>
+        </text>
+        <!--            ng-attr-x="{{group.width()-40}}"-->
+        <image 
+            class="group-text"  
+            x="10"
+            y="5" 
+            width="20"
+            height="20"                   
+            xlink:href="images/activity-icon.png" 
+            ng-dblclick="editGroupConfiguration(group)">
+            <title>{{entity + 'Select activity and press DEL to delete or double-click to edit configuration'|translate}}</title>
+        </image>
+        <line 
+            ng-attr-class="{{group.selected() && 'selected-group-rect' || (group === mouseOverGroup && 'mouseover-group-rect' || 'group-rect')}}"
+            x1="0" 
+            y1="30" 
+            ng-attr-x2="{{group.width()}}" 
+            y2="30">
+            <title>{{entity + 'Select activity and press DEL to delete or double-click to edit configuration'|translate}}</title>
+        </line>
+        <g
+            ng-repeat="node in group.nodes"
+            ng-mousedown="nodeMouseDown($event, node, group)"
+            ng-attr-transform="translate({{node.x()}}, {{node.y()}})"
+            >                
+            <rect 
+                ng-attr-class="{{node.selected() && 'selected-node-rect' || (node === mouseOverNode && 'mouseover-node-rect' || 'node-rect')}}"
+                ry="3" 
+                rx="3" 
+                x="0" 
+                y="0" 
+                ng-attr-width="{{node.width()}}" 
+                ng-attr-height="{{node.height()}}"                 
+                ng-dblclick="editNodeConfiguration(node)">
+                <title>{{entity + 'Select service and press DEL to delete or double - click to edit configuration'|translate}}</title>
+            </rect>                   
+            <image                 
+                class="node-text"
+                ng-attr-x="{{(node.width() / 2) - 10}}"                
+                y="15" 
+                width="20"
+                height="20"                   
+                xlink:href="images/service-icon.png" 
+                ng-dblclick="editNodeConfiguration(node)">
+                <title>{{entity + 'Select service and press DEL to delete or double - click to edit configuration'|translate}}</title>
+            </image>
+            <text                
+                class="node-text"
+                ng-attr-x="{{node.width() / 2}}"        
+                y="45"
+                text-anchor="middle"
+                alignment-baseline="middle"
+                ng-dblclick="editNodeConfiguration(node)">
+                {{node.name()}}            
+                <title>{{entity + 'Select service and press DEL to delete or double - click to edit configuration'|translate}}</title>
+            </text>                        
+            <g
+                ng-repeat="connector in node.inputConnectors"
+                ng-mousedown="connectorMouseDown($event, node, connector, $index, true)"
+                class="connector input-connector"
+                >                
+                <circle       
+                    ng-attr-class="{{connector === mouseOverConnector && 'mouseover-connector-circle'|| 'connector-circle'}}"
+                    ng-attr-r="{{connectorSize}}" 
+                    ng-attr-cx="{{connector.x()}}"
+                    ng-attr-cy="{{connector.y()}}"                  
+                    >
+                    <title>{{entity + 'Drop on empty area'|translate}}</title>
+                </circle>
+            </g>
+
+            <g
+                ng-repeat="connector in node.outputConnectors"
+                ng-mousedown="connectorMouseDown($event, node, connector, $index, false)"
+                class="connector output-connector"
+                >                
+                <circle             
+                    ng-attr-class="{{connector === mouseOverConnector && 'mouseover-connector-circle'|| 'connector-circle'}}"
+                    ng-attr-r="{{connectorSize}}" 
+                    ng-attr-cx="{{connector.x()}}"
+                    ng-attr-cy="{{connector.y()}}"
+                    >
+                    <title>{{entity + 'Drop on empty area'|translate}}</title>
+                </circle>
+            </g>
+        </g>
+    </g>
+
+    <g ng-if="!chart.isreadonly">        
+        <g
+            ng-repeat="connection in chart.connections"
+            class="connection"
+            ng-mousedown="connectionMouseDown($event, connection)"
+            >
+            <path
+                ng-attr-class="{{connection.selected() && 'selected-connection-line' || (connection === mouseOverConnection && 'mouseover-connection-line' || 'connection-line')}}"
+                ng-attr-d="{{connection.connectionArea()}}"
+                ng-dblclick="editRuleConfiguration(connection)"
+                >
+                <title>{{entity + 'Select rule and press DEL to delete or double - click to edit configuration'|translate}}</title>
+            </path>
+            <circle
+                ng-attr-class="{{connection.selected() && 'selected-connection-startpoint' || (connection === mouseOverConnection && 'mouseover-connection-startpoint' || 'connection-startpoint')}}"
+                r="4" 
+                ng-attr-cx="{{connection.sourceCoordX()}}" 
+                ng-attr-cy="{{connection.sourceCoordY()}}" 
+                >
+            </circle>
+            <circle
+                ng-attr-class="{{connection.selected() && 'selected-connection-endpoint' || (connection === mouseOverConnection && 'mouseover-connection-endpoint' || 'connection-endpoint')}}"
+                r="4" 
+                ng-attr-cx="{{connection.destCoordX()}}" 
+                ng-attr-cy="{{connection.destCoordY()}}" 
+                >
+            </circle>
+        </g>
+    </g>
+
+    <g
+        ng-if="!chart.isreadonly && draggingConnection"
+        >
+        <path
+            class="dragging-connection dragging-connection-line"
+            ng-attr-d="M {{dragPoint1.x}}, {{dragPoint1.y}}          
+            L {{dragPoint2.x}}, {{dragPoint2.y}}"            
+            >
+        </path>
+
+        <circle
+            class="dragging-connection dragging-connection-endpoint"
+            r="4" 
+            ng-attr-cx="{{dragPoint1.x}}" 
+            ng-attr-cy="{{dragPoint1.y}}" 
+            >
+        </circle>
+
+        <circle
+            class="dragging-connection dragging-connection-endpoint"
+            r="4" 
+            ng-attr-cx="{{dragPoint2.x}}" 
+            ng-attr-cy="{{dragPoint2.y}}" 
+            >
+        </circle>
+    </g>
+
+    <rect
+        ng-if="dragSelecting && !chart.isreadonly"
+        class="drag-selection-rect"
+        ng-attr-x="{{dragSelectionRect.x}}"
+        ng-attr-y="{{dragSelectionRect.y}}"
+        ng-attr-width="{{dragSelectionRect.width}}"
+        ng-attr-height="{{dragSelectionRect.height}}"
+        >
+    </rect>
+
+    <g ng-if="chart.isreadonly"
+       ng-repeat="group in chart.groups"
+       ng-attr-transform="translate({{group.x()}}, {{group.y()}})"
+       >        
+        <rect 
+            ng-attr-class="{{group.selected() && 'selected-group-rect' || (group === mouseOverGroup && 'mouseover-group-rect' || 'group-rect')}}"
+            ry="5" 
+            rx="5" 
+            x="0" 
+            y="0" 
+            ng-attr-width="{{group.width()}}" 
+            ng-attr-height="{{group.height()}}"             
+            >
+        </rect>       
+        <text
+            class="group-static-text"            
+            x="35"
+            y="20"                        
+            >
+            {{group.name()}}
+        </text>
+        <image 
+            x="10"
+            y="5" 
+            width="20"
+            height="20"                   
+            xlink:href="images/activity-icon.png" 
+            >
+        </image>
+        <line 
+            ng-attr-class="{{group.selected() && 'selected-group-rect' || (group === mouseOverGroup && 'mouseover-group-rect' || 'group-rect')}}"
+            x1="0" 
+            y1="30" 
+            ng-attr-x2="{{group.width()}}" 
+            y2="30">
+        </line>
+        <g
+            ng-repeat="node in group.nodes"
+            ng-attr-transform="translate({{node.x()}}, {{node.y()}})"
+            >                
+            <rect 
+                ng-attr-class="{{node.selected() && 'selected-node-rect' || (node === mouseOverNode && 'mouseover-node-rect' || 'node-rect')}}"
+                ry="3" 
+                rx="3" 
+                x="0" 
+                y="0" 
+                ng-attr-width="{{node.width()}}" 
+                ng-attr-height="{{node.height()}}"                 
+                >
+            </rect>                   
+            <image                 
+                ng-attr-x="{{(node.width() / 2) - 10}}"                
+                y="15" 
+                width="20"
+                height="20"                   
+                xlink:href="images/service-icon.png" 
+                >
+            </image>
+            <text                
+                class="node-static-text"
+                ng-attr-x="{{node.width() / 2}}"        
+                y="45"
+                text-anchor="middle"
+                alignment-baseline="middle"
+                >
+                {{node.name()}}            
+            </text>                        
+            <g
+                ng-repeat="connector in node.inputConnectors"
+                class="connector input-connector"
+                >                
+                <circle       
+                    ng-attr-class="{{connector === mouseOverConnector && 'mouseover-connector-circle'|| 'connector-circle'}}"
+                    ng-attr-r="{{connectorSize}}" 
+                    ng-attr-cx="{{connector.x()}}"
+                    ng-attr-cy="{{connector.y()}}"
+                    >
+                </circle>
+            </g>
+
+            <g
+                ng-repeat="connector in node.outputConnectors"
+                class="connector output-connector"
+                >                
+                <circle             
+                    ng-attr-class="{{connector === mouseOverConnector && 'mouseover-connector-circle'|| 'connector-circle'}}"
+                    ng-attr-r="{{connectorSize}}" 
+                    ng-attr-cx="{{connector.x()}}"
+                    ng-attr-cy="{{connector.y()}}"
+                    >
+                </circle>
+            </g>
+        </g>
+    </g>
+
+    <g>
+        <g ng-if="chart.isreadonly"
+           ng-repeat="connection in chart.connections"
+           class="connection"
+           >
+            <path
+                ng-attr-class="{{connection.selected() && 'selected-connection-line' || (connection === mouseOverConnection && 'mouseover-connection-line' || 'connection-line')}}"
+                ng-attr-d="{{connection.connectionArea()}}"
+                >
+            </path>
+            <circle
+                ng-attr-class="{{connection.selected() && 'selected-connection-startpoint' || (connection === mouseOverConnection && 'mouseover-connection-startpoint' || 'connection-startpoint')}}"
+                r="4" 
+                ng-attr-cx="{{connection.sourceCoordX()}}" 
+                ng-attr-cy="{{connection.sourceCoordY()}}" 
+                >
+            </circle>
+            <circle
+                ng-attr-class="{{connection.selected() && 'selected-connection-endpoint' || (connection === mouseOverConnection && 'mouseover-connection-endpoint' || 'connection-endpoint')}}"
+                r="4" 
+                ng-attr-cx="{{connection.destCoordX()}}" 
+                ng-attr-cy="{{connection.destCoordY()}}" 
+                >
+            </circle>
+        </g>
+    </g>
+
+
+</svg>

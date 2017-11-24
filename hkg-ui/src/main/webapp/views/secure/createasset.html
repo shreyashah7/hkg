@@ -1,0 +1,447 @@
+<div class="row">
+    <div class="col-xs-12">              
+        <form class="form-horizontal" role="form"  name="addAssetForm" autocomplete="off" novalidate>       
+
+            <div flow-init="uploadFile" flow-file-added="fileAdded($file, $flow)" flow-file-success="countFiles($file,$flow,addAssetForm,$message);" flow-files-submitted="$flow.upload()" >
+                <div class="form-group required">
+                    <label for="dropdownMenu1" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Asset Category'|translate}}</label>
+                    <div class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="dropdown">
+                            <button tooltip="{{asset.parentCategory}}" class="form-control dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown">
+                                <span class="pull-left" ng-bind="asset.parentCategory.length > 23? asset.parentCategory.substring(0, 23) + '..' :asset.parentCategory"></span><span class="caret pull-right no-margin"></span>
+                            </button>
+                            <ul class="dropdown-menu col-xs-12" role="menu" aria-labelledby="dropdownMenu1">
+                                <div ng-click='assetClick(selectedCategoryDropdown);'
+                                     data-angular-treeview="true"
+                                     data-tree-id="selectedCategoryDropdown"
+                                     ag-treemodel="categoryListDropdown" entity-name="ASTCTG_NM.">
+                                </div>
+                            </ul>
+                        </div>
+                    </div>
+                    <span class="help-block"><a href="" ng-click="viewAssetCategory()">
+                            <span class="glyphicon glyphicon-plus-sign text-primary" title="{{entity + 'Add Category'| translate}}"></span>
+                        </a>                            
+                    </span>
+                </div>    
+                <div class="form-group">
+                    <label for="accessType" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Asset Type'| translate}}</label>
+                    <div class="col-md-10 col-lg-10 col-sm-8">
+                        <label class="radio-inline">
+                            <input type="radio" id="accessType" name="accessType" ng-value="true" ng-model="asset.assetType"> 
+                            {{entity + 'Managed'| translate}}
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" id="accessType" name="accessType" ng-value="false" ng-model="asset.assetType"> 
+                            {{entity + 'Nonmanaged'| translate}}
+                        </label>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+                <div class="form-group required">
+                    <label for="assetName" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Asset Name'| translate}}</label>
+                    <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': addAssetForm.assetName.$invalid && (addAssetForm.assetName.$dirty || submitted)}">
+                        <input ng-pattern="/^[^.]+$/" type="text" required maxlength="100" id="assetName" name="assetName" class="form-control"  ng-model="asset.modelName"  close-text="Close">            
+                        <div class="error,help-block" ng-show="(addAssetForm.assetName.$dirty || submitted) && addAssetForm.assetName.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.assetName.$error.required">{{ entity + "Asset name not entered" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.assetName.$error.maxlength">{{ entity + "Maximum 100 characters" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.assetName.$error.pattern">{{ entity + 'Asset name is invalid ' | translate}}</span>
+                        </div>
+                    </div>
+                    <label ng-if="asset.assetType && reloadFlag" for="assetId" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Asset Id'| translate}}</label>
+                    <div ng-if="asset.assetType && reloadFlag" class="col-md-4 col-lg-4 col-sm-8">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <input type="text" disabled="true" id="assetId" class="form-control" ng-model="asset.prefix"> 
+                            </div>
+                            <div class="col-xs-8" ng-class="{'has-error': addAssetForm.serialNumber.$invalid && (addAssetForm.serialNumber.$dirty || submitted)}">
+                                <input class="form-control" input-minlength="{{min_length}}"  type="text" input-maxlength="{{min_length}}" numbers-only="numbers-only" required name="serialNumber" style="width: 100%" ng-model="asset.serialNumber"  ng-blur="checkSerialNumber(asset.serialNumber, asset.category, asset.id, addAssetForm);
+                                        handleBarcodeGeneration()" ng-change="addCategoryForm.serialNumber.$setValidity('exists', true);"/>
+                                <div class="error,help-block" ng-show="addAssetForm.serialNumber.$dirty && addAssetForm.serialNumber.$invalid">
+                                    <span class="help-block" ng-show="addAssetForm.serialNumber.$error.required && asset.prefix">{{ entity + "Enter Number" | translate }}</span>                                    
+                                    <span class="help-block" ng-show="!addAssetForm.serialNumber.$error.required && addAssetForm.serialNumber.$error.exists && !addAssetForm.serialNumber.$error.minlength && !addAssetForm.serialNumber.$error.maxlength && asset.prefix">{{ entity + categoryExistsMsg | translate}}</span>
+                                    <span class="help-block" ng-show="!addAssetForm.serialNumber.$error.required && addAssetForm.serialNumber.$error.minlength && asset.prefix">{{ entity + "At least " + min_length + " length" | translate}}</span>
+                                    <span class="help-block" ng-show="!addAssetForm.serialNumber.$error.required && addAssetForm.serialNumber.$error.maxlength && !addAssetForm.serialNumber.$error.minlength && asset.prefix">{{ entity + "Max " + min_length + " length" | translate}}</span>
+                                    <span class="help-block" ng-show="!asset.prefix">{{ entity + "Enter asset category" | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group required" ng-if="asset.assetType">
+                    <label for="modelNumber" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Model No'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.modelNumber.$invalid && (addAssetForm.modelNumber.$dirty || submitted)}">
+                        <input type="text" ng-model="asset.modelNumber" maxlength="100" class="form-control" id="modelNumber" name="modelNumber" required >
+                        <div class="error,help-block,has-error" ng-show="(addAssetForm.modelNumber.$dirty || submitted) && addAssetForm.modelNumber.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.modelNumber.$error.required">{{entity + 'Model number not entered'| translate}}</span>
+                            <span class="help-block" ng-show="addAssetForm.modelNumber.$error.pattern">{{entity + 'Enter valid Model No'| translate}}</span>
+                        </div>
+                    </div>      
+                </div>
+                <div class="form-group required" ng-if="!asset.assetType">
+                    <label for="remainingUnits" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Total Units'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.remainingUnits.$invalid && (addAssetForm.remainingUnits.$dirty || submitted)}">
+                        <input type="text" maxlength="10" ng-model="asset.remaingUnits" numbers-only="numbers-only" class="form-control input-md" id="remainingUnits" name="remainingUnits" required min="0">                   
+                        <div class="error,help-block,has-error" ng-show="(addAssetForm.remainingUnits.$dirty || submitted) && addAssetForm.remainingUnits.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.remainingUnits.$error.required">{{entity + 'Enter total units'| translate}}</span>
+                        </div>
+                    </div>      
+                </div>
+                <div class="form-group required" >
+                    <label for="recipients123" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Purchased By'| translate}}</label>                    
+                    <div ng-init="makeDirtyFalse(addAssetForm);" class="col-lg-4 col-md-4 col-sm-8"  ng-class="{'has-error': addAssetForm.recipients123.$invalid && (addAssetForm.recipients123.$dirty || submitted)}">
+                        <div class="input-group">      
+
+                            <input ng-show="flag" type="text"  class="col-xs-12 hkg-nopadding" id="recipients123" ng-required="true" name="recipients123" ui-select2="autoCompleteRecipient" ng-model="asset.purchasedBy"/>
+                            <span ng-show="flag" class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{assetpopover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                        </div>  
+                        <div  class="error,help-block" ng-show="(addAssetForm.recipients123.$dirty || submitted) && addAssetForm.recipients123.$invalid">
+                            <span ng-show="flag" class="help-block" ng-show="addAssetForm.recipients123.$error.required">{{entity + 'Purchaser not selected'| translate }}</span>
+                        </div>
+                    </div>              
+                    <label for="manufacturer" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Manufacturer'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.manufacturer.$invalid && (addAssetForm.manufacturer.$dirty || submitted)}">
+
+                        <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                            <select id="manufacturer" name="manufacturer" class="form-control" ng-model="asset.manufacturer" required ng-options="manifacturer.value as (manifacturer.shortcutCode+'-'+manifacturer.label) for manifacturer in manifacturerList">
+                                <option value="">{{entity + 'Select Manufacturer'| translate}}</option>
+                            </select>
+                        </div>
+                        <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="manifacturerList" model-value="asset.manufacturer" master-code="MF" is-shortcut-required="true"></add-master-value>
+                        <!--<input type="text" ng-model="asset.manufacturer" class="form-control input-md col-md-12 hkg-nopadding"  ui-select2="manifacturerList" required close-text="Close" id="manufacturer" name="manufacturer" >-->
+                        <div class="error,help-block" ng-show="(addAssetForm.manufacturer.$dirty || submitted) && addAssetForm.manufacturer.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.manufacturer.$error.required">{{ entity + "Manufacturer not selected" | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group required">
+
+                    <label for="purchaseDt" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Purchase Date'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.purchaseDt.$invalid && (addAssetForm.purchaseDt.$dirty || submitted)}">
+                        <!--                    <p class="input-group">                       
+                                                <input type="text" class="form-control" readonly datepicker-popup="{{format}}" ng-model="dt" is-open="opened" min-date="minDate" max-date="'2015-06-22'" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" />
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-default" ng-click="open($event);opened = true;"><i class="glyphicon glyphicon-calendar"></i></button>
+                                                </span>
+                                            </p>-->
+                        <div class="input-group">
+                            <input type="text" id="purchaseDt" max="minFromDate" name="purchaseDt" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="asset.purchaseDt" is-open="opened"  datepicker-options="dateOptions" required close-text="Close" ng-change="setToDate();"/>
+                            <span class="input-group-btn">
+                                <button class="form-control" ng-click="open($event);
+                                    opened = true;">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </button>
+                            </span>     
+                        </div>
+                        <div class="error,help-block" ng-show="(addAssetForm.purchaseDt.$dirty || submitted) && addAssetForm.purchaseDt.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.purchaseDt.$error.required && !(addAssetForm.purchaseDt.$error.date || addAssetForm.purchaseDt.$error.min || addAssetForm.purchaseDt.$error.max)">
+                                {{ entity + "Purchase date not entered" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.purchaseDt.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.purchaseDt.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.purchaseDt.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                        </div>
+                    </div>
+                    <label for="inwardDt" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Inward Date'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.inwardDt.$invalid && (addAssetForm.inwardDt.$dirty || submitted)}">
+                        <div class="input-group">                               
+                            <input type="text" id="inwardDt" name="inwardDt" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="asset.inwardDt" is-open="opened_puc_expires" min="minToDate" datepicker-options="dateOptions" ng-required="true" close-text="Close" ng-change="setFromDate();"/>
+                            <span class="input-group-btn">
+                                <button class="form-control" ng-click="openInwartDt($event);
+                                    opened_puc_expires = true;">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="error,help-block" ng-show="(addAssetForm.inwardDt.$dirty || submitted) && addAssetForm.inwardDt.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.inwardDt.$error.required">{{ entity + "Inward date not entered" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.inwardDt.$error.required && !(addAssetForm.inwardDt.$error.date || addAssetForm.inwardDt.$error.min || addAssetForm.inwardDt.$error.max)">
+                                {{ entity + "Inward date not entered" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.inwardDt.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.inwardDt.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                            <span class="help-block" ng-show="addAssetForm.inwardDt.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label ng-if="asset.assetType" for="produceImage" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Produce Images'| translate}}</label>
+                    <div ng-if="asset.assetType" class="col-lg-4 col-md-4 col-sm-8">
+                        <label class="radio-inline">
+                            <input type="radio" id="produceImage" name="produceImage" ng-value="true" ng-model="asset.canProduceImages">
+                            {{ entity + "Yes" | translate }}
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" id="produceImage" name="produceImage" ng-value="false" ng-model="asset.canProduceImages"> 
+                            {{ entity + "No" | translate }}
+                        </label>
+                    </div>
+
+                    <label ng-if="editFlag" for="assetStatus" class="col-md-2 col-lg-2 col-sm-4 control-label"><span style="color: red">*</span>{{entity + 'Current Status'| translate}}</label>
+                    <div ng-if="editFlag" class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.assetStatus.$invalid}">
+                        <select id="assetStatus" name="assetStatus" class="form-control" ng-model="asset.status" required ng-options="assetStatus.value as assetStatus.label for assetStatus in statuslist">
+                        </select>
+                        <!--<input type="text" ng-model="asset.manufacturer" class="form-control input-md col-md-12 hkg-nopadding"  ui-select2="manifacturerList" required close-text="Close" id="manufacturer" name="manufacturer" >-->
+                        <div class="error,help-block" ng-show="(addAssetForm.assetStatus.$dirty || submitted) && addAssetForm.assetStatus.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.assetStatus.$error.required">{{ entity + "Manufacturer not selected" | translate }}</span>
+                        </div>
+                    </div>
+
+                </div>               
+                <div class="form-group required" ng-if="asset.canProduceImages">
+                    <label for="storagepath" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Storage Path'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8" ng-class="{'has-error': addAssetForm.storagepath.$invalid && (addAssetForm.storagepath.$dirty || submitted)}">
+                        <input type="text" ng-pattern='/^([A-Za-z]:)(\\[A-Za-z_\-\s0-9\.]+)+$/' ng-model="asset.imagePath" class="form-control input-md" id="storagepath" name="storagepath" required >
+                        <div class="error,help-block" ng-show="(addAssetForm.storagepath.$dirty || submitted) && addAssetForm.storagepath.$invalid">
+                            <span class="help-block" ng-show="addAssetForm.storagepath.$error.required">{{ entity + "Enter storage path" | translate }}</span>
+                            <span class="help-block" ng-show='addAssetForm.$error.pattern'>{{entity + 'Enter valid Storage path. '| translate }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-if="editFlag && asset.status === 'I'">
+                    <label class="col-md-2 col-lg-2 col-sm-4 text-right">{{entity + 'Issued To '| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8">
+                        <label>{{asset.issueToName}}-{{asset.issuedOn| date:'MM/dd/yyyy'}}</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="remarks" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Remarks'| translate}}</label>
+                    <div class="col-lg-4 col-md-4 col-sm-8">
+                        <textarea id="remarks" class="form-control" ng-trim="false" rows="5" ng-model="asset.remarks" maxlength="500"></textarea>           
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-2 col-lg-2 col-sm-4">&nbsp;</div>
+                    <div class="col-lg-4 col-md-4 col-sm-8">
+                        <div class="pull-right" id="messagecounter">{{500 - asset.remarks.length}}&nbsp;  {{entity + 'characters left'| translate }}</div> 
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="assetName" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Upload Docs'| translate}}</label>
+
+                    <div class="col-lg-4 col-md-4 col-sm-8">
+                        <button class="btn btn-hkg form-control" flow-btn>{{entity + 'Choose File'|translate}}</button>  
+                        <ul class="list-group">    
+                            <li class="list-group-item" ng-repeat="file in $flow.files">
+                                {{file.name}}
+                                <span class="glyphicon glyphicon-remove pull-right" ng-click="$flow.files.splice($index, 1);
+                                        removeFromSession(file.msg);"></span>
+                            </li>
+                        </ul>
+                        <ul class="list-group">                        
+                            <li class="list-group-item" ng-repeat="file1 in fileNames" ng-show="validFileFlag">
+
+                                <span class="text-danger"> {{file1}} {{entity + 'not valid file'| translate}} </span>
+                                <span class="glyphicon glyphicon-remove pull-right" ng-click="fileNames.splice($index, 1)"></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div ng-if="editFlag">
+                        <div class="col-md-6 col-md-offset-2">
+                            <ul class="list-group">    
+                                <li class="list-group-item" ng-repeat="file in asset.fileDataBeans">
+                                    <a ng-if="!file.archiveStatus" ng-href="{{appendAuthToken(apipath + 'asset/downloadDocument?filename=' + file.filePath)}}">{{file.fileName}} </a>
+                                    <span ng-if="!file.archiveStatus" class="glyphicon glyphicon-remove pull-right" ng-click="file.archiveStatus = true;
+                                            asset.fileDataBeans.splice($index, 1);
+                                            removeFromPage(file);"></span>
+                                </li>                      
+                            </ul>
+                        </div>
+                    </div>
+<!--                    <div class="input-group">              
+                        <input type="text" id="demo" name="demo" class="form-control"ng-model="asset.path"/>
+                        <span><a href="" ng-click="openFolder(asset.path)">
+                            <span class="glyphicon glyphicon-plus-sign text-primary"></span>
+                        </a>                            
+                    </span>
+                    </div>-->
+                    <div class="col-md-1">&nbsp;</div>
+                </div>
+                <div class="form-group" ng-if="asset.assetType">
+                    <label for="barcode" class="col-md-2 col-lg-2 col-sm-4 control-label">{{entity + 'Generate Barcode'| translate}}</label>
+                    <div class="col-md-2">
+                        <input type="radio" name="barcode" ng-value="true" ng-change='handleBarcodeGeneration()' ng-model="asset.canGenerateBarcode"> {{entity + 'Yes'| translate}}
+                        <div class="pull-right">
+                            <input type="radio" name="barcode" ng-value="false" ng-change='handleBarcodeGeneration()' ng-model="asset.canGenerateBarcode"> {{entity + 'No'| translate}}
+                        </div>
+                    </div>
+                    <div class="col-md-4" ng-if="asset.barcode">
+                        <a ng-href="{{appendAuthToken(apipath + 'event/getimage?file_name=' + asset.barcode)}}"  download="barcode.jpg" title="barcode"><img class="col-md-12"  ng-src="{{appendAuthToken(apipath + 'event/getimage?file_name=' + asset.barcode)}}" /></a> 
+                        <print-barcode-value model-value="asset.barcode" is-image-name="true"></print-barcode-value>
+                        <!--<span class="btn-link glyphicon glyphicon-print pull-right" style="font-size: 20px" ng-click="printBarcode()" ng-if="asset.barcode"></span>-->
+                    </div>
+                </div> 
+                <div ng-if="editFlag && reload">  
+                    <dynamic-form input-css ="col-lg-4 col-md-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" db-map="dbType" internationalization-label="{{entity}}" form-name="form2" template="genralDepartmentTemplate" ng-model="addAssetData" ng-if="genralDepartmentTemplate" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1">
+                    </dynamic-form></div>
+                <div ng-if="!editFlag && reload">  
+                    <dynamic-form input-css ="col-lg-4 col-md-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" db-map="dbType" internationalization-label="{{entity}}" form-name="form2" template="genralDepartmentTemplate" ng-model="addAssetData" ng-if="genralDepartmentTemplate" edit-flag="{{editFlag}}" is-diamond="false" no-of-field-per-row = "1">
+                    </dynamic-form></div>
+                <div class="form-group">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="assetCancel(addAssetForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="submitFilesAndSaveAsset($flow, addAssetForm);">
+                                    <div ng-if="!editFlag">{{entity + 'Add Asset'| translate}}</div>
+                                    <div ng-if="editFlag">{{entity + 'Edit Asset'| translate}}</div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+
+            </div>  
+            <div ng-init="initForm(addAssetForm);
+                    registerLocationChangeEvent(addAssetForm);"></div>
+        </form>
+
+
+        <!--            <div class="col-md-2 ">
+                        <a href="" style="float: right" ng-click="viewAssetCategory()">+Add Category</a>
+                    </div>-->
+
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="addcategoryPopUp">
+    <form name="addCategoryForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideAssetCategory(addCategoryForm);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Add Asset Category'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">                      
+                        <label for="dropdownMenu2" class="col-md-3 control-label control-label">{{entity + 'Parent Category'|translate}}</label>
+                        <div class="col-md-7 col-lg-7 col-sm-10">
+                            <div class="dropdown">
+                                <button class="form-control dropdown-toggle" id="dropdownMenu2" data-toggle="dropdown"> 
+                                    <span class="pull-left" ng-bind="category.parentName"></span><span class="caret pull-right no-margin"></span>
+                                </button>
+                                <ul ng-if="categoryDropdownList" class="dropdown-menu col-xs-12" role="menu" aria-labelledby="dropdownMenu1">
+                                    <div ng-click='categoryClick(selectedCategoryDropdown)'
+                                         data-angular-treeview="true"
+                                         data-tree-id="selectedCategoryDropdown"
+                                         ag-treemodel="categoryDropdownList">
+                                    </div>
+                                </ul>
+                            </div>
+                        </div>                        
+                    </div> 
+                    <div class="form-group required">
+                        <label for="categoryName" class="col-md-3 control-label">{{entity + 'Category Name'|translate}}</label>
+                        <div class="col-md-7" ng-class="{'has-error': addCategoryForm.categoryName.$invalid && (addCategoryForm.categoryName.$dirty || categorySubmitted)}">
+                            <div>
+                                <input ng-pattern="/^[^.]+$/" type="text" id="categoryName" name="categoryName" class="form-control input-md" ng-model="category.displayName" required ng-change="addCategoryForm.categoryName.$setValidity('exists', true);" maxlength="100">     
+                                <div class="error,help-block" ng-show="(addCategoryForm.categoryName.$dirty || categorySubmitted) && addCategoryForm.categoryName.$invalid">
+                                    <span class="help-block" ng-show="addCategoryForm.categoryName.$error.required">{{entity + 'Category name not entered'| translate }}</span>
+                                    <span class="help-block" ng-show="addCategoryForm.categoryName.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                                    <span class="help-block" ng-show="addCategoryForm.categoryName.$error.pattern">{{ entity + 'Category name is invalid ' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="col-md-3 control-label">{{entity + 'Description'|translate}}</label>
+                        <div class="col-md-7">
+                            <textarea id="description" name="description" rows="5" maxlength="500" ng-trim="false" class="form-control input-md" ng-model="category.description"></textarea>           
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-offset-3 col-md-7">
+                            <div id="messagecounter" class="pull-right">{{500 - category.description.length}}&nbsp;  {{entity + 'characters left'| translate }}</div> 
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryPrefix" class="col-md-3 control-label"><span style="color: red">*</span>{{entity + 'Id Series'|translate}}</label>
+
+                        <div class="col-md-3" ng-class="{'has-error': addCategoryForm.categoryPrefix.$invalid && categorySubmitted}">
+                            <input type="text" id="categoryPrefix" placeholder="Prefix" maxlength="10" name="categoryPrefix" required class="form-control input-md" ng-model="category.categoryPrefix" ng-change="addCategoryForm.categoryPrefix.$setValidity('exists1', true);">      
+                            <div class="error,help-block" ng-show="(addCategoryForm.categoryPrefix.$dirty || categorySubmitted) && addCategoryForm.categoryPrefix.$invalid">
+                                <span class="help-block" ng-show="addCategoryForm.categoryPrefix.$error.required">{{ entity + "Id Prefix not entered" | translate }}</span>
+                                <span class="help-block" ng-show="addCategoryForm.categoryPrefix.$error.exists1">{{ entity + categoryPrefixMsg | translate}}</span>
+
+                            </div>
+                        </div> 
+                        <div class="col-md-3" ng-class="{'has-error': addCategoryForm.addSerialNumber.$invalid && (addCategoryForm.addSerialNumber.$dirty || categorySubmitted)}">   
+                            <input type="text" id="addSerialNumber" maxlength="10" class="form-control" placeholder="Starting index" name="addSerialNumber" style="width: 100%" numbers-only="numbers-only" value="0" ng-minlength="2" ng-model="category.startIndex"/>
+                            <div class="error,help-block" ng-show="(addCategoryForm.addSerialNumber.$error.minlength || categorySubmitted)">
+                                <span class="help-block" ng-show="addCategoryForm.addSerialNumber.$error.minlength">{{ entity + "Insert at least two digits" | translate }}</span>
+                            </div>
+                            <!--                            <div class="error,help-block" ng-show="(addCategoryForm.addSerialNumber.$dirty || categorySubmitted) && addCategoryForm.addSerialNumber.$invalid">
+                                                            <span class="help-block" ng-show="addCategoryForm.addSerialNumber.$error.required">{{ entity + "Enter Serial Number" | translate }}</span>
+                                                            <span class="help-block" ng-show="addCategoryForm.addSerialNumber.$error.exists">{{ entity + categoryExistsMsg | translate}}</span>
+                                                        </div>-->
+                        </div>                      
+                    </div>
+                    <div ng-if="addAssetCategory">
+                        <dynamic-form input-css ="col-md-7" label-css="col-md-3 control-label" db-map="dbTypeForCategory" internationalization-label="{{entity}}" form-name="form2" template="categoryTemplate" ng-model="categoryData" ng-if="categoryTemplate" submit-flag-name="categorySubmitted" edit-flag="false">
+                        </dynamic-form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideAssetCategory(addCategoryForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="addCategory(addCategoryForm);">
+                                        {{entity + 'Add category'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>          
+                    <!--                    <button class="btn btn-primary" ng-click="addCategory(addCategoryForm);">{{entity + 'Add category'|translate}}</button>
+                                        <button class="btn btn-primary" ng-click="hideAssetCategory(addCategoryForm);">{{entity + 'Cancel'|translate}}</button>-->
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="removeAssetModal">
+    <form name="removeAssetForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideconformationForRemoveAsset();">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Remove Asset'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">                        
+                        <label for="assetCategory" class="col-md-12">
+                            {{ entity + "Are you sure you want to remove"}}  
+                        </label>                                            
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideconformationForRemoveAsset();">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="updateasset();">
+                                        {{entity + 'Remove'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>        
+                    <!--                    <button class="btn btn-primary" ng-click="updateasset();">{{entity + 'Remove'|translate}}</button>
+                                        <button class="btn btn-primary" ng-click="hideconformationForRemoveAsset();">{{entity + 'Cancel'|translate}}</button>-->
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+

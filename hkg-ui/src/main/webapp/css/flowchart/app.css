@@ -1,0 +1,193 @@
+/*
+Generic reset.
+*/
+
+
+.test {
+    border: 5px #0048ff solid;
+    padding: 10;
+    margin: 10;
+    font-family: "Times New Roman";
+    font-style: italic;
+}
+
+/*
+Styles for nodes and connectors.
+*/
+
+.node-rect {
+    stroke: #a8b878;
+    stroke-width: 1;
+    fill: #c1d095;
+}
+
+.mouseover-node-rect {
+    stroke: #a8b878;
+    stroke-width: 2;
+    fill: #c1d095;
+    opacity: 0.75;
+    cursor: pointer;
+}
+
+.group-rect {
+    stroke: #d7d7d7;
+    stroke-width: 1;    
+    fill: #ebebeb;
+    box-shadow: 2px 2px 2px #444;
+}
+
+.group-text {
+    fill: #303030;    
+    font-size:15px;
+    cursor: pointer;
+    text-shadow: 1px 1px 1px #fff;
+}
+
+.group-static-text {
+    fill: #303030;    
+    font-size:15px;
+    text-shadow: 1px 1px 1px #fff;
+}
+
+.node-text {
+    fill:#405013;    
+    font-size: 15px;
+    cursor: pointer;
+    text-shadow: 1px 1px 1px #fff;    
+}
+
+.node-static-text {
+    fill:#405013;    
+    font-size: 15px;
+    text-shadow: 1px 1px 1px #fff;    
+}
+
+.mouseover-group-rect {
+    stroke: #d7d7d7;
+    stroke-width: 2;
+    fill: #ebebeb;
+    fill-opacity: 0.75;
+    cursor: pointer;
+}
+
+.selected-node-rect {
+    stroke: #0048ff;
+    stroke-width: 2;
+    fill: #c1d095;
+    fill-opacity: 0.75;
+    cursor: pointer;
+}
+
+.selected-group-rect {
+    stroke: #0048ff;
+    stroke-width: 2;
+    fill: #ebebeb;
+    opacity: 0.75;
+    cursor: pointer;
+}
+
+.connector-circle {
+    fill: white;
+    stroke: #636363;
+    stroke-width: 2;
+}
+
+.mouseover-connector-circle {
+    fill: white;
+    stroke: black;
+    stroke-width: 3;
+}
+
+/*
+Style for connections.
+*/
+
+.connection {
+}
+
+.connection-line {
+    stroke: gray;
+    stroke-width: 4;
+    fill: transparent;    
+}	
+
+.mouseover-connection-line {
+    stroke: #0048ff;
+    stroke-width: 8;
+    fill: transparent;
+    cursor: pointer;
+}	
+
+.selected-connection-line {
+    stroke: #0048ff;
+    stroke-width: 8;
+    fill: transparent;
+    cursor: pointer;
+}	
+
+.connection-endpoint {
+    fill: green;
+}
+
+.selected-connection-endpoint {
+    fill: green;
+}	
+
+.mouseover-connection-endpoint {
+    fill: green;
+}
+
+.connection-startpoint {
+    fill: orange;
+}
+
+.selected-connection-startpoint {
+    fill: orange;
+}	
+
+.mouseover-connection-startpoint {
+    fill: orange;
+}
+
+/*
+Style for the connection being dragged out.
+*/
+
+.dragging-connection {
+    pointer-events: none;
+}
+
+.dragging-connection-line {
+    stroke: #0048ff;
+    stroke-width: 3;
+    fill: transparent;
+}	
+
+.dragging-connection-endpoint {
+    fill: #0048ff;
+}
+
+/*
+The element (in this case the SVG element) that contains the draggable elements.
+*/
+
+.draggable-container {	
+    height: auto;
+    width: auto;        
+    min-height: 600px;
+    min-width: 100%;                    
+}
+
+/*
+Drag selection rectangle.
+*/
+
+.drag-selection-rect {
+    stroke: #0033ff;
+    stroke-width: 2;
+    fill: transparent;
+}
+
+.scroll {    
+    overflow: auto;      
+}

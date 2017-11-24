@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<div class="pull-right">
+    <a href="#updatelabel">{{i18Int + 'Show Labels' | translate }}</a>
+    <input type="button" value="Reload Labels" ng-click="fnCopyLabel()" class="btn btn-primary"/>
+</div>
+<div class="row">&nbsp;</div>
+<div class="hkg-fieldset-min">
+    <div ag-alert entity="i18Int"></div>
+    <div class="row">&nbsp;</div>
+    <table style="width: 100%">
+        <tr>
+        <div ng-init="pageSetup()">
+
+            <div class="row">
+                <div class="col-md-1 ">
+                    {{i18Int + 'Add' | translate }}
+                </div>
+                <div class="col-md-1 left">
+                    <select class="form-control" name="numberOfLabel" required id="input_category" ng-click="setNumberDropdown()" ng-options="count for count in listLabelRowCount" ng-model="selectedRowCount"> 
+                        <!--<option value="">Select</option>-->
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    {{i18Int + 'Labels' | translate }}        
+                </div>
+                <div class="col-md-9">
+                    &nbsp;
+                </div>
+            </div>
+            <!--                <div class="btn-group">
+                                <button data-toggle="dropdown" class="btn dropdown-toggle" >{{selectedRowCount}} <span class="caret"></span></button>
+                                <ul class="dropdown-menu" >
+                                    <li ng-repeat="count in listLabelRowCount" ng-click="setNumberDropdown(count)"><a href="">{{count}}</a></li>
+                                </ul>
+                            </div> -->
+
+            <form role="form" ng-submit="addLabel()" name="labelform" novalidate>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{i18Int + 'Text' | translate }}</th>
+                            <th>{{i18Int + 'Type:' | translate }}<div class="btn-group">
+                        <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelTypes[selectedLabelTypeForAll]}} <span class="caret"></span></button>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="(typekey,typeval) in labelTypes" ng-click="setSelectedTypeAll(typekey)" ><a href="">{{typeval}}</a></li>
+                        </ul>
+                    </div></th>
+                    <th>{{i18Int + 'Environment:' | translate }}<div class="btn-group">
+                        <button name="b1" data-toggle="dropdown" class="btn dropdown-toggle">{{labelEnvironments[selectedLabelEnvironmentForAll]}} <span class="caret"></span></button>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="(environmentkey,environmentval) in labelEnvironments" ng-click="setSelectedEnvironmentAll(environmentkey)"><a href="">{{environmentval}}</a></li>
+                        </ul>
+                    </div></th>
+                    <th>
+                        {{i18Int + 'Entity:' | translate }}
+                        <select class="form-control" name="selectEntity" required id="input_category" ng-click="setSelectedEntityAll()" ng-options="entity for entity in labelEntitys" ng-model="selectedLabelEntityForAll"> 
+                            <!--<option value="">Select</option>-->
+                        </select>
+                    </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="count in getRange() track by $index">
+                            <td>
+                                <!--<div ng-class="{'has-error': labelform.labelTextval.$invalid}">-->
+                                    <input type='text' required class='form-control' name="labelTextval" placeholder="Label text" ng-model="label[$index].text"/>
+<!--                                    <div class="error,help-block" ng-show="(labelform.labelTextval.$dirty || textsubmitted) && labelform.labelTextval.$invalid">
+                                        <span class="help-block" ng-show="labelform.labelTextval.$error.required">Enter Label Text</span>
+                                    </div>
+                                </div> -->
+                            </td>
+                            <!--                    <td><input type='text' required class=  'form-control' placeholder="Label type" ng-model="label[$index].type"/></td>-->
+                            <td><div class="btn-group">
+                                    <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelTypes[label[$index].type]}} <span class="caret"></span></button>
+                                    <ul class="dropdown-menu" >
+                                        <li ng-repeat="(typekey,typeval) in labelTypes " ng-click="setSelectedType(typekey, label[$parent.$index])"><a href="">{{typeval}}</a></li>
+                                    </ul>
+                                </div><span class="error" ng-show="{{label[$index].type === 'Select Type' && submitted}}">Error</span></td>
+                            <!--<td><input type='text' required class='form-control' placeholder="Label environment" ng-model="label[$index].environment"/></td>-->
+                            <td><div class="btn-group">
+                                    <button data-toggle="dropdown" class="btn dropdown-toggle">{{labelEnvironments[label[$index].environment]}}<span class="caret"></span></button>
+                                    <ul class="dropdown-menu" >
+                                        <li ng-repeat="(environmentkey,environmentval) in labelEnvironments" ng-click="setSelectedEnvironment(environmentkey, label[$parent.$index])"><a href="">{{environmentval}}</a></li>
+                                    </ul>
+                                </div></td>
+                            <td><div class="btn-group">
+                                    <button data-toggle="dropdown" class="btn dropdown-toggle">{{label[$index].entity}}<span class="caret"></span></button>
+                                    <ul class="dropdown-menu" >
+                                        <li ng-repeat="entity in labelEntitys" ng-click="setSelectedEntity(entity, label[$parent.$index])"><a href="">{{entity}}</a></li>
+                                    </ul>
+                                </div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-primary">{{i18Int + 'Add Label' | translate}}</button>
+            </form>
+        </div></td></tr></table>
+</div>
+<!--code to add language and country
+<div>
+    <form name="add_lang_country_form" ng-submit="addCountryLang()">
+        <table>
+            <tr>
+                <td>Country:</td>
+                <td><div class="btn-group">
+                        <button data-toggle="dropdown" class="btn dropdown-toggle">{{countryMap[selectedCountry]}} <span class="caret"></span></button>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="(countrykey,countryval) in countryMap" ng-click="setSelectedCountry(countrykey)" ><a href="">{{countryval}}</a></li>
+                        </ul>
+                    </div></td>
+            </tr>
+            <tr>
+                <td>Language:</td>
+                <td><div class="btn-group">
+                        <button data-toggle="dropdown" class="btn dropdown-toggle">{{languageMap[selectedLanguage]}} <span class="caret"></span></button>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="(langkey,langval) in languageMap" ng-click="setSelectedLanguage(langkey)" ><a href="">{{langval}}</a></li>
+                        </ul>
+                    </div></td>
+            </tr>
+            <tr>
+                <td>Is language left to right?</td>
+                <td><input type="checkbox" ng-model="isLefttoRight"/></td>
+            </tr>
+            <tr>
+                <td>Character encoding:</td>
+                <td><div class="btn-group">
+                        <button data-toggle="dropdown" class="btn dropdown-toggle">UTF-8<span class="caret"></span></button>
+                        <ul class="dropdown-menu" >
+                            <li><a href="">UTF-8</a></li>
+                        </ul>
+                    </div></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td> <button class="btn btn-default">Add</button></td>
+            </tr>
+        </table>
+    </form>
+</div>-->

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">    
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'|translate}} </li>
+                    <li>{{entity + 'Configure'|translate}} </li>                   
+
+                    <li class="active" ng-if="showRuleLink">
+                        {{entity + 'Exception'|translate}}
+                    </li>
+                    <li class="active" ng-if="showExceptionLink">
+                        {{entity + 'Rule'|translate}}
+                    </li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary" title="{{entity + 'Add '|translate}}" ></span>
+                <a style="cursor: pointer"  class="pull-right" ng-if="showRuleLink" ng-click="setRuleAsFeature()">{{entity + 'Add Rule'|translate}}</a>&nbsp;
+
+                <!--<span class="glyphicon glyphicon-plus-sign text-primary" title="{{entity + 'Add '|translate}}" ></span>-->
+                <a style="cursor: pointer"  class="pull-right"  ng-if="showExceptionLink" ng-click="setExceptionAsFeature()">{{entity + 'Add Exception'|translate}}</a>
+            </div>
+        </div>
+        <form class="form-horizontal" role="form"  name="configRule" novalidate id="configRule">
+            <div class="new-panel slide-transition col-xs-9" id="left-column">
+
+                <div class="col-xs-12 col-lg-12 well well-sm ">
+                    <div class="input-group ">
+                        <div id="searchCustomField">
+
+                            <input class="typeahead" type="text" ng-model="customLabel"  placeholder="Search rule" 
+                                   ag-search="{{apipath}}ruleconfig/searchrules" 
+                                   result-format="displayName" 
+                                   on-select="editRuleFromSearch" 
+                                   on-enter="getSearchedRules"
+                                   search-list-array='searchedList'
+                                   id="searchCustomField" />
+                        </div>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default btn-hkg" ng-click="getSearchedRulePages(searchedList)" type="button" tooltip-html-unsafe="{{customsearchpopover}}" ><span class="glyphicon glyphicon-search"></span></button>
+                        </span> 
+                    </div>
+                    <!-- input-group --> 
+                </div>
+
+
+                <div class="clearfix"></div>
+                <div id="messages" ng-include src="'templates/messages.html'"></div>
+                <div ng-include src="'views/secure/searchedRule.html'" ng-if="displayRulepage === 'search'"></div>
+                <div ng-form="configRule" ng-if="displayRulepage === 'view'">
+                    <div class="row">
+
+                        <div class="form-group required">
+                            <div class="col-lg-6 col-md-6 col-xs-12   ">
+                                <label for="ruleName" class="col-md-4 control-label ">{{entity + 'Rule name'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.ruleName.$invalid && submittedForm}">
+                                    <input type='text'  maxlength="25" class="form-control" id='ruleName' name="ruleName" ng-model="rule.ruleName"  ng-pattern="/^[a-zA-Z0-9 ]+$/" ng-required ="true"/>
+                                    <div class="error,help-block" ng-show="configRule.ruleName.$invalid && submittedForm">                                                    
+                                        <span class="help-block"  ng-show=" configRule.ruleName.$error.pattern">{{entity + 'Enter valid rule name'| translate }}</span>
+                                        <span class="help-block" ng-show=" configRule.ruleName.$error.required">{{entity + 'Rule name not entered'| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xs-12 " ng-if="isRulePage">
+                                <label for="ruleType" class="col-md-4 control-label">{{entity + 'Rule type'|translate}}</label>
+
+                                <div class="col-md-8" ng-class="{'has-error': configRule.ruleType.$invalid && submittedForm}">
+                                    <select id="ruleType" name="ruleType" class="form-control col-md-12" ng-options="ruleType.id as ruleType.text for ruleType in ruleTypes"   ng-model="rule.type" ng-required="true">
+                                        <option value="">Select </option>
+                                    </select>
+                                    <div class="error,help-block" ng-show=" configRule.ruleType.$invalid && submittedForm">
+                                        <span class="help-block" ng-show=" configRule.ruleType.$error.required">{{ entity + "Rule type not entered" | translate }}</span>
+                                    </div> 
+                                </div>  
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <rule-template ruleset-object="rule" only-criteria="true" entity-id="entityId"></rule-template>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+
+                            <div class="col-lg-6 col-md-6 col-xs-12   ">
+                                <label for="ruleDescription" class="col-md-4 control-label">{{entity + 'Description'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.ruleDescription.$invalid}">
+                                    <textarea   class="form-control" ng-trime="false" ng-maxlength="500"  id="ruleDescription" name="ruleDescription" ng-model="rule.description" ></textarea>
+                                    <div style="text-align: right;">{{500 - rule.description.length}} {{ entity + "characters remains" | translate }}</div>
+
+                                    <div class="error,help-block" ng-show="configRule.ruleDescription.$invalid">                                                    
+                                        <span class="help-block" >{{entity + 'Enter valid description'| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-xs-12 form-group required" style="margin-left: 0px;margin-right: 0px;" ng-if="isRulePage && reloadFeature" ng-hide="entityId < 0">
+                                <div class="col-md-4 ">
+                                    <label class="control-label" for="autoCompleteFeature"> {{ entity + "Select Feature" | translate }}  </label>
+                                </div>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.autoCompleteFeature.$invalid && submittedForm}">
+                                    <input type="text" id="autoCompleteFeature" dynamic-options="true"  ng-required="entityId > 0"  name="autoCompleteFeature" ui-select2="autoCompleteFeature" ng-model="rule.features" class="col-md-6 hkg-nopadding form-control" 
+                                           select-by-id="true" />
+                                    <div class="error,help-block" ng-show=" configRule.autoCompleteFeature.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.autoCompleteFeature.$error.required">{{ entity + "Feature not selected" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-xs-12" ng-if="isExceptionPage && reloadSkipRule">
+                                <div class="col-md-4 control-label">
+                                    <label  for="autoCompleteFeature"> {{ entity + "Skip Rules" | translate }}  </label>
+                                </div>
+                                ---{{rule.skipRules}}
+                                <div class="col-md-8" ng-class="{'has-error': configRule.autoCompleteSkipRule.$invalid && submittedForm}">
+                                    <input type="text" id="autoCompleteSkipRule" required dynamic-options="true"    name="autoCompleteSkipRule" ui-select2="autoCompleteSkipRule" ng-model="rule.skipRules" class="col-md-6 hkg-nopadding form-control" 
+                                           select-by-id="true" />
+                                    <div class="error,help-block" ng-show=" configRule.autoCompleteSkipRule.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.autoCompleteSkipRule.$error.required">{{ entity + "Skip rules not selected" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group required">
+
+                            <div class="col-lg-6 col-md-6 col-xs-12   " ng-hide="entityId < 0">
+                                <label for="fromDate" class="col-md-4 control-label">{{entity + 'From date'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.fromDate.$invalid && submittedForm}">
+
+                                    <div class="input-group">
+                                        <input type="text" id="fromDate"  name="fromDate" class="form-control" datepicker-popup="{{format}}" max="rule.toDate"   placeholder="{{format}}" ng-model="rule.fromDate" is-open="opened"  datepicker-options="dateOptions" ng-required="entityId > 0" close-text="Close" />
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" ng-click="open($event);
+                                                opened = true;">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </button>
+                                        </span>     
+                                    </div>
+
+                                    <div class="error,help-block" ng-show="configRule.fromDate.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.fromDate.$error.required">{{ entity + "From date not selected" | translate }}</span>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xs-12" ng-hide="entityId < 0">
+                                <label for="fromDate" class="col-md-4 control-label">{{entity + 'To date'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.toDate.$invalid && submittedForm}">
+
+                                    <div class="input-group">
+                                        <input type="text" id="fromDate"  name="toDate" class="form-control" min="rule.fromDate" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="rule.toDate" is-open="opened_toDate"  datepicker-options="dateOptions" ng-required="entityId > 0" close-text="Close" />
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" ng-click="openToDate($event);
+                                                opened_toDate = true;">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </button>
+                                        </span>     
+                                    </div>
+
+                                    <div class="error,help-block" ng-show="configRule.toDate.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.toDate.$error.required">{{ entity + "To date not selected" | translate }}</span>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--- For Edit --->
+                    <div class="row" ng-if="isEditFlag">
+                        <div class="form-group">
+                            <div class="col-lg-6 col-md-6 col-xs-12   ">
+                                <label for="status" class="col-md-4 control-label">{{entity + 'Status'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.status.$invalid && submittedForm}">
+                                    <select class="form-control" name="status" required id="status" ng-options="count for count in statusList" ng-model="rule.status"> 
+                                        <option value="Select"></option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xs-12   ">
+                                <label for="ruleNumber" class="col-md-4 control-label">{{entity + 'Rule Number'|translate}}</label>
+                                <div   class="form-control-static col-md-8"> {{rule.ruleNumber}}  </div>
+                                <!--<span class="form-control-static"  ng-bind ="rule.ruleNumber"></span>-->
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group ">
+                            <div class="col-lg-6 col-md-6 col-xs-12 form-group required" style="margin-left: 0px;margin-right: 0px;"    ng-if="rule.type !== 'S' && isRulePage">
+
+                                <label for="validationMsg" class="col-md-4 control-label">{{entity + 'Validation Message'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.validationMsg.$invalid && submittedForm}">
+
+                                    <textarea class="form-control" ng-required="true" ng-maxlength="150"  id="validationMsg" name="validationMsg" ng-model="rule.validationMessage" ></textarea>
+                                    <div style="text-align: right;">{{150 - rule.validationMessage.length}} {{ entity + "characters remains" | translate }}</div>
+
+                                    <div class="error,help-block" ng-show="configRule.validationMsg.$invalid && submittedForm">                                                    
+                                        <span class="help-block" >{{entity + 'Enter validation message'| translate }}</span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-xs-12"    ng-if="rule.type === 'S' && isRulePage">
+                                <label for="tooltipMsg" class="col-md-4 control-label">{{entity + 'Tooltip Message'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.tooltipMsg.$invalid && submittedForm}">
+
+                                    <textarea class="form-control" maxlength="150" ng-trim="false"  id="tooltipMsg" name="tooltipMsg" ng-model="rule.tooltipMsg" ></textarea>
+                                    <div style="text-align: right;">{{150 - rule.tooltipMsg.length}} {{ entity + "characters remains" | translate }}</div>
+
+                                    <div class="error,help-block" ng-show="configRule.tooltipMsg.$invalid">                                                    
+                                        <span class="help-block" >{{entity + 'Enter valid tool tip message'| translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-xs-12 "   ng-if="isEditFlag && isRulePage">
+                                <label for="exceptionList" class="col-md-4 control-label">{{entity + 'Exceptions'|translate}}</label>
+                                <div  id="exception" class="col-md-8 " ng-class="{'has-error': configRule.exceptionList.$invalid && submittedForm}">
+                                    <span class="form-control-static " ng-if="exceptionListForRule.length > 0" ng-repeat="exception in exceptionListForRule">
+                                        <a> <span ng-bind="exception.label" ng-click="redirectToException(exception)"></span></a>
+                                        <span ng-if="$index !== exceptionListForRule.length - 1">,</span>
+
+                                    </span>
+                                    <div class="form-control-static" ng-if="exceptionListForRule === undefined || exceptionListForRule.length === 0" >
+                                        N/A
+
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                    <div class="row"  ng-if="rule.type === 'S' && isRulePage">
+                        <div class="form-group required">
+
+                            <div class="col-lg-6 col-md-6 col-xs-12   ">
+                                <label for="fields" class="col-md-4 control-label">{{entity + 'Fields on which color to be applied'|translate}}</label>
+                                <div class="col-md-8" ng-class="{'has-error': configRule.fields.$invalid && submittedForm}">
+                                    <div id='searchField' name='searchField' ng-if="(fieldList.length) > 0" multi-select output-model="$parent.selectedFieldsForSearch" input-model="combinedFieldListForSearch" button-label="modelName fieldName" item-label="modelName fieldName" 
+                                         ng-required="true" tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup" max-height="200px" on-item-click="setSearchField($parent.selectedFieldsForSearch);">
+                                    </div> 
+                                    <div class="error,help-block" ng-show=" configRule.fields.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.fields.$error.required">{{ entity + "Field not selected" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-6 col-xs-12"   >
+                                <label for="labelColor" class="col-md-4 control-label">{{entity + 'Color Code'|translate}}</label>
+
+
+                                <div class="col-md-8" ng-class="{'has-error': configRule.labelColor.$invalid && submittedForm}"> 
+                                    <input colorpicker colorpicker-position="bottom" ng-required ="true"  type="text" ng-model="rule.colorCode" class="form-control" placeholder="{{entity + 'Color Name'| translate}}" name="labelColor"/>
+                                    <div class="error,help-block" ng-show=" configRule.labelColor.$invalid && submittedForm">
+                                        <span class="help-block" ng-show="configRule.labelColor.$error.required">{{ entity + "Color code not selected" | translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right"> <a ng-click="cancel();">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                            <button class="btn btn-hkg " type="submit" ng-click="saveRule(configRule);">{{ entity + "Save" | translate }}</button>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="col-xs-3 tree-bg   " id="right-column" >
+                <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING RULES'|translate}}</strong></span>
+                    <hr class="margin-md"/>
+                    <div class="hkg-scrollable-menu-rule" >
+                        <div class="col-xs-9">   <select id="ruleTypeTree" name="ruleTypeTree" class="form-control" ng-options="ruleType.id as ruleType.text for ruleType in ruleTypesForTree"   ng-model="ruleTypeForTree" ng-required="true" ng-change="sortTreeByType(ruleTypeForTree)">
+                                <option value="">Select </option>
+                            </select></div> 
+                        <br><br>
+                        <div ng-show="ruleList.length > 0"  ng-click='editRule(selectedRule, "tree")'
+                             data-angular-treeview="true"
+                             data-tree-id="selectedRule"
+                             search-id="searchedRuleTree" 
+                             ag-treemodel="ruleList">
+                        </div>
+                        <div  ng-hide="ruleList.length > 0">
+                            {{entity + 'No Rules exist'| translate }}
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="col-xs-3 tree-bg   " id="right-column"  >
+                <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING EXCEPTIONS'|translate}}</strong></span>
+                    <hr class="margin-md"/>
+                    <div ng-show="exceptionList.length > 0" class="hkg-scrollable-menu-rule">
+                        <div ng-click='editRule(selectedException, "tree")'
+                             data-angular-treeview="true"
+                             data-tree-id="selectedException"
+                             search-id="searchedExceptionTree" 
+                             ag-treemodel="exceptionList">
+                        </div>
+                    </div>
+                    <div ng-show="exceptionList.length === 0 || exceptionList === undefined">
+
+                        {{entity + 'No Exceptions exist'|translate}} 
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+
+        </form>
+        <div class="modal fade" id="messageModal">
+            <form name="messageModalForm" class="form-horizontal" novalidate>
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <a class="close" ng-click="hideconformationForRemoveCustomField();">&times;</a>
+                            <h4 class="modal-title">
+                                <b>{{entity + 'Remove Rule'|translate}}</b>
+                            </h4>
+
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="form-group">
+
+                                <label  class="col-md-12">
+                                    {{entity + 'Are you sure you want to remove the rule '|translate}}{{rule.ruleName}}{{entity + '?'| translate}}
+                                </label>
+
+                            </div> 
+                        </div>
+                        <div class="modal-footer">
+                            <div class="form-group">
+                                <div class="col-xs-12">
+                                    <div class="row">
+                                        <div class="col-xs-12 pull-right text-right">
+                                            <button class="btn btn-hkg" ng-click="removeRule();" ng-disabled="disableOkForRemove">
+                                                {{entity + 'Ok'|translate}}
+                                            </button>
+                                            <button class="btn btn-hkg" ng-click="hideconformationForRemoveRule();">
+                                                {{entity + 'Cancel'|translate}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <!--breadcrumb-->
+        <hr class="margin-md" />
+        <div class="clearfix"></div>
+        <!--breadcrumb--></div>
+</div>
+

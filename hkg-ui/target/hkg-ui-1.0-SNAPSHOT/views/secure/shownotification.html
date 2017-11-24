@@ -1,0 +1,53 @@
+
+
+<div class="row">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>You are here</li>
+                    <li>View</li>
+                    <li class="active uppercase">{{i18Notification + 'NOTIFICATIONS '| translate }}</li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="canAccess('notificationAddEdit')"> 
+                <a href="" ng-click="goToNotificationConfig();"><span class="glyphicon glyphicon-wrench"></span></a>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class=" form-group" ng-init="retrieveNotifications();" id="shownotification">
+                <div class="col-xs-12">
+                    <div ng-show="!notifications || notifications.length == 0">
+                        <label>{{i18Notification + 'No notifications available'|translate}}</label>
+                    </div>
+
+                    <div class="table-responsive">
+                        <div  ng-show="notifications && notifications.length > 0" >
+                            <table   class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="notifications">
+                                <thead>
+                                    <tr>
+                                        <th style=" white-space: nowrap;" width="10%" class="col-md-1">{{i18Notification + 'Sr.No.'|translate}}</th>
+                                        <th width="80%">{{i18Notification + 'Description'|translate}}</th>
+                                        <th width="10%">{{i18Notification + 'Action'|translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="notification in notifications" dt-rows>
+                                        <td>{{$index + 1}}</td>
+                                        <td> <span class="wordRap" ng-if="notificationText[$index].length <= 135">{{notificationText[$index]}}</span>
+                                            <span ng-if="notificationText[$index].length > 135" tooltip="{{notificationText[$index]}}" tooltip-trigger="mouseenter" tooltip-placement="right">{{shortNotificationText[$index]}}...</span>
+                                        </td> 
+                                        <td>
+                                            <span class="col-md-offset-2" title="{{i18Notification + 'Click to remove'|translate}}" ng-click="removeNotifications(notification.notificationDataBean.id)" ><a class=" text-danger glyphicon glyphicon-remove"></a></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

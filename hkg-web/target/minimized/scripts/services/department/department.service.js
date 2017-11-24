@@ -1,0 +1,4 @@
+define(["hkg"],function(a){a.register.factory("DepartmentService",["$resource","$rootScope",function(d,c){var b=d(c.apipath+"department/:action",{action:"@actionName"},{retrieveUsersCount:{method:"POST",params:{action:"activeuserscountindepartment"}},retrieveDepartment:{method:"GET",isArray:true,params:{action:"retrieve"}},addDepartment:{method:"PUT",params:{action:"create"}},deleteDepartment:{method:"POST",params:{action:"delete"}},updateDepartment:{method:"POST",params:{action:"update"}},retrieveDepartmentSimpleTreeView:{method:"GET",isArray:true,params:{action:"retrievedeptreeview"}},addCustomDataToDepartmentDataBean:{method:"POST",isArray:false,params:{action:"addCustomDataToDepartmentDataBean"}},checkIfDepartmentIsPresentInAnyFeature:{method:"POST",params:{action:"checkIfDepartmentIsPresentInAnyFeature"}}});
+return b
+}])
+});

@@ -1,0 +1,263 @@
+<div class="col-xs-12 col-lg-12" ng-if="canAccess('applyLeave')">
+    <h4>{{ entity + 'Apply For Leave' | translate}}</h4>
+    <div class="row">
+        <form method="POST" class="form-horizontal" name="addLeaveForm" novalidate >
+            <div  ng-init="registerLocationChangeEvent(addLeaveForm); initAddLeaveForm(addLeaveForm)">
+                <div class="col-md-12">
+                    <div class="form-group required">
+                        <label for="reason"  class="col-md-2 col-lg-2 col-sm-4 control-label">{{ entity + 'Reason'|translate}}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': addLeaveForm.reason.$invalid && submitted }"> 
+                            <div class="hkg-nopadding" ng-class="{'col-md-10':canAccess('addMasterValueShortcut'),'col-md-12':!canAccess('addMasterValueShortcut')}">
+                                <select ui-select2  ng-model="leave.reason" name="reason" id="reason" ng-options="res.text for res in leaveReasonTypes"  data-placeholder="Select" class="form-control input-md col-md-12 hkg-nopadding" ng-required="true">
+                                    <option value=""></option>
+                                </select>
+                            </div>
+                            <add-master-value ng-show="canAccess('addMasterValueShortcut')" class="col-md-2" records="leaveReasonTypes" model-value="leave.reason" master-code="LR" is-object="true"></add-master-value>
+                            <div class="error,help-block" ng-show="(addLeaveForm.reason.$dirty || submitted) && addLeaveForm.reason.$invalid">
+                                <span class="help-block" ng-show="addLeaveForm.reason.$error.required">{{ entity + 'Leave reason not selected'|translate}}</span>
+                            </div>
+                        </div>
+                        <label ng-if="isEdit" for="Appliedon"  class="col-md-1 col-lg-1 col-sm-2 control-label">{{ entity + 'Applied On' | translate}}</label>
+                        <div ng-if="isEdit" class="col-md-4 col-lg-4 col-sm-8"> 
+                            <input  type="text" readonly  name="applyedon" id="applyedon" class="form-control" ng-model="leave.applyedOn"/>
+                        </div>
+                    </div>
+                    <!--                                  addDaysToDefaultDate="1" 
+                                                                defaultStartTime="00.00 AM" defaultEndTime="11.59 PM"-->
+                    <div class="form-group required" >
+                        <label for="leaveFromDate" class="col-md-2 control-label">{{ entity + 'From'| translate}}</label>
+                        <ag-datetime-picker input-class="col-md-4 col-lg-4 col-sm-8" submitted="submitted" defaultDate="true" 
+                                            form="addLeaveForm" 
+                                            defaultStartTime="00.00 AM" defaultEndTime="11.59 PM"
+                                            type="datetimerange" allow="all" from-model="leave.fromDate" to-model="leave.toDate"
+                                            ng-required="true" label-class="col-md-1 col-lg-1 col-sm-2 control-label">
+
+                        </ag-datetime-picker> 
+                    </div>
+                    <!--                <div class="form-group required" >
+                                        <label for="leaveFromDate" class="col-md-2  control-label">{{ entity + 'From'| translate}}</label>
+                                        <div class="col-md-4" >
+                                            <div class="dropdown keep-open"  >
+                                                 Dropdown Button 
+                                                <a id="dLabel" role="button" href="#"
+                                                   data-toggle="dropdown" data-target="#">
+                                                    <div>
+                                                        <div class="input-group" >
+                                                            <input type="text" id="leaveFromDate" readonly name="leaveFromDate" class="form-control" datepicker-popup="{{format}}"  ng-model="leave.fromDate"  required>
+                                                            <span class="input-group-addon">
+                                                                <i class="glyphicon glyphicon-calendar">
+                    
+                                                                </i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="error,help-block" ng-show="(addLeaveForm.leaveFromDate.$dirty || submitted) && addLeaveForm.leaveFromDate.$invalid">
+                                                            <span class="help-block" ng-show="addLeaveForm.leaveFromDate.$error.required">{{ entity + "Leave start date not entered" | translate }}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                 Dropdown Menu 
+                                                <ul class="dropdown-menu" role="menu" 
+                                                    aria-labelledby="dLabel">
+                                                    <li>
+                                                        <div style="display:inline-block;">
+                                                            <datepicker ng-model="leave.fromDate" min="minDate" show-weeks="true" class="well well-sm" ng-change="setDefaultTime()"></datepicker>
+                                                        </div>
+                                                    </li>
+                                                    <li class="hkg-validation-failure">
+                                                        {{dateWarning}}
+                                                    </li>
+                                                    <li> 
+                                                        <div class="col-md-4">
+                                                            <timepicker ng-model="fromTime" hour-step="hstep" minute-step="mstep" show-meridian="ismeridian" ng-change="setTime(fromTime)"></timepicker>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="row">
+                                                                <div class="row">&nbsp;</div>
+                                                                <div class="row">&nbsp;</div>
+                                                                <div class="col-md-4">
+                                                                    <button class="btn btn-primary" ng-click="setDateAndTime()">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <label for="leaveToDate" class="col-md-1 control-label">{{ entity + 'To'|translate}}</label>
+                                        <div class="col-md-4">
+                                            <div class="dropdown keep-open"  >
+                                                 Dropdown Button 
+                                                <a id="dLabel" role="button" href="#"
+                                                   data-toggle="dropdown" data-target="#">
+                                                    <div ng-class="{'has-error': addLeaveForm.leaveToDate.$invalid}">
+                                                        <div class="input-group">
+                                                            <input type="text" readonly id="leaveToDate" name="leaveToDate" class="form-control" datepicker-popup="{{format}}"  ng-model="leave.toDate" >
+                                                            <span class="input-group-addon">
+                                                                <i class="glyphicon glyphicon-calendar">
+                    
+                                                                </i>
+                                                            </span>
+                                                        </div>
+                                                        <div class="error,help-block" ng-show="(addLeaveForm.leaveToDate.$dirty || submitted) && addLeaveForm.leaveToDate.$invalid">
+                                                            <span class="help-block" ng-show="addLeaveForm.leaveToDate.$error.required">{{ entity + "Leave end date not entered" | translate }}</span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                                 Dropdown Menu 
+                                                <ul class="dropdown-menu" role="menu" 
+                                                    aria-labelledby="dLabel">
+                                                    <li>
+                                                        <div style="display:inline-block;">
+                                                            <datepicker ng-model="leave.toDate" min="leave.fromDate" show-weeks="true" class="well well-sm" ng-change="setToDefaultTime()"></datepicker>
+                                                        </div>
+                                                    </li>
+                                                    <li class="hkg-validation-failure">
+                                                        {{dateWarning}}
+                                                    </li>
+                                                    <li> 
+                                                        <div class="col-md-4">
+                                                            <timepicker ng-model="toTime" hour-step="hstep" minute-step="mstep" show-meridian="ismeridian" meridians="['PM','AM']" ng-change="setToTime(toTime)"></timepicker>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div class="row">
+                                                                <div class="row">&nbsp;</div>
+                                                                <div class="row">&nbsp;</div>
+                                                                <div class="col-md-4">
+                                                                    <button class="btn btn-primary" ng-click="setDateAndTime()">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                    
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>-->
+                    <div class="form-group required">
+                        <label for="description"  class="col-md-2 control-label">{{ entity + 'Description'|translate}}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8" ng-class="{'has-error': addLeaveForm.description.$invalid && submitted }"> 
+                            <textarea  maxlength="255" name="description" id="description" class="form-control" ng-model="leave.description" required></textarea>
+
+                            <div class="error,help-block" ng-show="(addLeaveForm.description.$dirty || submitted) && addLeaveForm.description.$invalid">
+                                <span class="help-block" ng-show="addLeaveForm.description.$error.required"> {{ entity + 'Leave description not entered'|translate}}</span>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="isEdit">
+                        <label for="remarks"  class="col-md-2 control-label">{{ entity + 'Remarks'|translate}}</label>
+                        <div class="col-md-4 col-lg-4 col-sm-8"  ng-class="{'has-error': addLeaveForm.remarks.$invalid && submitted}"> 
+                            <textarea   name="remarks" id="remarks" class="form-control" ng-model="leave.remarks" required></textarea>
+
+                            <div class="error,help-block" ng-show="(addLeaveForm.remarks.$dirty || submitted) && addLeaveForm.remarks.$invalid">
+                                <span class="help-block" ng-show="addLeaveForm.remarks.$error.required"> {{ entity + 'Remark not entered'|translate}}</span>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="isEdit">
+                        <dynamic-form  input-css ="col-md-4 col-lg-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="genralLeaveTemplate" ng-model="addLeaveData" edit-flag="{{isEdit}}" is-diamond="false" no-of-field-per-row = "1"
+                                       >
+
+                        </dynamic-form></div>
+                    <div ng-if="!isEdit">
+                        <dynamic-form  input-css ="col-md-4 col-lg-4 col-sm-8" label-css="col-md-2 col-lg-2 col-sm-4 control-label" 
+                                       db-map="dbType" internationalization-label="{{entity}}" form-name="form2" 
+                                       template="genralLeaveTemplate" ng-model="addLeaveData" edit-flag="{{isEdit}}" is-diamond="false" no-of-field-per-row = "1"
+                                       >
+
+                        </dynamic-form></div>
+                    <!--            <div class="form-group" ng-show="isEdit">
+                                    <label for="leaveStatus" class="col-md-2 control-label">{{ entity + "Status" | translate }}</label>
+                                    <div class="col-md-2">
+                                        <select class="form-control" ng-options="o.name for o in options" ng-model="leaveStatus" name="leaveStatus"> 
+                    
+                                        </select>   
+                                    </div>
+                                </div>-->
+                    <div class="form-group" ng-show="isEdit">
+                        <div class="col-md-2 control-label"></div>
+
+                        <div class="hkg-checkbox-button">
+                            <input  type="checkbox" ng-model="leave.cancel" />{{ entity + 'Cancel Leave'|translate}}
+                        </div>
+                    </div>
+                    <!--                    <div class="form-group">
+                                            </hr>
+                                            <div class="col-md-offset-9">
+                                                <a href="" ng-click="cancelLeave(addLeaveForm)">
+                                                    {{ entity + 'Cancel' | translate}}
+                                                </a>&nbsp;
+                                                <button ng-show="!isEdit" class="btn btn-hkg" ng-click="addLeave(addLeaveForm, leave)">{{ entity + 'Apply'|translate}}</button>
+                                                <button ng-show="isEdit" class="btn btn-hkg" ng-click="updateLeave(leave, leaveStatus, addLeaveForm)">{{ entity + 'Update leave'|translate}}</button>
+                                                <button class="btn btn-hkg" ng-click="cancelLeave(addLeaveForm)">{{ entity + 'Cancel'|translate}}</button>
+                    
+                                            </div>
+                                        </div>-->
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a href="" ng-click="cancelLeave(addLeaveForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button ng-show="!isEdit" class="btn btn-hkg" ng-click="addLeave(addLeaveForm, leave)">{{ entity + 'Apply'|translate}}</button>
+                                    <button ng-show="isEdit" class="btn btn-hkg" ng-click="updateLeave(leave, leaveStatus, addLeaveForm)">{{ entity + 'Update Leave'|translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>   
+                </div>
+                <!--                <div class="col-md-2">
+                                    <h5>{{ entity + 'Pending Stock'|translate}}</h5>
+                                    <ul>
+                                        <li>1</li>
+                                        <li>1</li>
+                                        <li>1</li>
+                                    </ul>
+                                </div>-->
+            </div>
+        </form>
+    </div>
+
+    <div class="modal fade" id="removeShowId">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="removeCancel()">&times;</a>
+                    <h4 class="modal-title">
+                        {{ entity + "Cancel Leave" | translate }}
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div>
+                            {{ entity + "Are you sure you want to cancel the leave for \{\{leaveStartDate\}\} to \{\{leaveToDate\}\} ?"| translate:{
+                            leaveStartDate:(leaveStartDate | translate),
+                            leaveToDate:(leaveToDate | translate)} }}
+                            <!--{{ 'LEAVE.removeMsg' | translate }}-->
+                            <!--                            {{ entity + "removeMsg" | translate:{
+                                                                    leaveStartDate:(leaveStartDate | translate),
+                                                                    leaveToDate:(leaveToDate | translate)
+                                                     }  }}-->
+                            <!--{{ entity + "removeMsg"|translate:{taskName:(taskName | translate)} }}-->
+                            <!--:{holiday.title:(holiday.title | translate)} }}-->
+                            <!--{{holidat.title}}-->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="" href="" ng-click="removeCancel()">{{ entity + "Cancel" | translate }}</button>
+                        <button class="btn btn-hkg" ng-click="removeOk()">
+                            {{ entity + "Remove" | translate }}
+                        </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div ng-if="!canAccess('applyLeave')">
+    you have no authorization for this page.
+</div>

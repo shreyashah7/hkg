@@ -1,0 +1,183 @@
+<style>
+    .table-striped tbody tr.active:nth-child(odd) td,
+    .table-striped tbody tr.active:nth-child(odd) th {
+        background-color: #017ebc !important;
+    }
+</style>
+<div>
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12 col-lg-8">
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate}}</li>
+                <li>{{entity + 'Stock'|translate}}</li>
+                <li class="active">{{entity + 'Rough Invoice'| translate}}</li>
+            </ol>
+        </div>
+        <div class="col-xs-12 col-lg-4 text-right context-menu" ng-click="linkRoughPurchase()" ng-if="invoiceAddEditFlag"> 
+            <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;<a class="pull-right" >{{entity + 'Link Rough Purchase'| translate}}</a>
+        </div>
+    </div>
+    <div class="col-xs-12 new-panel">
+        <div class="clearfix"></div>
+        <div id="messages" ng-include src="'templates/messages.html'"></div>
+        <div class="clearfix"></div>
+        <div ng-if="invoiceAddEditFlag">
+            <form method="POST" class="form-horizontal" name="invoiceForm" novalidate>
+                <div class="form-group col-md-12 hkg-nopadding" ng-init="registerLocationChangeEvent(invoiceForm);">
+                    <h4>{{entity + 'Search Invoices'| translate}}</h4>
+                </div>
+                <div class="col-md-12">
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalInvoiceTemplate" 
+                                    ng-model="searchCustom" ng-if="generalInvoiceTemplate" is-diamond ="true">
+                    </custom-search>
+                </div>
+
+                <div ng-if="!generalInvoiceTemplate || generalInvoiceTemplate.length == 0">
+                    <div class="col-xs-12 col-lg-12">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Search Fields are not configured for your designation, Please contact administrator'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <hr style="margin-top: 2px;margin-bottom: 10px"/>
+                <div class="col-xs-12 pull-right text-right hkg-nopadding" ng-if="generalInvoiceTemplate">                     
+                    <a ng-click="onCancelOfSearch(invoiceForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="retrieveSearchedData(invoiceForm)">{{entity + 'Search'| translate}}</button>
+                </div>
+                <br/>
+
+                <h4>{{entity + 'Available Invoices'| translate}}</h4>
+                <div ng-if="invoiceShowConfigMsg === true">
+                    <br/>
+                    <div class="col-xs-12 col-lg-12 hkg-nopadding">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'Invoice Fields are not configured for your designation, Please contact administrator'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div ng-if="invoiceShowConfigMsg === false">
+                    <editable-custom-grid editable-grid-options="editableGridInvoiceOptions" feature-name="roughInvoice" entity-type="invoice">
+                    </editable-custom-grid>
+                    <div class="col-xs-12 col-lg-12 hkg-nopadding" ng-if="editableGridInvoiceOptions.datarows.length === 0 && allInvoiceDataRetrieved !== undefined && !allInvoiceDataRetrieved">
+                        <table class="table  table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    {{entity + 'No Results found'| translate}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </form>
+            <form method="POST" class="form-horizontal" name="parcelForm" novalidate ng-if='showParcels'>
+                <br/><br/>
+                <h4>{{entity + 'Available Parcels'| translate}}</h4>
+                <div ng-if="parcelShowConfigMsg === true">  
+                    <br/>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Parcel fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div ng-if="parcelShowConfigMsg === false">
+                    <editable-custom-grid editable-grid-options="editableGridParcelOptions" feature-name="roughInvoice" entity-type="parcel">
+                    </editable-custom-grid>
+                    <div ng-if="editableGridParcelOptions.datarows.length == 0 && allParcelDataRetrieved !== undefined && !allParcelDataRetrieved">
+                        <div class="col-xs-12 col-lg-12 hkg-nopadding">
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No results found'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div ng-if="invoiceAddEditFlag == false">
+            <div class="form-group col-md-12 hkg-nopadding">
+                <h4>{{entity + 'Associated Rough Purchase'| translate}}</h4>
+                <div ng-if="showConfigMsgForPurchase === true">  
+                    <br/>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Purchase fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div ng-if="showConfigMsgForPurchase === false">
+                    <div  class="col-md-12" ng-if="associatedPurchaseListFilled">
+                        <div id="associatedPurchaseGridTable" ui-grid="associatedPurchaseGridOptions" ui-grid-pinning ui-grid-selection ui-grid-auto-resize></div>
+                    </div>
+
+                    <div ng-if="(searchedPurchaseData.length === 0 && !associatedPurchaseListFilled)">
+                        <br/>
+                        <div class="col-xs-12 col-lg-12 hkg-nopadding">
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No matching results found'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group col-md-12 hkg-nopadding">
+                <br/><br/>
+                <h4>{{entity + 'Associated Rough Parcel'| translate}}</h4>
+                <div ng-if="showConfigMsgForAssParcel === true">  
+                    <br/>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + 'Parcel fields are not configured for your designation, Please contact administrator'| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div ng-if="showConfigMsgForAssParcel === false">
+                    <div  class="col-md-12" ng-if="associatedParcelListFilled">
+                        <div id="associatedParcelGridTable" ui-grid="associatedParcelGridOptions" ui-grid-pinning ui-grid-selection ui-grid-auto-resize></div>
+                    </div>
+                    <div ng-if="(searchedParcelData.length === 0 && !associatedParcelListFilled)">
+                        <br/>
+                        <div class="col-xs-12 col-lg-12 hkg-nopadding">
+                            <table class="table  table-bordered" >
+                                <tr>
+                                    <td class="col-md-12">
+                                        {{entity + 'No matching results found'| translate}}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 pull-right text-right hkg-nopadding" > 
+                <br/><br/>
+                <a ng-click="backToMainPage()">{{entity + 'Back'| translate}}</a>&nbsp;
+                <a ng-if="searchedParcelData.length > 0 || searchedPurchaseData.length > 0" ng-click="cancelLinkingRoughPurchase()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                <button ng-if="flag.purchaseRowSelectedflag == true && flag.parcelRowSelectedflag == true" class="btn btn-hkg" ng-click="linkPurchase()">{{entity + 'Link'| translate}}</button>
+            </div>
+        </div>
+    </div>
+</div>

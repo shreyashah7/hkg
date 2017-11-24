@@ -1,0 +1,21 @@
+<div class="panel panel-default" id="{{parentId}}">
+    <div class="panel-heading">
+        <h4 ng-show="collapsed" class="accordion-toggle" data-toggle="collapse" data-parent="#{{parentId}}" data-target="#{{collapseId}}" style="cursor: pointer;margin: 0px;border-bottom: 0px;">
+            {{title}}
+        </h4>
+        <h4 ng-show="!collapsed" class="accordion-toggle" data-toggle="collapse" data-parent="#{{parentId}}" data-target="#{{collapseId}}" style="cursor: pointer;margin: 0px;">
+            {{title}}
+        </h4>
+        <span style="font-size: 16px;float: right;">
+            <span title="Click here to toggle" class="glyphicon text-hkg" 
+                  data-toggle="collapse" data-parent="#{{parentId}}" data-target="#{{collapseId}}" ng-class="{'glyphicon-plus-sign':collapsed,'glyphicon-minus-sign':!collapsed}" 
+                  style="cursor: pointer;">
+            </span>
+        </span>
+    </div>
+    <div id="{{collapseId}}" ng-class="{'in':isOpen}" class="panel-collapse collapse">
+        <div class="row">
+            <div class="col-xs-12" ng-transclude></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,285 @@
+
+<div class="row" ng-init="initializeData();">
+    <div class="col-xs-12"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Stock'| translate }}</li>
+                    <li class="active">{{entity + 'Re-Rout'| translate }}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="messages" ng-include src="'templates/messages.html'"></div>
+                </div>
+            </div>
+
+            <div ng-if="!flag.reroutstockflag">
+                <form role="form" class="form-horizontal" novalidate name="reRoutStockForm">
+                    <div class="form-group required">
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="activityName" class="col-md-4 control-label wordRap">{{entity + "Version"| translate}}</label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : reRoutStockForm.select_version.$invalid && (reRoutStockForm.select_version.$dirty || submitted)}">
+                                <select class="form-control" required name="select_version" id="select_version" ng-model="tempReRoutStockDataBean.version" ng-change="onVersionChange(tempReRoutStockDataBean.version);" ng-options="ver as ver.label for ver in versionList">                                            
+                                    <option value="">{{entity + 'Select'|translate}}</option>
+                                </select>  
+                                <div class="error,help-block" ng-show="reRoutStockForm.select_version.$invalid && (reRoutStockForm.select_version.$dirty || submitted)">
+                                    <span class="help-block" ng-show="reRoutStockForm.select_version.$error.required">{{ entity + "Select version" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="activityName" class="col-md-4 control-label wordRap">{{entity + "Activity"| translate}}</label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : reRoutStockForm.activityName.$invalid && (reRoutStockForm.activityName.$dirty || submitted)}">
+                                <select id="activityName" required name="activityName" class="form-control"  ng-options="v as k for (k, v) in mapOfActivitySerice" ng-model="tempReRoutStockDataBean.activity">
+                                    <option value="">{{entity + 'Select activity'| translate }}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="reRoutStockForm.activityName.$invalid && (reRoutStockForm.activityName.$dirty || submitted)">
+                                    <span class="help-block" ng-show="reRoutStockForm.activityName.$error.required">{{ entity + "Select activity" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="serviceName" class="col-md-4 control-label wordRap">{{entity + "Service"| translate}}</label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : reRoutStockForm.serviceName.$invalid && (reRoutStockForm.serviceName.$dirty || submitted)}">
+                                <select id="serviceName" required name="serviceName" class="form-control" ng-options="(serviceList.nodeId +' - '+ serviceList.serviceName) for serviceList in tempReRoutStockDataBean.activity" ng-model="tempReRoutStockDataBean.service">
+                                    <option value="">{{entity + 'Select service'| translate }}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="reRoutStockForm.serviceName.$invalid && (reRoutStockForm.serviceName.$dirty || submitted)">
+                                    <span class="help-block" ng-show="reRoutStockForm.serviceName.$error.required">{{ entity + "Select service" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="generalSearchTemplate && searchResetFlag">
+
+                        <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                        internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" is-diamond="true"
+                                        ng-model="searchCustom" ng-if="generalSearchTemplate">
+                        </custom-search>
+                    </div>
+
+
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onCanelOfSearch(reRoutStockForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="retrieveSearchedData(reRoutStockForm)">{{entity + 'Search'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 " ng-if="(stockList.length === 0 && listFilled)">
+                            <hr/>
+                            <div class="col-lg-12 col-md-12 col-xs-12">
+                                <table class="table table-bordered" >
+                                    <tr>
+                                        <td class="col-md-12">
+                                            {{entity + 'No matching results found'| translate}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id='masterDetail' ng-if="stockList && (stockList.length) > 0">
+                        <div><h4>{{entity + 'Searched Records'| translate}}</h4></div>
+                        <div id="gridTable" ui-grid="gridOptions"  ui-grid-selection ui-grid-pinning ui-grid-auto-resize></div>
+                    </div>
+
+                    <div class="col-xs-12" ng-if="(stockList.length) > 0 && flag.rowSelectedflag">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onCanelOfSearch(reRoutStockForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="next(reRoutStockForm)">{{entity + 'Next'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div ng-if="flag.reroutstockflag">
+                <form>
+                    <div ng-if="flag.multipleLotflag === false">
+                        <div>
+                            <!--                        <div class="panel-heading"> class added to match parent collapse 
+                                                        <h4 ng-if="generaInvoiceTemplate && flag.multipleLotflag">{{entity + 'Invoice details'| translate }}</h4>
+                                                    </div>-->
+                            <!--                        <div ng-if="flag.multipleLotflag">
+                                                        <div class="col-lg-12 col-md-12 col-xs-12">
+                                                            <table class="table table-bordered" >
+                                                                <tr>
+                                                                    <td class="col-md-12">
+                                                                        {{entity + 'Not applicable - because there are multiple Invoices involved'| translate}}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>-->
+                            <div ng-if="generaInvoiceTemplate && generaInvoiceTemplate.length > 0" id="invoiceParent" title="Invoice Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                               ng-model="invoiceCustom" ng-if="generaInvoiceTemplate && invoiceCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div>
+                            <!--                        <div class="panel-heading"> class added to match parent collapse 
+                                                        <h4 ng-if="generaParcelTemplate && flag.multipleLotflag">{{entity + 'Parcel details'| translate }}</h4> 
+                                                    </div>
+                                                    <div ng-if="flag.multipleLotflag">
+                                                        <div class="col-lg-12 col-md-12 col-xs-12">
+                                                            <table class="table table-bordered" >
+                                                                <tr>
+                                                                    <td class="col-md-12">
+                                                                        {{entity + 'Not applicable - because there are multiple Parcels involved'| translate}}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>-->
+                            <div ng-if="generaParcelTemplate && generaParcelTemplate.length > 0" id="parcelParent" title="Parcel Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                               ng-model="parcelCustom" ng-if="generaParcelTemplate && parcelCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}"  view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div>
+                            <!--                        <div class="panel-heading"> class added to match parent collapse 
+                                                        <h4 ng-if="generalLotTemplate && flag.multipleLotflag">{{entity + 'Lot Details'| translate }}</h4>
+                                                    </div>
+                                                    <div  ng-if="flag.multipleLotflag">
+                                                        <div class="col-lg-12 col-md-12 col-xs-12">
+                                                            <table class="table table-bordered" >
+                                                                <tr>
+                                                                    <td class="col-md-12">
+                                                                        {{entity + 'Not applicable - because there are multiple Lots involved'| translate}}
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </div>
+                                                    </div>-->
+                            <div ng-if="generalLotTemplate && generalLotTemplate.length > 0" id="lotParent" title="Lot Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                               ng-model="lotCustom" ng-if="generalLotTemplate && lotCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                        <div ng-if="flag.singlePacket === true">
+                            <div ng-if="generaPacketTemplate && generaPacketTemplate.length > 0" id="packetParent" title="Packet Details" accordion-collapse>
+                                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="packetDbType" 
+                                               internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaPacketTemplate" 
+                                               ng-model="packetCustom" ng-if="generaPacketTemplate && packetCustom" invoice-id="{{invoiceIdForConstraint}}" parcel-id="{{parcelIdForConstraint}}" view-only="true" is-diamond="true">
+                                </dynamic-form>
+                            </div>
+                        </div>
+                    </div>
+                    <div ng-if="flag.multipleLotflag === true ">
+                        <div>
+                            <div class="col-md-12" id="stockParent" title="Parent Details" accordion-collapse>
+                                <div id="parentGridTable" ui-grid="parentGridOptions" ui-grid-pinning ui-grid-auto-resize></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-heading"><!-- class added to match parent collapse -->
+                        <h4>{{entity + 'Re-route Stock'| translate }}</h4> 
+                    </div>
+                </form>
+                <form role="form" class="form-horizontal" novalidate name="changedReRoutStockForm">
+                    <div class="form-group required">
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="changedActivityName" class="col-md-4 control-label wordRap">{{entity + "Activity"| translate}}</label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : changedReRoutStockForm.changedActivityName.$invalid && (changedReRoutStockForm.changedActivityName.$dirty || changedsubmitted)}">
+                                <select id="changedActivityName" required name="changedActivityName" class="form-control" ng-change="removeAllotTo()"  ng-options="v as k for (k, v) in mapOfActivitySerice" ng-model="changedReRoutStockDataBean.activity">
+                                    <option value="">{{entity + 'Select activity'| translate }}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="changedReRoutStockForm.changedActivityName.$invalid && (changedReRoutStockForm.changedActivityName.$dirty || changedsubmitted)">
+                                    <span class="help-block" ng-show="changedReRoutStockForm.changedActivityName.$error.required">{{ entity + "Select activity" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-xs-12" style="padding-left: 0px;padding-right: 0px;">
+                            <label for="changedServiceName" class="col-md-4 control-label wordRap">{{entity + "Service"| translate}}</label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : changedReRoutStockForm.changedServiceName.$invalid && (changedReRoutStockForm.changedServiceName.$dirty || changedsubmitted)}">
+                                <select id="changedServiceName" required name="changedServiceName" class="form-control" ng-change="removeAllotTo()" ng-options="(serviceList.nodeId +' - '+ serviceList.serviceName) for serviceList in changedReRoutStockDataBean.activity" ng-model="changedReRoutStockDataBean.service">
+                                    <option value="">{{entity + 'Select service'| translate }}</option>
+                                </select>
+                                <div class="error,help-block" ng-show="changedReRoutStockForm.changedServiceName.$invalid && (changedReRoutStockForm.changedServiceName.$dirty || changedsubmitted)">
+                                    <span class="help-block" ng-show="changedReRoutStockForm.changedServiceName.$error.required">{{ entity + "Select service" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-lg-6 col-md-6 col-xs-12 " style="padding-left: 0px;padding-right: 0px;">
+                            <label for="allotTo" class="col-md-4 control-label wordRap">{{entity + "Allot To"| translate}}  </label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : changedReRoutStockForm.allotTo.$invalid && (changedReRoutStockForm.allotTo.$dirty || changedsubmitted)}">
+                                <div class="input-group">
+                                    <input id="allotTo" required ng-minlength="1" name="allotTo" class="form-control hkg-nopadding " ui-select2="userSingleselectComponent" ng-model="changedReRoutStockDataBean.allotTo"/>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" tooltip-trigger="mouseenter" tooltip-placement="right" tooltip-html-unsafe="{{popover}}"></i>
+                                    </span>
+                                </div>
+                                <div class="error,help-block" ng-show="changedReRoutStockForm.allotTo.$invalid && (changedReRoutStockForm.allotTo.$dirty || changedsubmitted)">
+                                    <span class="help-block" ng-show="changedReRoutStockForm.allotTo.$error.minlength">{{ entity + "Select allot to" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <div class="col-lg-6 col-md-6 col-xs-12 " style="padding-left: 0px;padding-right: 0px;">
+                            <label for="inStockOf" class="col-md-4 control-label wordRap">{{entity + "In Stock of"| translate}}  </label>
+                            <div class="col-md-8" ng-class="{
+                                    'has-error'
+                                            : changedReRoutStockForm.inStockOf.$invalid && (changedReRoutStockForm.inStockOf.$dirty || changedsubmitted)}">
+                                <div class="input-group">
+                                    <input id="inStockOf" required ng-minlength="1" name="inStockOf" class="form-control hkg-nopadding " ui-select2="userSingleselectComponentForInStockOf" ng-model="changedReRoutStockDataBean.inStockOf"/>
+                                    <span class="input-group-addon">
+                                        <i class="glyphicon glyphicon-info-sign" data-toggle="tooltip" tooltip-trigger="mouseenter" tooltip-placement="right" tooltip-html-unsafe="{{popover}}"></i>
+                                    </span>
+                                </div>
+                                <div class="error,help-block" ng-show="changedReRoutStockForm.inStockOf.$invalid && (changedReRoutStockForm.inStockOf.$dirty || changedsubmitted)">
+                                    <span class="help-block" ng-show="changedReRoutStockForm.inStockOf.$error.minlength">{{ entity + "Select In Stock of" | translate }}</span>                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <hr/>
+                            <div class="col-xs-6 pull-right text-right">
+                                <a ng-click="onBack(changedReRoutStockForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                                <button class="btn btn-hkg" ng-click="stockReRout(changedReRoutStockForm)">{{entity + 'Save'| translate}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>

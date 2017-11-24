@@ -1,0 +1,180 @@
+<form method="POST" class="form-horizontal" name="splitLotForm" novalidate>
+    <div ng-show="dataRetrieved && !flag.showUpdatePage" ng-init="registerLocationChangeEvent(splitLotForm);
+            initSplitLotForm(splitLotForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Split'|translate}}</li>
+                    <li class="active">{{entity + 'Lot'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class="clearfix"></div>
+            <div ng-if="!flag.showAddPage && !generalSearchTemplate">
+                <p>{{entity + 'First configure the search field to search and split'| translate}}</p>
+            </div>
+            <div ng-if="!flag.showAddPage && generalSearchTemplate">
+                <h4>Search/filter</h4>
+            </div>
+            <div ng-if="!flag.showAddPage">
+                <div>
+                    <custom-search  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="dbType"
+                                    internationalization-label="{{i18DynamicForm}}" template="generalSearchTemplate" 
+                                    ng-model="searchCustom" ng-if="generalSearchTemplate">
+                    </custom-search>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-xs-12" ng-if="generalSearchTemplate">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-6 " ng-if="(!searchedData.length > 0 && listFilled)">
+                            <p class="col-md-offset-4">{{entity + 'No matching results found'| translate}}</p>
+                        </div>
+                        <div class="col-xs-6 pull-right text-right">
+                            <a ng-click="onCanelOfSearch(splitLotForm)">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                            <button class="btn btn-hkg" ng-click="retrieveSearchedData(splitLotForm)">{{entity + 'Search'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-show="searchedData && (searchedData.length) > 0">
+                    <div class="form-group">
+                        <br/><br/>
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData" >
+                                <thead>
+                                    <tr>
+                                        <th ng-repeat="itr in modelAndHeaderList">{{itr.header}}</th>
+                                        <th>{{ entity + 'Action' | translate }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="searchDataObj in searchedData" dt-rows>
+                                        <td ng-repeat="key in modelAndHeaderList">{{!searchDataObj.categoryCustom[key.model]?"NA":searchDataObj.categoryCustom[key.model]}}</td>
+                                        <td><a ng-click="addLot(searchDataObj)"><i class="glyphicon glyphicon-plus " title="{{ entity + 'Add Lot' | translate }}"></i></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="flag.showAddPage">
+                <div ng-if="!generalLotTemplate ||generalLotTemplate.length==0">
+                    <p>{{entity + 'First configure the add field to split'| translate}}</p>
+                </div>
+                <div>
+                    <h4 ng-if="generaInvoiceTemplate">{{entity + 'Invoice Details'| translate }}</h4>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="invoiceDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaInvoiceTemplate" 
+                                   ng-model="invoiceCustom" ng-if="generaInvoiceTemplate" >
+                    </dynamic-form>
+                </div>
+
+                <div>
+                    <h4 ng-if="generaParcelTemplate">{{entity + 'Parcel Details'| translate }}</h4>    
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="parcelDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generaParcelTemplate" 
+                                   ng-model="parcelCustom" ng-if="generaParcelTemplate" >
+                    </dynamic-form>
+                </div>
+                <div>
+                    <h4 ng-if="generalLotTemplate">{{entity + 'Lot Details'| translate }}</h4>    
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="lotDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalLotTemplate" 
+                                   ng-model="lotCustom" ng-if="generalLotTemplate" >
+                    </dynamic-form>
+                </div>
+                <div>
+                    ----------->> {{splitLotDbType}}
+                    <h4 ng-if="generalSplitLotTemplate">{{entity + 'Split Lot'| translate }}</h4>
+                    <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="splitLotDbType" 
+                                   internationalization-label="{{i18DynamicForm}}" form-name="form2" template="generalSplitLotTemplate" 
+                                   ng-model="categoryCustom" ng-if="generalSplitLotTemplate" >
+                    </dynamic-form>
+                </div>
+                <hr/>
+                <div class="col-xs-12">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a ng-if="flag.editLot" ng-click="onCanel(splitLotForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button ng-if="flag.customFieldGenerated && generalSplitLotTemplate && generalSplitLotTemplate.length > 0 && !flag.editLot" class="btn btn-hkg" ng-click="createLot(splitLotForm)">{{entity + 'Split Lot'| translate}}</button>
+                            <button ng-if="flag.customFieldGenerated && generalSplitLotTemplate && generalSplitLotTemplate.length > 0 && flag.editLot" class="btn btn-hkg" ng-click="saveLot(splitLotForm)">{{entity + 'Save Lot'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+                <div id='masterDetail' ng-show="lotListTodisplay && (lotListTodisplay.length) > 0">
+                    <br/><br/>
+                    <h4>{{entity + 'Splitted Lots'| translate}}</h4>
+                    <div class="form-group">
+                        <div  class="col-md-12" ng-if="listFilled">
+                            <table class="table" cellspacing="0" width="100%" ag-data-table="searchedData" >
+                                <thead>
+                                    <tr>
+                                        <th>{{ entity + 'Action' | translate }}</th>
+                                        <th ng-repeat="itr in modelAndHeaderListForLot">{{itr.header}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="searchDataObj in lotListTodisplay" dt-rows>
+                                        <td>
+                                            <span ng-show="!searchDataObj.label">
+                                                <a ng-click="editLotLocally(searchDataObj)">{{ entity + 'Edit' | translate }}</a>
+                                            </span>
+                                            <span ng-show="!searchDataObj.label">
+                                                <a ng-click="showPopUp(searchDataObj)">{{ entity + 'Delete' | translate }}</a>
+                                            </span>
+                                        </td>
+                                        <td ng-repeat="key in modelAndHeaderListForLot">{{!searchDataObj.category.categoryCustom[key.model]?"NA":searchDataObj.category.categoryCustom[key.model]}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-if="lotListTodisplay && lotListTodisplay.length>0">
+                    <div class="row">
+                        <hr/>
+                        <div class="col-xs-12 pull-right text-right">                     
+                            <a ng-click="onCancel(splitLotForm)">{{entity + 'Back'| translate}}</a>&nbsp;
+                            <button  class="btn btn-hkg" ng-if="lotListToSave && lotListToSave.length > 0" ng-click="saveAllLot(splitLotForm)">{{entity + 'Save'| translate}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="modal fade" role="dialog" id="deletePopUp" tabindex="-1" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" href="#/splitlot" ng-click="hidePopUp()">&times;</a>
+                <h4 class="modal-title" id="myModalLabel">{{entity + 'Delete Lot'| translate }}</h4>
+            </div >
+            <form  class="form-horizontal" name="deletePopUp" role='form'>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            {{entity + "Are you sure you want to delete lot?"| translate }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> <a ng-click="hidePopUp()">No</a>&nbsp;
+                                    <button class="btn btn-hkg " ng-click="deleteLot()">{{ entity + "Yes" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

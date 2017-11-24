@@ -1,0 +1,4 @@
+define(["hkg"],function(a){a.register.factory("DepartmentConfigService",["$resource","$rootScope",function(d,c){var b=d(c.apipath+"configdept/:action",{action:"@actionName"},{retrieveDesignationByDept:{method:"POST",isArray:true,params:{action:"retrieveDesignationForDept"}},retrieveAllDepartments:{method:"GET",isArray:true,params:{action:"retrieveAllDepartments"}},updateDepartmentConfig:{method:"PUT",params:{action:"create"}},retrieveConfigDetailByDepId:{method:"POST",params:{action:"retriveConfigDetailByDepId"}},updateDepartment:{method:"POST",params:{action:"update"}},retrieveDepartmentSimpleTreeView:{method:"GET",isArray:true,params:{action:"retrievedeptreeview"}},addCustomDataToDepartmentDataBean:{method:"POST",isArray:false,params:{action:"addCustomDataToDepartmentDataBean"}},retrieveAssociatedDepartments:{method:"POST",isArray:true,params:{action:"retrieveAssociatedDepartments"}}});
+return b
+}])
+});

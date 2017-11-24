@@ -1,0 +1,178 @@
+<div class="col-xs-2  pull-right hkg-nopadding" ng-if="editableGridOptions.datarows.length > 0">
+    <input type="text" class="form-control" ng-disabled="searchEditFlag == false" ng-model="searchText" ng-change="filterData(searchText)" placeholder="Search {{editableGridOptions.featureName}}">
+</div>
+<form method="POST" class="form-horizontal" name="gridForm" novalidate>
+    <div style="width: 100%;overflow-x: auto">
+        <div style="height: 400px;overflow-y: auto" class="contents"  ng-if="editableGridOptions.datarows.length > 0" > 
+            <table col-resizeable infinite-scroll="loadPaginatedData()" infinite-scroll-container='".contents"' infinite-scroll-parent='true' id="editablegrid{{editableGridOptions.tableName}}" class='table table-striped table-bordered'  style="table-layout: fixed;" ng-if="editableGridOptions.datarows.length > 0">
+                <thead style="">
+                    <tr>
+                        <th class="text-center" style="width: 40px" ng-if="editableGridOptions.enableselection != false && editableGridOptions.template.length > 4"><span class="glyphicon glyphicon-ok"></span></th>
+                        <th class="text-center" style="width: 70px" ng-if="editableGridOptions.template.length > 4">Actions</th>
+                        <th class="text-center" ng-style="{'width' : supported[headerRows.type].width}" ng-repeat="headerRows in editableGridOptions.template">
+                            {{'CSTMFLD_NM.' + headerRows.label| translate}}&nbsp;<span style="color:red" ng-if="headerRows.required">*</span>
+<!--                            <span class="glyphicon glyphicon-chevron-down" ng-if="reverse && sortBy === headerRows.label"></span>
+                            <span class="glyphicon glyphicon-chevron-up" ng-if="reverse == false && sortBy === headerRows.label"></span>-->
+                            <br/>
+                        </th>
+                        <th class="text-center" style="width: 70px">Actions</th>
+                        <th class="text-center" style="width: 40px" ng-if="editableGridOptions.enableselection != false"><span class="glyphicon glyphicon-ok"></span></th>
+                        <th class="text-center" style="width: 70px" ng-if="editableGridOptions.linked">Link Purchase</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat-start="dataRow in editableGridOptions.datarows track by $index" ng-init="dataRow.isEditGridFlag = false;"  ng-if="(dataRow.isEditGridFlag == undefined || dataRow.isEditGridFlag == false)">
+                        <td style="width: 40px" class="text-center hkg-nopadding" ng-if="editableGridOptions.enableselection != false && editableGridOptions.template.length > 4">
+                            <span class='btn btn-link glyphicon glyphicon-ok' tooltip="Select {{editableGridOptions.featureName}}" ng-click="selectCurrentRow($event, $index)" ng-disabled="0 === $index"></span>
+                        </td>
+                        <td style="width: 70px" class="text-center hkg-nopadding" ng-if="editableGridOptions.template.length > 5">
+                            <span class='btn btn-link glyphicon glyphicon-pencil' style="padding: 7px" ng-if="$index > 0" ng-click='makeACopyOfOldRecord(dataRow, $index, $event)' tooltip="Edit {{editableGridOptions.featureName}}"></span>
+                            <span class='btn btn-link glyphicon glyphicon-plus-sign' style="padding: 7px" ng-if="$index == 0" ng-click='makeACopyOfOldRecord(dataRow, $index, $event)' tooltip="Add {{editableGridOptions.featureName}}"></span>
+                            <span class='glyphicon glyphicon-trash pointer btn btn-link hkg-nopadding' style="padding: 5px" ng-click="showDeletePopup(dataRow)" ng-if="!(0 === $index)" tooltip="Delete {{editableGridOptions.featureName}}"></span>
+                        </td>
+                        <td title="{{editableGridOptions.labelrows[$parent.$index].screenRuleDetailsWithDbFieldName[headerRow.model].tooltipMessage}}" ng-style="{'width' : supported[headerRow.type].width, 'background-color' : editableGridOptions.labelrows[$parent.$index].screenRuleDetailsWithDbFieldName[headerRow.model].colorCode}" ng-class="{'text-right' : supported[headerRow.type].align === 'right', 'text-left': supported[headerRow.type].align === 'left'}" ng-repeat="headerRow in editableGridOptions.template" >
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type == 'fileUpload')">
+                                <span ng-if="editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null" class="column-spacing" >
+                                    N/A
+                                </span>
+                                <span ng-repeat="fileArray in editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model].split(',')">
+                                    <span class="glyphicon glyphicon-arrow-right" style="font-size: 10px"></span>&nbsp;<a ng-href='api/fileUpload/download?filename={{fileArray.trim()}}&token={{token}}'>{{fileArray.substring(fileArray.lastIndexOf(')') + 1, fileArray.length)}}</a><br/>
+                                </span>
+                            </span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type == 'exchangeRate' || headerRow.type == 'currency')">{{editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null ? 'N/A' : headerRow.currencyCode + " "+ editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]}}</span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type == 'Angle')">{{editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null ? 'N/A' : editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] + "°"}}</span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type == 'percent')">{{editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null ? 'N/A' : editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] + "%"}}</span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type == 'imageUpload')">
+                                <span ng-if="editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null" class="column-spacing" >
+                                    N/A
+                                </span>
+                                <!--<img ng-if="editableGridOptions.labelrows[$parent.$index].categoryCustom[headerRow.model] != null" alt='Image' style='position:relative' height='20' width='20' ng-src='{{"api/fileUpload/getimage?file_name=" + ((editableGridOptions.labelrows[$parent.$index].categoryCustom[headerRow.model]).substring(0, (editableGridOptions.labelrows[$parent.$index].categoryCustom[headerRow.model]).lastIndexOf("."))) + "_T.jpg&token=" + token}}' ng-click="showImagePopup(editableGridOptions.labelrows[$parent.$index].categoryCustom[headerRow.model])">-->
+                                <a ng-if="editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] != null"  ng-href='api/fileUpload/download?filename={{(editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model])}}&token={{token}}'>{{(editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]).substring((editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]).lastIndexOf(")") + 1, (editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]).length)}}</a>
+                                <span ng-if="editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] != null" class="btn btn-link glyphicon glyphicon-picture" ng-click="showImagePopup(editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model])"></span>
+                            </span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index > 0 && (headerRow.type != 'fileUpload' && headerRow.type != 'imageUpload' && headerRow.type != 'exchangeRate' && headerRow.type != 'currency' && headerRow.type != 'Angle' && headerRow.type != 'percent')">{{editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model] == null ? 'N/A' : editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]}}</span>
+                            <span class="column-spacing" ng-if="$parent.$parent.$index == 0">{{editableGridOptions.labelrows[$parent.$parent.$index].categoryCustom[headerRow.model]}}</span>
+                        </td>
+
+                        <td style="width: 70px" class="text-center hkg-nopadding">
+                            <span class='btn btn-link glyphicon glyphicon-pencil' style="padding: 7px" ng-if="$index > 0" ng-click='makeACopyOfOldRecord(dataRow, $index, $event)' tooltip="Edit {{editableGridOptions.featureName}}"></span>
+                            <span class='btn btn-link glyphicon glyphicon-plus-sign' style="padding: 7px" ng-if="$index == 0" ng-click='makeACopyOfOldRecord(dataRow, $index, $event)' tooltip="Add {{editableGridOptions.featureName}}"></span>
+                            <span class='glyphicon glyphicon-trash pointer btn btn-link hkg-nopadding' style="padding: 5px" ng-click="showDeletePopup(dataRow)" ng-if="!(editableGridOptions.datarows.length - 1 === $index)" tooltip="Delete {{editableGridOptions.featureName}}"></span>
+                        </td>
+                        <td style="width: 40px" class="text-center hkg-nopadding" ng-if="editableGridOptions.enableselection != false">
+                            <span class='btn btn-link glyphicon glyphicon-ok' tooltip="Select {{editableGridOptions.featureName}}" ng-click="selectCurrentRow($event, $index)" ng-disabled="editableGridOptions.datarows.length - 1 === $index"></span>
+                        </td>
+                        <td style="width: 100px" class="text-center hkg-nopadding" ng-if="editableGridOptions.linked">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" ng-disabled="dataRow.isLinked == false" ng-model="dataRow.isLinked" ng-change="delinkEntity(dataRow)"/>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr id="{{'row' + $index}}" class="animated fadeIn" ng-if="dataRow.isEditGridFlag == true" dynamic-form-grid form-name="{{'form' + $index}}" db-map="dbType"
+                        template="editableGridOptions.template" screen-rules="dataRow.screenRuleDetailsWithDbFieldName"
+                        edit-flag="true"  ng-model="dataRow.categoryCustom" is-diamond="true" before-label="dataRow.beforeLabel"
+                        after-label="dataRow.afterLabel" invoice-id="{{dataRow.invoiceId}}" parcel-id="{{dataRow.parcelId}}">
+                        <td style="width: 100px" class="text-center hkg-nopadding" ng-if="editableGridOptions.enableselection != false && editableGridOptions.template.length > 4">
+                            <span class='btn btn-link glyphicon glyphicon-ok' ng-disabled="dataRow.isEditGridFlag"></span>
+                        </td>
+                        <td style="width: 100px" class="text-center hkg-nopadding" ng-if="editableGridOptions.template.length > 4">
+                            <span class='btn btn-link glyphicon glyphicon-check' tooltip="Save {{editableGridOptions.featureName}}" style="padding: 7px" ng-init="setFormsss(this['form' + $index], dbType)" ng-click='createOrUpdateRecord(dataRow, $index, gridForm, dbType);'></span>
+                            <span class='glyphicon glyphicon-remove pointer btn btn-link' tooltip="Cancel {{editableGridOptions.featureName}} editing" style="color: #ac2925;padding: 7px" ng-click="cancelRowEdit(dataRow, $index)"></span>
+                        </td>
+                        <!--                 <td style="width: 100px" class="text-center hkg-nopadding" ng-if="editableGridOptions.linked">
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" ng-disabled="dataRow.isLinked == false" ng-model="dataRow.isLinked" ng-change="delinkEntity(dataRow)"/>
+                                            </label>
+                                        </td>-->
+
+                        <td style="width: 100px" class="text-center hkg-nopadding saveBtnHiddenTd">
+                            <span class='btn btn-link glyphicon glyphicon-check' id="check" tooltip="Save {{editableGridOptions.featureName}}" style="padding: 7px" ng-init="setFormsss(this['form' + $index], dbType)" ng-click='createOrUpdateRecord(dataRow, $index,{{"form" + $index}}, dbType
+                                                );'></span>
+                            <span class='glyphicon glyphicon-remove pointer btn btn-link' tooltip="Cancel {{editableGridOptions.featureName}} editing" style="color: #ac2925;padding: 7px" ng-click="cancelRowEdit(dataRow, $index)"></span>
+                        </td>
+                        <td style="width: 100px" class="text-center hkg-nopadding saveBtnHiddenTd" ng-show="editableGridOptions.enableselection != false">
+                            <span class='btn btn-link glyphicon glyphicon-ok' ng-disabled="dataRow.isEditGridFlag"></span>
+                        </td>
+                    </tr>
+                    <tr ng-repeat-end ></tr>
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+    <div ng-show='isBusy'>
+        <span style="margin-top: 10px;font-family: robotoregular;font-size: 14px;color: #000;display: inline-block;">Loading data...</span>
+    </div>
+    <div ng-if="editableGridOptions.datarows.length > 0">
+        <span style="margin-top: 10px;font-family: robotoregular;font-size: 14px;color: #000;display: inline-block;">
+            {{ entity + "Showing Results of " + editableGridOptions.datarows.length + " out of " + editableGridOptions.totalItems  | translate }}
+        </span>
+    </div>
+</form>
+<div class="modal fade" id="{{editableGridOptions.cancelModalId}}" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="cancelRowEdit()">&times;</a>
+                <h4 class="modal-title">
+                    {{ entity + "Confirmation of Row Changes" | translate }}
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div>
+                        {{ entity + "There are pending row changes You want to save changes?" | translate}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="" ng-click="cancelChanges()">{{ entity + "Cancel" | translate }}</a>
+                <button class="btn btn-hkg"  ng-click="saveChanges()">
+                    {{ entity + "Save" | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="{{editableGridOptions.deleteModalId}}" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hideDeletePopup()">&times;</a>
+                <h4 class="modal-title">
+                    {{ entity + "Remove Entity" | translate }}
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <div>
+                        {{ entity + "Are you sure you want to remove?" | translate}}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="" ng-click="hideDeletePopup()">{{ entity + "Cancel" | translate }}</a>
+                <button class="btn btn-hkg" ng-click="deletesRecord()">
+                    {{ entity + "Remove" | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="galleryPopup" tabindex="-1" aria-hidden="true" >
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a ng-href='{{"api/fileUpload/download?filename=" + imageFileNamePopup + "&token=" + token}}'>
+                    <h4 class="btn btn-link" style="padding-right: 1px">{{ entity + "Click here to Download" | translate }}</h4><h4 style="text-decoration: none;padding-bottom: 10px;padding-left: 0px" class="btn btn-link glyphicon glyphicon-download" ></h4></a>
+                <a class="close" ng-click="hideImagePopup()()">&times;</a>
+
+            </div>
+            <div class="modal-body">
+                <img style="height: 100%;width: 100%" ng-src='{{"api/fileUpload/getimage?file_name=" + imageFileNamePopup + "&token=" + token}}' />
+            </div>
+        </div>
+    </div>
+</div>

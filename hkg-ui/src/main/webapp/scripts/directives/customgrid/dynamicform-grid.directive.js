@@ -1,0 +1,6237 @@
+
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ * Author : Shreya
+ */
+
+
+define(['angular', 'webcam', 'datepickercustom.directive'], function () {
+    globalProvider.compileProvider.directive('dynamicFormGrid', ['$q', '$parse', '$http', '$templateCache', '$compile', '$document', '$timeout', '$rootScope', '$filter', 'CustomHolidayService', 'CenterCustomHolidayService',
+        function ($q, $parse, $http, $templateCache, $compile, $document, $timeout, rootScope, $filter, CustomHolidayService, CenterCustomHolidayService)
+        {
+            var supported = {
+                //  Text-based elements
+                'text': {element: 'input', type: 'text', editable: true, textBased: true, width: '200px'},
+                'date': {element: 'ag-date-picker-custom', type: 'date', editable: true, textBased: false, width: '200px'},
+                'datetime': {element: 'input', type: 'datetime', editable: true, textBased: true, width: '200px'},
+                'datetime-local': {element: 'input', type: 'datetime-local', editable: true, textBased: true, width: '200px'},
+                'email': {element: 'input', type: 'email', editable: true, textBased: true, width: '200px'},
+                'month': {element: 'input', type: 'month', editable: true, textBased: true},
+                'number': {element: 'input', type: 'text', editable: true, textBased: true, width: '200px'},
+                'password': {element: 'input', type: 'password', editable: true, textBased: true, width: '200px'},
+                'search': {element: 'input', type: 'search', editable: true, textBased: true},
+                'tel': {element: 'input', type: 'tel', editable: true, textBased: true},
+                'textarea': {element: 'textarea', editable: true, textBased: true, width: '200px'},
+                'time': {element: 'input', type: 'time', editable: true, textBased: true, width: '200px'},
+                'url': {element: 'input', type: 'url', editable: true, textBased: true, width: '200px'},
+                'week': {element: 'input', type: 'week', editable: true, textBased: true},
+                //  Specialized editables
+                'checkbox': {element: 'input', type: 'checkbox', editable: true, textBased: false, width: '50px'},
+                'color': {element: 'input', type: 'color', editable: true, textBased: false, width: '200px'},
+                'file': {element: 'input', type: 'file', editable: true, textBased: false, width: '200px'},
+                'range': {element: 'input', type: 'range', editable: true, textBased: false, width: '200px'},
+                'select': {element: 'select', editable: true, textBased: false, width: '200px'},
+                'subEntity': {element: 'select', editable: true, textBased: false, width: '200px'},
+                'pointerselect': {element: 'select', editable: true, textBased: false, width: '200px'},
+                //  Pseudo-non-editables (containers)
+                'checklist': {element: 'div', editable: false, textBased: false, width: '200px'},
+                'fieldset': {element: 'fieldset', editable: false, textBased: false, width: '200px'},
+                'radio': {element: 'div', editable: false, textBased: false, width: '50px'},
+                //  Non-editables (mostly buttons)
+//                'button': {element: 'button', type: 'button', editable: false, textBased: false, class: "btn btn-hkg "},
+                'hidden': {element: 'input', type: 'hidden', editable: false, textBased: false},
+                'image': {element: 'input', type: 'image', editable: false, textBased: false},
+                'legend': {element: 'legend', editable: false, textBased: false},
+                'reset': {element: 'button', type: 'reset', editable: false, textBased: false},
+                'submit': {element: 'button', type: 'submit', editable: false, textBased: false},
+                'imageUpload': {element: 'input', type: 'hidden', editable: true, textBased: false, width: '200px'},
+                'currency': {element: 'input', type: 'hidden', editable: true, textBased: false, width: '200px'},
+                'exchangeRate': {element: 'input', type: 'hidden', editable: true, textBased: false, width: '200px'},
+                'fileUpload': {element: 'input', type: 'hidden', editable: true, textBased: false, width: '200px'},
+                'fileDownload': {element: 'input', type: 'hidden', editable: true, textBased: true, width: '100px'},
+                'multiSelect': {element: 'input', type: 'text', editable: true, textBased: true, width: '300px'},
+                'percent': {element: 'input', type: 'text', editable: true, textBased: true, width: '100px'},
+                'UserMultiSelect': {element: 'input', type: 'text', editable: true, textBased: true, width: '300px'},
+                'AutoGenerated': {element: 'input', type: 'text', editable: true, textBased: true, width: '200px'},
+                'pointer_multiSelect': {element: 'input', type: 'text', editable: true, textBased: true, width: '300px'},
+                'Angle': {element: 'input', type: 'text', editable: true, textBased: true, width: '200px'},
+                'formula': {element: 'input', type: 'text', editable: true, textBased: true, width: '200px'}
+            };
+//            return {
+//                restrict: 'E', // supports using directive as element only
+            var dependentIdsToBeViewed = [];
+//            var colorElementsForUISelect = [];
+            var link = function ($scope, element, attrs, ctrls) {
+                var colorElementsForUISelect = [];
+                var modelCtrl = ctrls[1];
+                //  Basic initialization
+                var render = function (callback) {
+
+                    var newElement = null,
+                            mainDiv = null,
+                            newChild = null,
+                            cbAtt = '',
+                            foundOne = false,
+                            iterElem = element,
+                            model = null,
+                            dtbMap = null,
+                            submitFlagName = attrs.submitFlagName,
+                            hiddenSaveBtnElement = element.find(".saveBtnHiddenTd");
+//                    ////console.log(hiddenSaveBtnElement.length);
+//                    element.find(".saveBtnHiddenTd").remove();
+                    if (!submitFlagName) {
+                        submitFlagName = "submitted";
+                    }
+                    //  Check that the required attributes are in place
+                    if (angular.isDefined(attrs.ngModel) && (angular.isDefined(attrs.template) || angular.isDefined(attrs.templateUrl)) && !element.hasClass('dynamic-form-grid')) {
+                        model = $parse(attrs.ngModel)($scope);
+                        if (!model) {
+                            var objModel = attrs.ngModel.split(".");
+                            $scope[objModel[0]] = {};
+                            var tmp = $parse(objModel[0])($scope);
+                            for (var i = 1; i < objModel.length; i++)
+                            {
+                                tmp[objModel[i]] = {};
+                                tmp = tmp[objModel[i]];
+                            }
+                            model = tmp;
+                            $scope[attrs.ngModel] = {};
+                            model = $scope.$eval(attrs.ngModel);
+                        }
+
+                        dtbMap = $parse(attrs.dbMap)($scope);
+                        if (!dtbMap) {
+                            var objProps = attrs.dbMap.split(".");
+                            $scope[objProps[0]] = {};
+                            var temp = $parse(objProps[0])($scope);
+                            for (var i = 1; i < objProps.length; i++)
+                            {
+                                temp[objProps[i]] = {};
+                                temp = temp[objProps[i]];
+                            }
+                            dtbMap = temp;
+                        }
+                        var screenRules = $parse(attrs.screenRules)($scope);
+                        if (screenRules === null || screenRules === undefined) {
+                            $scope.screenRules = {};
+                        } else {
+                            $scope.screenRules = screenRules;
+                        }
+//                        ////console.log(JSON.stringify(screenRules));
+                        //  Grab the template. either from the template attribute, or from the URL in templateUrl
+                        (attrs.template ? $q.when($parse(attrs.template)($scope)) :
+                                $http.get(attrs.templateUrl, {cache: $templateCache}).then(function (result) {
+                            return result.data;
+                        })
+                                ).then(function (template) {
+
+                            var buildFields = function (field, id) {
+                                // ////console.log('field.dbType : '+field.type)
+
+                                //added condition for invoice visibility
+                                if (rootScope.haveValue === 'off' && (field.model === 'is_hidden$CB$Boolean' || field.isCurrencyInvolvedInField || field.type === 'currency')) {
+                                } else {
+                                    //created map dtbMap to map model as key and dbtype as value
+                                    if (angular.isDefined(field.dbType)) {
+                                        if (field.type === 'date' && field.attributes && (field.attributes.type === 'timerange' || field.attributes.type === 'datetimerange' || field.attributes.type === 'daterange')) {
+                                            dtbMap[field.fromModel] = field.dbType;
+                                            dtbMap[field.toModel] = field.dbType;
+                                        }
+                                        else if (field.type === 'currency')
+                                        {
+//                                        dtbMap[field.model + "@CurrencyValue"] = field.dbType;
+                                            dtbMap[field.model] = field.dbType;
+                                            dtbMap[field.model + "*CurrencyCode"] = field.dbType;
+                                        }
+
+                                        else {
+                                            dtbMap[field.model] = field.dbType;
+                                        }
+                                    }
+                                    if (!angular.isDefined(supported[field.type]) || supported[field.type] === false) {
+                                        //  Unsupported.  Create SPAN with field.label as contents
+                                        newElement = angular.element('<span></span>');
+                                        if (angular.isDefined(field.label)) {
+                                            angular.element(newElement).html(field.label);
+                                        }
+                                        angular.forEach(field, function (val, attr) {
+                                            if (["label", "type"].indexOf(attr) > -1) {
+                                                return;
+                                            }
+                                            newElement.attr(attr, val);
+                                        });
+                                        this.append(newElement);
+                                        newElement = null;
+                                    }
+                                    else {
+                                        if ((angular.isDefined(attrs.isDiamond) && attrs.isDiamond === 'true') || attrs.isDiamond === true) {
+                                            attrs.isDiamond = true;
+                                        } else {
+                                            attrs.isDiamond = false;
+                                        }
+                                        if ((angular.isDefined(attrs.disableFlag) && attrs.disableFlag === 'true') || attrs.disableFlag === true) {
+                                            attrs.disableFlag = true;
+                                        } else {
+                                            attrs.disableFlag = false;
+                                        }
+                                        if ((angular.isDefined(attrs.viewOnly) && attrs.viewOnly === 'true') || attrs.viewOnly === true) {
+                                            attrs.viewOnly = true;
+                                        } else {
+                                            attrs.viewOnly = false;
+                                        }
+                                        if (angular.isDefined(attrs.userDefined) && attrs.userDefined !== null) {
+                                            $scope.userDefined = true;
+                                            $scope.userDefinedData = $scope[attrs.userDefined];
+                                        } else {
+                                            $scope.userDefined = false;
+                                        }
+                                        if ((angular.isDefined(field.isViewFromDesignation) && field.isViewFromDesignation === 'true') || field.isViewFromDesignation === true) {
+                                            field.isViewFromDesignation = true;
+                                        } else {
+                                            field.isViewFromDesignation = false;
+                                        }
+                                        if (attrs.viewOnly) {
+                                            if (attrs.isDiamond === false) {
+                                                newElement = angular.element('<span></span>');
+                                                var spnsElement = angular.element('<span></span>');
+                                                newElement.wrap(spnsElement).parent();
+                                            } else
+                                            {
+                                                newElement = angular.element('<span></span>');
+                                            }
+
+                                            if (field.type === 'date' || field.type === 'timerange') {
+                                                if (field.fromModel !== null && field.fromModel !== undefined && field.toModel !== null && field.toModel !== undefined)
+                                                {
+                                                    var convertedDate;
+                                                    var fromDateString = $scope.$eval(attrs.ngModel + "." + field.fromModel);
+                                                    var toDateString = $scope.$eval(attrs.ngModel + "." + field.toModel);
+                                                    if (fromDateString !== null && fromDateString !== undefined && toDateString !== null && toDateString !== undefined) {
+                                                        // From Date Conversion
+                                                        var fromdate = new Date(fromDateString);
+                                                        var fromyear = fromdate.getFullYear();
+                                                        var frommonth = fromdate.getMonth() + 1;
+                                                        var fromtoday = fromdate.getDate();
+                                                        var fromformattedDate = fromtoday + "/" + frommonth + "/" + fromyear;
+                                                        // To Date Conversion
+                                                        var todate = new Date(toDateString);
+                                                        var toyear = todate.getFullYear();
+                                                        var tomonth = todate.getMonth() + 1;
+                                                        var totoday = todate.getDate();
+                                                        var toformattedDate = totoday + "/" + tomonth + "/" + toyear;
+                                                        convertedDate = fromformattedDate + "  To  " + toformattedDate;
+                                                    }
+                                                    var dateElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.fromModel + '" ></span>');
+                                                    dateElement.prepend(convertedDate);
+                                                    newElement.prepend(dateElement);
+                                                    var dateElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.fromModel + '" ></span>');
+                                                    dateElement1.prepend('N/A');
+                                                    newElement.prepend(dateElement1);
+                                                } else {
+                                                    var formattedDate;
+                                                    var dateString = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                    var date = new Date(dateString);
+                                                    var theyear = date.getFullYear()
+                                                    var themonth = date.getMonth() + 1
+                                                    var thetoday = date.getDate()
+                                                    formattedDate = thetoday + "/" + themonth + "/" + theyear;
+                                                    var dateElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    dateElement.prepend(formattedDate);
+                                                    newElement.prepend(dateElement);
+                                                    var dateElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    dateElement1.prepend('N/A');
+                                                    newElement.prepend(dateElement1);
+                                                }
+                                            }
+                                            else if (field.type === 'checkbox')
+                                            {
+                                                var checkBoxFinalString;
+                                                var checkBoxString = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                var checkBoxMap = new Array();
+                                                checkBoxMap["true"] = "Yes";
+                                                checkBoxMap["false"] = "No";
+                                                checkBoxMap[true] = "Yes";
+                                                checkBoxMap[false] = "No";
+                                                checkBoxFinalString = checkBoxMap[checkBoxString];
+                                                var checkBoxElement = angular.element('<span  ng-show="' + checkBoxString + '!== undefined" ></span>');
+                                                checkBoxElement.prepend(checkBoxFinalString);
+                                                newElement.prepend(checkBoxElement);
+                                                var checkBoxElement1 = angular.element('<span  ng-show="' + checkBoxString + '=== undefined" ></span>');
+                                                checkBoxElement1.prepend('N/A');
+                                                newElement.prepend(checkBoxElement1);
+                                            }
+                                            else if (field.type === 'imageUpload') {
+                                                var imageFullString = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                if ($scope.$eval(attrs.ngModel + "." + field.model) !== null && $scope.$eval(attrs.ngModel + "." + field.model) !== undefined)
+                                                {
+                                                    var imageForThumbnailString = $scope.$eval(attrs.ngModel + "." + field.model).substring(0, $scope.$eval(attrs.ngModel + "." + field.model).lastIndexOf("."));
+                                                    var thumbnailString = imageForThumbnailString + "_T.jpg";
+                                                }
+                                                var imageFinalString;
+                                                if (imageFullString !== null && imageFullString !== undefined && imageFullString.length > 0)
+
+                                                {
+                                                    var startlength = imageFullString.lastIndexOf("~~") + 1;
+                                                    var endLength = imageFullString.length;
+                                                    if (startlength > -1 && endLength > -1)
+                                                    {
+                                                        imageFinalString = imageFullString.substring(startlength, endLength).toString();
+                                                    }
+                                                }
+                                                var imageElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                var linkElement = angular.element("<a ng-href='api/fileUpload/download?filename={{ \"" + imageFullString + "\"}}&token={{authToken}}'>{{ \"" + imageFinalString + "\"}}</a>");
+                                                imageElement.append(linkElement);
+                                                if ($scope.$eval(attrs.ngModel + "." + field.model) !== null && $scope.$eval(attrs.ngModel + "." + field.model) !== undefined)
+                                                {
+                                                    var thumbnailElement = angular.element("<img alt='Image' style='position:relative' height='42' width='42' ng-src='api/fileUpload/getimage?file_name={{ \"" + thumbnailString + "\"}}&token={{authToken}}'></img>");
+                                                    imageElement.prepend(thumbnailElement);
+                                                }
+                                                newElement.prepend(imageElement);
+                                                var imageElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                imageElement1.prepend('N/A');
+                                                newElement.prepend(imageElement1);
+                                            }
+                                            else if (field.type === 'fileUpload')
+                                            {
+                                                var fileStringWithoutLastComma;
+                                                var fileFullString = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                var fileArray = [];
+                                                if (fileFullString !== null && fileFullString !== undefined)
+                                                {
+
+
+                                                    var tempFileString = "";
+                                                    var fileStringReplace = fileFullString.toString().replace("[", "").replace("]", "").replace(/"/g, "");
+                                                    fileArray = fileStringReplace.split(',');
+                                                    for (var j = 0; j < fileArray.length; j++)
+                                                    {
+                                                        var startlength = fileArray[j].lastIndexOf("~~") + 1;
+                                                        var endLength = fileArray[j].length;
+                                                        if (startlength > -1 && endLength > -1)
+                                                        {
+                                                            tempFileString += fileArray[j].substring(startlength, endLength) + " , ";
+                                                        }
+
+                                                    }
+                                                    fileStringWithoutLastComma = tempFileString.replace(/,(?=[^,]*$)/, '');
+                                                }
+                                                var linkElement;
+                                                if (fileArray.length > 0) {
+                                                    for (var i = 0; i < fileArray.length; i++)
+                                                    {
+                                                        var startlength = fileArray[i].lastIndexOf("~~") + 1;
+                                                        var endLength = fileArray[i].length;
+                                                        var iteratorElement = angular.element("<li><a ng-href='api/fileUpload/download?filename={{ \"" + fileArray[i] + "\"}}&token={{authToken}}'>{{ \"" + fileArray[i].substring(startlength, endLength) + "\"}}</a></li>");
+                                                        if (i === 0) {
+                                                            linkElement = iteratorElement;
+                                                        } else {
+                                                            linkElement.append(iteratorElement);
+                                                        }
+                                                    }
+                                                    newElement = newElement.wrap('<div style="position:relative""<ol></ol></div>').parent();
+                                                    newElement.append(linkElement);
+                                                }
+                                                var fileElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                fileElement1.prepend('N/A');
+                                                newElement.prepend(fileElement1);
+                                            }
+                                            else
+                                            if (field.type === 'select' || field.type === 'pointerselect') {
+                                                var selectId = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                if (attrs.uniqueIdView !== null && attrs.uniqueIdView !== undefined)
+                                                {
+                                                    uniqueId = attrs.uniqueIdView + field.model;
+                                                } else
+                                                {
+                                                    uniqueId = 'spn_select' + field.model;
+                                                }
+                                                if (selectId !== null && selectId !== undefined)
+                                                {
+                                                    var select = $scope.$eval(attrs.ngModel + "." + field.model).toString();
+                                                    var selectUrl;
+                                                    if (field.model !== 'carate_range_of_lot$DRP$Long' && field.model !== 'carate_range_of_packet$DRP$Long') {
+                                                        selectUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveValueNamesForSelect?param=" + select);
+                                                    }
+                                                    else
+                                                    {
+                                                        selectUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveCaratRangeNames?param=" + select);
+                                                    }
+
+                                                    var selectElement = angular.element('<span id="' + uniqueId + '" ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    newElement.prepend(selectElement);
+                                                    var selectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    selectElement1.prepend('N/A');
+                                                    newElement.prepend(selectElement1);
+                                                    $.ajax({
+                                                        url: selectUrl,
+                                                        type: 'GET',
+                                                        error: function () {
+                                                        },
+                                                        success: function (result) {
+
+                                                            $scope.finalString = result;
+                                                            var div = document.getElementById(uniqueId);
+                                                            div.innerHTML = div.innerHTML + $scope.finalString;
+                                                        }
+                                                    });
+                                                }
+                                                else
+                                                {
+                                                    var selectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    selectElement1.prepend('N/A');
+                                                    newElement.prepend(selectElement1);
+                                                }
+                                            }
+                                            else
+                                            if (field.type === 'subEntity') {
+                                                var subEntityId = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                if (attrs.uniqueIdView !== null && attrs.uniqueIdView !== undefined)
+                                                {
+                                                    uniqueId = attrs.uniqueIdView + field.model;
+                                                } else
+                                                {
+                                                    uniqueId = 'spn_subEntity' + field.model;
+                                                }
+                                                if (subEntityId !== null && subEntityId !== undefined)
+                                                {
+                                                    var subEntity = $scope.$eval(attrs.ngModel + "." + field.model).toString();
+                                                    var subEntityUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveSubEntityNames?param=" + subEntity + "&fieldId=" + field.fieldId);
+                                                    var subEntityElement = angular.element('<span id="' + uniqueId + '" ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    newElement.prepend(subEntityElement);
+                                                    var subEntityElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    subEntityElement1.prepend('N/A');
+                                                    newElement.prepend(subEntityElement1);
+                                                    $.ajax({
+                                                        url: subEntityUrl,
+                                                        type: 'GET',
+                                                        error: function () {
+                                                        },
+                                                        success: function (result) {
+
+                                                            $scope.finalSubEntityString = result;
+                                                            var div = document.getElementById(uniqueId);
+                                                            div.innerHTML = div.innerHTML + $scope.finalSubEntityString;
+                                                        }
+                                                    });
+                                                }
+                                                else
+                                                {
+                                                    var subEntityElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    subEntityElement1.prepend('N/A');
+                                                    newElement.prepend(subEntityElement1);
+                                                }
+                                            }
+
+                                            else
+                                            if (field.type === 'multiSelect' || field.type === 'pointer_multiSelect') {
+                                                var multiSelectId = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                if (attrs.uniqueIdView !== null && attrs.uniqueIdView !== undefined)
+                                                {
+                                                    uniqueId = attrs.uniqueIdView + field.model;
+                                                } else
+                                                {
+                                                    uniqueId = 'spn_multiselect' + field.model;
+                                                }
+                                                if (multiSelectId !== null && multiSelectId !== undefined)
+                                                {
+                                                    var multiselect = $scope.$eval(attrs.ngModel + "." + field.model).toString();
+                                                    var multiSelectUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveValueNamesForMultiSelect?param=" + multiselect);
+                                                    var multiSelectElement = angular.element('<span id="' + uniqueId + '" ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    newElement.prepend(multiSelectElement);
+                                                    var multiSelectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    multiSelectElement1.prepend('N/A');
+                                                    newElement.prepend(multiSelectElement1);
+                                                    $.ajax({
+                                                        url: multiSelectUrl,
+                                                        type: 'GET',
+                                                        error: function () {
+                                                        },
+                                                        success: function (result) {
+
+                                                            $scope.finalMultiSelectString = result;
+                                                            var div = document.getElementById(uniqueId);
+                                                            div.innerHTML = div.innerHTML + $scope.finalMultiSelectString;
+                                                        }
+                                                    });
+                                                }
+                                                else
+                                                {
+                                                    var multiSelectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    multiSelectElement1.prepend('N/A');
+                                                    newElement.prepend(multiSelectElement1);
+                                                }
+
+                                            }
+                                            else
+                                            if (field.type === 'UserMultiSelect') {
+                                                var userMultiSelectMap;
+                                                var uniqueId;
+                                                if (attrs.uniqueIdView !== null && attrs.uniqueIdView !== undefined)
+                                                {
+                                                    uniqueId = attrs.uniqueIdView + field.model;
+                                                } else
+                                                {
+                                                    uniqueId = 'spn_usermultiselect' + field.model;
+                                                }
+                                                if ($scope.$eval(attrs.ngModel + "." + field.model) !== null && $scope.$eval(attrs.ngModel + "." + field.model) !== undefined)
+                                                {
+                                                    var multiSelectId = $scope.$eval(attrs.ngModel + "." + field.model).toString();
+                                                    var multiSelectUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveRecipientNamesForCustomUserMultiSelect?param=" + multiSelectId);
+                                                    var usermultiSelectElement = angular.element('<span id="' + uniqueId + '" ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    newElement.prepend(usermultiSelectElement);
+                                                    var usermultiSelectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    usermultiSelectElement1.prepend('N/A');
+                                                    newElement.prepend(usermultiSelectElement1);
+                                                    $.ajax({
+                                                        url: multiSelectUrl,
+                                                        type: 'GET',
+                                                        error: function () {
+
+                                                        },
+                                                        success: function (result) {
+                                                            userMultiSelectMap = JSON.parse(angular.toJson(result));
+                                                            var commaseparatedModelArray = [];
+                                                            commaseparatedModelArray = multiSelectId.split(",");
+                                                            var commaSeparatedString = '';
+                                                            for (var j = 0; j < commaseparatedModelArray.length; j++)
+                                                            {
+                                                                var temp = commaseparatedModelArray[j];
+                                                                commaSeparatedString += userMultiSelectMap[commaseparatedModelArray[j].trim()] + ",";
+                                                            }
+
+                                                            $scope.finalStringWithoutLastComma = commaSeparatedString.replace(/,(?=[^,]*$)/, '');
+                                                            var div = document.getElementById(uniqueId);
+                                                            div.innerHTML = div.innerHTML + $scope.finalStringWithoutLastComma;
+                                                        }
+                                                    });
+                                                }
+                                                else
+                                                {
+                                                    var usermultiSelectElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    usermultiSelectElement1.prepend('N/A');
+                                                    newElement.prepend(usermultiSelectElement1);
+                                                }
+
+//                                           
+                                            }
+                                            else if (field.type === 'percent')
+                                            {
+                                                var percentElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                percentElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}}  % ');
+                                                newElement.prepend(percentElement);
+                                                var percentElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                percentElement1.prepend('N/A');
+                                                newElement.prepend(percentElement1);
+                                            }
+                                            else if (field.type === 'Angle')
+                                            {
+                                                var angleElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                angleElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}}');
+                                                angleElement.append('<span class="">&#176</span>');
+                                                newElement.prepend(angleElement);
+                                                var angleElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                angleElement1.prepend('N/A');
+                                                newElement.prepend(angleElement1);
+                                            }
+
+                                            else if (field.type === 'currency')
+                                            {
+                                                console.elog("inside currency")
+                                                var currencyCodeSymbolMap = JSON.parse(angular.toJson(field.currencyCodeWithSymbolMap));
+                                                var codeVal = field.model + "*CurrencyCode";
+                                                var currencyValue = model[field.model];
+                                                var modelValue = model[codeVal];
+                                                var currencySymbol = currencyCodeSymbolMap[modelValue];
+                                                var codeValForView = field.model + "*CurrencyCode";
+                                                var currencyCodeForView = attrs.ngModel + "." + codeValForView;
+                                                var currencyCodeSymbol = $scope[currencyCodeForView];
+                                                var symbolElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                symbolElement.prepend(format(field.currencyFormat, currencyValue));
+//                                                if (field.currencySymbolPosition !== null && field.currencySymbolPosition !== undefined && field.currencySymbolPosition === true)
+//                                                {
+//                                                    symbolElement.prepend(currencySymbol + "  ");
+//                                                    newElement.prepend(symbolElement);
+//                                                }
+//                                                else
+//                                                {
+                                                ////console.log("field.currencyCode :" + field.currencyCode);
+                                                symbolElement.append(" " + field.currencyCode);
+                                                newElement.append(symbolElement);
+//                                                }
+
+                                                var symbolElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                symbolElement1.prepend('N/A');
+                                                newElement.prepend(symbolElement1);
+                                            }
+                                            else if (field.type === 'exchangeRate')
+                                            {
+                                                var currencyValue = model[field.model];
+                                                var symbolElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                symbolElement.prepend(format(field.currencyFormat, currencyValue));
+//                                            
+                                                symbolElement.append(" " + field.currencyCode);
+                                                newElement.append(symbolElement);
+
+                                                var symbolElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                symbolElement1.prepend('N/A');
+                                                newElement.prepend(symbolElement1);
+                                            }
+                                            else if (field.type === 'text')
+                                            {
+                                                if (angular.isDefined(field.masked) && field.masked) {
+
+                                                    if (rootScope.viewEncryptedData === false)
+                                                    {
+                                                        if ($scope.$eval(attrs.ngModel + "." + field.model) !== null && $scope.$eval(attrs.ngModel + "." + field.model) !== undefined)
+                                                        {
+                                                            var textElement = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                            var encrypt = '~';
+                                                            for (var j = 0; j < textElement.length; j++)
+                                                            {
+                                                                if (/\s/.test(textElement[j])) {
+                                                                    // Got Space
+                                                                    encrypt += " ";
+                                                                }
+                                                                else
+                                                                {
+                                                                    encrypt += "*";
+                                                                }
+                                                            }
+                                                            // Remove first character
+                                                            encrypt = encrypt.toString().slice(1);
+                                                            var textPwdElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                            textPwdElement.prepend(encrypt);
+                                                            newElement.prepend(textPwdElement);
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        var textPwdElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                        textPwdElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}} ')
+                                                        newElement.prepend(textPwdElement);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    var textPwdElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                    textPwdElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}} ')
+                                                    newElement.prepend(textPwdElement);
+                                                }
+                                                var textPwdElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                textPwdElement1.prepend('N/A');
+                                                newElement.prepend(textPwdElement1);
+                                            } else if (field.type === 'AutoGenerated') {
+                                                //Added By Shreya for printing barcode directly from the IDs.
+                                                var mdelValue = attrs.ngModel + '.' + field.model;
+                                                var allElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                allElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}} ');
+                                                newElement.prepend(allElement);
+                                                var auto = angular.element('<print-barcode-value class="col-md-2" ng-hide="!' + attrs.ngModel + '.' + field.model + '" model-value="' + attrs.ngModel + '.' + field.model + '" field-label="{{fieldLabel}}" is-diamond ="' + attrs.isDiamond + '" is-image-name="false" "></print-barcode-value>');
+                                                var newt = angular.element('<div class="control-group"></div>');
+                                                var newt2 = angular.element('<div class="col-md-5 " ng-hide="!' + attrs.ngModel + '.' + field.model + '"></div>');
+                                                newElement = newElement.wrap(newt2).parent();
+                                                newElement = newElement.wrap(newt).parent();
+                                                newElement.append(auto);
+                                                var textPwdElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                textPwdElement1.prepend('N/A');
+                                                newElement.prepend(textPwdElement1);
+                                            } else {
+                                                var allElement = angular.element('<span  ng-hide="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                allElement.prepend('{{' + attrs.ngModel + "['" + field.model + "']" + '}} ');
+                                                newElement.prepend(allElement);
+                                                var allElement1 = angular.element('<span  ng-show="!' + attrs.ngModel + '.' + field.model + '" ></span>');
+                                                allElement1.prepend('N/A');
+                                                newElement.prepend(allElement1);
+                                            }
+
+                                        } else {
+                                            //  Supported.  Create element (or container) according to type
+
+                                            if ((angular.isDefined(attrs.editFlag) && attrs.editFlag === 'true') || attrs.editFlag === true) {
+                                                attrs.editFlag = true;
+                                            } else {
+                                                attrs.editFlag = false;
+                                            }
+                                            if (!angular.isDefined(field.model)) {
+                                                field.model = id;
+                                            }
+
+                                            newElement = angular.element($document[0].createElement(supported[field.type].element));
+                                            if (angular.isDefined(supported[field.type].type)) {
+                                                newElement.attr('type', supported[field.type].type);
+                                            }
+                                            //  Editable fields (those that can feed models)
+                                            if (angular.isDefined(supported[field.type].editable) && supported[field.type].editable) {
+                                                if (angular.isDefined(field.fromModel) && angular.isDefined(field.toModel)) {
+                                                    newElement.attr('name', field.fromModel);
+                                                    newElement.attr('from-model', attrs.ngModel + "['" + field.fromModel + "']");
+                                                    newElement.attr('name', field.toModel);
+                                                    newElement.attr('to-model', attrs.ngModel + "['" + field.toModel + "']");
+                                                }
+                                                else {
+                                                    newElement.attr('id', field.modelWithoutSeperators);
+                                                    newElement.attr('name', field.model);
+                                                    newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    newElement.attr('ng-readonly', true);
+                                                }
+                                                if (angular.isDefined(field.required)) {
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+                                                if (angular.isDefined(field.val) && field.val !== null && field.val.length > 0) {
+//                                                    model[field.model] = angular.copy(field.val);
+                                                    var codeVal = field.model;
+                                                    if (!attrs.editFlag) {
+                                                        // Create Time
+                                                        model[codeVal] = angular.copy(field.val);
+                                                    }
+                                                    else
+                                                    {
+                                                        // Update Time
+                                                        /* This scenario will be if I create a document at that time there was no currency component but now I add a component and then if i edit
+                                                         if it does not have value in mongo bring it from postgres */
+                                                        if ($scope.$eval(attrs.ngModel + "." + field.model) === undefined)
+                                                        {
+                                                            model[codeVal] = field.val;
+                                                        }
+                                                    }
+                                                    newElement.attr('value', field.val);
+                                                }
+                                            }
+                                            //  Fields based on input type=text
+                                            if (angular.isDefined(supported[field.type].textBased) && supported[field.type].textBased) {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (angular.isDefined(field.minLength)) {
+
+                                                    newElement.attr('ng-minlength', field.minLength);
+                                                }
+                                                if (angular.isDefined(field.maxLength)) {
+
+                                                    newElement.attr('ng-maxlength', field.maxLength);
+                                                }
+
+                                                if (angular.isDefined(field.validate)) {
+                                                    newElement.attr('ng-pattern', field.validate);
+                                                }
+                                                if (angular.isDefined(field.placeholder)) {
+                                                    newElement.attr('placeholder', field.placeholder);
+                                                }
+                                                newElement.attr('class', 'form-control');
+                                                if (angular.isDefined(field.masked) && field.masked) {
+                                                    if (rootScope.viewEncryptedData === false)
+                                                    {
+                                                        newElement.attr('type', 'password');
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    newElement.attr('type', 'text');
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                            }
+
+                                            //  Special cases   
+                                            if (field.isUnique === true) {
+                                                var textValue = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(textValue, function () {
+                                                    $scope[textValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                    if (field.uniqueForFields !== null && field.uniqueForFields !== undefined) {
+                                                        ////console.log("field.uniqueForFields...." + field.uniqueForFields);
+                                                        var uniqueDependantArr = [];
+                                                        uniqueDependantArr = field.uniqueForFields.toString().split(",");
+                                                        var mapOfFieldsWithVal = {};
+                                                        for (var i in uniqueDependantArr)
+                                                        {
+
+                                                            var key = uniqueDependantArr[i];
+                                                            var value;
+                                                            if (key === "invoiceId")
+                                                            {
+                                                                value = attrs.invoiceId;
+                                                            }
+                                                            else if (key === "parcelId")
+                                                            {
+                                                                value = attrs.parcelId;
+                                                            }
+                                                            else if (key === "lotId")
+                                                            {
+                                                                value = attrs.lotId;
+                                                            }
+                                                            else if (key === "packetId")
+                                                            {
+                                                                value = attrs.packetId;
+                                                            } else
+                                                            {
+                                                                value = $scope.$eval(attrs.ngModel + "." + key);
+                                                            }
+//                                                            
+                                                            mapOfFieldsWithVal[key] = value;
+
+
+                                                        }
+
+                                                        ////console.log("map......" + JSON.stringify(mapOfFieldsWithVal));
+//                                                        var modelValue = $scope[attrs.ngModel][field.model];
+                                                        var uniqUrlFrFields = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/checkuniquenessForFields?modelValue=" + $scope[textValue] + "&modelName=" + field.model + "&featureName=" + field.featureName);
+//                                             
+
+                                                        $.ajax({
+                                                            url: uniqUrlFrFields,
+                                                            type: 'POST',
+                                                            headers: {
+                                                                'Accept': 'application/json',
+                                                                'Content-Type': 'application/json'
+                                                            },
+                                                            data: JSON.stringify(mapOfFieldsWithVal),
+                                                            'dataType': 'json',
+                                                            error: function () {
+                                                                ////console.log("in failurew");
+                                                            },
+                                                            success: function (response)
+                                                            {
+                                                                ////console.log("response..." + response.data)
+                                                                var uniqueFieldElement = angular.element(document.querySelector('#uni_' + field.modelWithoutSeperators));
+                                                                if (response.data === false) {
+                                                                    ////console.log(modelCtrl)
+
+
+                                                                    if (uniqueFieldElement !== null && uniqueFieldElement !== undefined && uniqueFieldElement.hasClass('ng-hide')) {
+                                                                        uniqueFieldElement.removeClass('ng-hide');
+                                                                    }
+                                                                    modelCtrl.$setValidity('unique', false);
+                                                                } else
+                                                                {
+                                                                    if (uniqueFieldElement !== null && uniqueFieldElement !== undefined) {
+                                                                        uniqueFieldElement.addClass('ng-hide');
+                                                                    }
+                                                                    modelCtrl.$setValidity('unique', true);
+
+                                                                }
+                                                            },
+                                                            failure: function ()
+                                                            {
+
+                                                            }
+                                                        });
+                                                    } else
+                                                    {
+
+                                                        var uniqUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/checkuniqueness?modelValue=" + $scope[textValue] + "&modelName=" + field.model + "&featureName=" + field.featureName);
+//                                             
+
+                                                        $.ajax({
+                                                            url: uniqUrl,
+                                                            type: 'GET',
+                                                            error: function () {
+                                                                ////console.log("in failurew");
+                                                            },
+                                                            success: function (response)
+                                                            {
+                                                                var uniqueElem = angular.element(document.querySelector('#uni_' + field.modelWithoutSeperators));
+                                                                if (response.data === false) {
+                                                                    ////console.log(modelCtrl)
+
+
+                                                                    if (uniqueElem !== null && uniqueElem !== undefined && uniqueElem.hasClass('ng-hide')) {
+                                                                        uniqueElem.removeClass('ng-hide');
+                                                                    }
+                                                                    modelCtrl.$setValidity('unique', false);
+                                                                } else
+                                                                {
+                                                                    if (uniqueElem !== null && uniqueElem !== undefined) {
+                                                                        uniqueElem.addClass('ng-hide');
+                                                                    }
+                                                                    modelCtrl.$setValidity('unique', true);
+
+                                                                }
+                                                            },
+                                                            failure: function ()
+                                                            {
+
+                                                            }
+                                                        });
+                                                    }
+                                                });
+
+                                            }
+
+                                            if (field.type === 'date') {
+//                                                newElement.attr('ng-controller', 'DefaultGridController');
+                                                newElement.attr('disable-flag', attrs.disableFlag);
+                                                newElement.attr('ng-init', "defineLabel(\"" + field.model + "\",\"" + field.featureName + "\",\"" + attrs.isDiamond + "\",\"" + attrs.editFlag + "\",\"true\",\"" + field.skipHolidays + "\")");
+                                                newElement.attr('ng-form', 'form1234');
+                                                newElement.attr('hide-calendar', false);
+                                                newElement.attr('holiday-list', 'holidayList');
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+
+
+                                                var dateValue = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(dateValue, function () {
+                                                    var isDate = function (date) {
+                                                        return ((new Date(date)).toString() !== "Invalid Date") ? true : false;
+                                                    };
+                                                    if (field.dateInvInOtherDefDate === true || field.dateInvInOtherDefDate === 'true')
+                                                    {
+                                                        if (field.mapDefaultdateOther !== null && field.mapDefaultdateOther !== undefined)
+                                                        {
+                                                            //////console.log("field.map deee" + JSON.stringify(field.mapDefaultdateOther))
+                                                            for (var k in field.mapDefaultdateOther)
+                                                            {
+                                                                var modelKeyArr = [];
+                                                                modelKeyArr = k.split("%");
+                                                                var modelKey = modelKeyArr[0];
+                                                                var skipHolidayVal = modelKeyArr[1];
+                                                                var defaultDateString = field.mapDefaultdateOther[k];
+                                                                var seperatedArr = [];
+                                                                seperatedArr = defaultDateString.split("#@");
+
+
+                                                                var date_dependant = seperatedArr[0];
+                                                                var dateVal = model[date_dependant.replace(/"/g, "")];
+                                                                if (dateVal !== null && dateVal !== undefined) {
+                                                                    var operator;
+                                                                    var numberString;
+                                                                    if (seperatedArr.length > 1) {
+                                                                        operator = seperatedArr[1];
+                                                                        numberString = seperatedArr[2].replace("\"", "");
+                                                                        var finalNumString;
+                                                                        if (numberString.match(/^\d+$/)) {
+                                                                            finalNumString = angular.copy(numberString);
+                                                                        } else
+                                                                        {
+                                                                            finalNumString = angular.copy(model[numberString]);
+                                                                        }
+                                                                        //valid integer
+                                                                        var numOfDaysToBeAddedOrSubtractedFrDef;
+                                                                        if (skipHolidayVal === true || skipHolidayVal === 'true') {
+                                                                            numOfDaysToBeAddedOrSubtractedFrDef = $scope.updateDateWithHoliday(new Date(dateVal), operator, finalNumString);
+                                                                        } else
+                                                                        {
+                                                                            numOfDaysToBeAddedOrSubtractedFrDef = finalNumString;
+                                                                        }
+
+                                                                        var presentDateFrDef = new Date(dateVal);
+
+                                                                        if (presentDateFrDef !== null && presentDateFrDef !== undefined) {
+                                                                            var modelValToBeSet;
+                                                                            if (operator.toString() === '+')
+                                                                            {
+                                                                                modelValToBeSet = new Date(presentDateFrDef.setDate(presentDateFrDef.getDate() + parseInt(numOfDaysToBeAddedOrSubtractedFrDef)));
+                                                                                if (isDate(modelValToBeSet)) {
+                                                                                    model[modelKey] = angular.copy(modelValToBeSet);
+                                                                                }
+                                                                            }
+                                                                            if (operator.toString() === '-')
+                                                                            {
+                                                                                modelValToBeSet = new Date(presentDateFrDef.setDate(presentDateFrDef.getDate() - parseInt(numOfDaysToBeAddedOrSubtractedFrDef)));
+                                                                                if (isDate(modelValToBeSet))
+                                                                                {
+                                                                                    model[modelKey] = angular.copy(modelValToBeSet);
+                                                                                }
+                                                                            }
+
+                                                                        }
+
+                                                                    }
+                                                                }
+                                                                if (seperatedArr.length === 1 && date_dependant !== "Today")
+                                                                {
+                                                                    if (dateVal !== null && dateVal !== undefined) {
+
+                                                                        model[modelKey] = new Date(angular.copy(dateVal));
+                                                                    }
+
+                                                                }
+                                                            }
+
+                                                        }
+
+
+                                                    }
+                                                });
+
+
+
+                                                if (field.attributes.defaultDate !== null && field.attributes.defaultDate !== undefined) {
+                                                    var defDateArr = [];
+                                                    defDateArr = field.attributes.defaultDate.toString().split("#@");
+                                                    var presentDate = new Date();
+                                                    if (defDateArr.length === 1)
+                                                    {
+                                                        model[field.model] = presentDate;
+                                                    } else
+                                                    {
+                                                        var numOfDaysToBeAddedOrSubtracted;
+                                                        if (field.skipHolidayForDate === true || field.skipHolidayForDate === 'true') {
+                                                            // If skip holiday true , call the method and bring the total no of days.e.g if i say add 3 and there is 1 Sunday and 1 holiday,then method will return 5
+                                                            numOfDaysToBeAddedOrSubtracted = $scope.updateDateWithHoliday(new Date(), defDateArr[1].toString(), defDateArr[defDateArr.length - 1]);
+
+                                                        } else
+                                                        {
+                                                            // If skip holiday false,add 3 only
+                                                            numOfDaysToBeAddedOrSubtracted = defDateArr[defDateArr.length - 1];
+                                                        }
+                                                        if (presentDate !== null && presentDate !== undefined) {
+
+
+                                                            if (defDateArr[1].toString() === '+')
+                                                            {
+                                                                model[field.model] = new Date(presentDate.setDate(presentDate.getDate() + parseInt(numOfDaysToBeAddedOrSubtracted)));
+                                                            }
+                                                            if (defDateArr[1].toString() === '-')
+                                                            {
+                                                                model[field.model] = new Date(presentDate.setDate(presentDate.getDate() - parseInt(numOfDaysToBeAddedOrSubtracted)));
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+                                            }
+                                            if (field.type === 'number' || field.type === 'range') {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (angular.isDefined(field.min) && field.min !== null) {
+                                                    newElement.attr('min', field.min);
+                                                }
+                                                if (angular.isDefined(field.max) && field.max !== null) {
+                                                    newElement.attr('max', field.max);
+                                                }
+                                                if (field.type === 'range') {
+                                                    if (angular.isDefined(field.step)) {
+                                                        newElement.attr('step', field.step);
+                                                    }
+                                                }
+                                                newElement.attr('numbers-only', true);
+                                                if (field.negativeAllowed !== null && field.negativeAllowed !== undefined && (field.negativeAllowed === true || field.negativeAllowed === 'true'))
+                                                {
+                                                    newElement.attr('negativeallowed', field.negativeAllowed)
+                                                }
+
+                                                if (field.decimalallowed !== null && field.decimalallowed !== undefined && (field.decimalallowed === true || field.decimalallowed === 'true'))
+                                                {
+                                                    newElement.attr('decimalallowed', true);
+                                                } else
+                                                {
+                                                    newElement.attr('decimalallowed', false);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr("autocomplete", "off");
+                                                var numValue = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(numValue, function () {
+//                                                    ////console.log("in watch num")
+                                                    $scope[numValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                    ////console.log("field...." + JSON.stringify(field));
+
+                                                    if (field.isInvolvedInFormula === true)
+                                                    {
+                                                        if (numValue !== undefined && numValue !== null && $scope.$eval(attrs.ngModel) !== undefined)
+                                                        {
+
+
+                                                            for (var key in field.formulaWithDbField)
+                                                            {
+                                                                var formulaArray = field.formulaWithDbField[key].split("|");
+//                                                                ////console.log("in num array" + formulaArray)
+                                                                for (var j = 0; j < formulaArray.length; j++)
+                                                                {
+                                                                    var formulaSplit = [];
+
+                                                                    if (formulaArray[j].indexOf(".") > -1)
+                                                                    {
+                                                                        ////console.log("isFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                        if (isFloat(formulaArray[j]))
+                                                                        {
+                                                                            ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                        } else {
+                                                                            ////console.log("else ,a k")
+                                                                            formulaSplit = formulaArray[j].split(".");
+                                                                            formulaArray[j] = formulaSplit[1];
+                                                                        }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                    }
+
+                                                                }
+                                                                ////console.log("now frm arr" + formulaArray.toString())
+                                                                for (var k = 0; k < formulaArray.length; k++)
+                                                                {
+                                                                    var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                    ////console.log("val to replace" + ValueToReplace + "scope" + $scope[ValueToReplace])
+                                                                    if ($scope[ValueToReplace] !== undefined)
+                                                                    {
+                                                                        formulaArray[k] = $scope[ValueToReplace];
+                                                                    }
+                                                                }
+
+
+                                                                var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+                                                                ////console.log("final stringgg num" + finalFormulaStringNUm)
+                                                                try {
+                                                                    var math = mathjs();
+                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                    ////console.log("math eval num" + mathevalNum)
+                                                                    var roundOff;
+                                                                    //console.log("form round" + JSON.stringify(field.formulaRoundOff) + "-key----" + key + "---" + field.formulaRoundOff[key])
+                                                                    if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                    {
+                                                                        roundOff = field.formulaRoundOff[key];
+
+                                                                    } else {
+                                                                        roundOff = "2"
+                                                                    }
+                                                                    model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+                                                                    ////console.log("setting val.." + key + "---val" + model[key])
+                                                                }
+                                                                catch (Exception)
+                                                                {
+                                                                    model[key] = "";
+                                                                }
+//                                                                ////console.log("before..." + $scope[key + 'form'] + "-----" + key + 'form')
+
+
+                                                                if ((model[key] === undefined || model[key].length === 0) && $scope[key + 'form'] !== undefined)
+                                                                {
+                                                                    // Tis code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+                                                                    // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+                                                                    var form_Value = angular.copy($scope[key + 'form']);
+                                                                    for (var k = 0; k < form_Value.length; k++)
+                                                                    {
+                                                                        var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+                                                                        if ($scope[ValueToReplace] !== undefined)
+                                                                        {
+                                                                            form_Value[k] = $scope[ValueToReplace];
+                                                                        }
+                                                                    }
+
+                                                                    var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+                                                                    try {
+                                                                        var math = mathjs();
+                                                                        var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                        model[key] = mathevalNum;
+//                                                                        ////console.log("2...." + key + "---" + model[key])
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        model[key] = "";
+                                                                    }
+                                                                }
+                                                            }
+
+//                                                      
+                                                        }
+                                                    }
+                                                    //////console.log("atttrr" + JSON.stringify(field))
+                                                    if (field.mapDefaultdateNumber !== null && field.mapDefaultdateNumber !== undefined)
+                                                    {
+                                                        for (var datekey in field.mapDefaultdateNumber)
+                                                        {
+                                                            //////console.log("k..." + datekey + "--val" + field.mapDefaultdateNumber[datekey]);
+                                                            var seperators = [];
+                                                            seperators = datekey.split("%");
+                                                            var keyForDate = seperators[0];
+                                                            var skipHoliday = seperators[1]
+                                                            var defaultDateeArray = [];
+                                                            defaultDateeArray = field.mapDefaultdateNumber[datekey].toString().split("#@");
+
+                                                            var todayDate = new Date();
+                                                            if (defaultDateeArray.length === 1)
+                                                            {
+                                                                if (defaultDateeArray[0].replace("\"", "") === 'Today') {
+                                                                    model[datekey] = todayDate;
+                                                                } else {
+                                                                    model[datekey] = new Date(angular.copy(model[defaultDateeArray[0]]));
+                                                                }
+                                                            } else
+                                                            {
+                                                                var preDate;
+                                                                if (defaultDateeArray[0].replace("\"", "") === 'Today') {
+                                                                    preDate = new Date();
+                                                                } else {
+                                                                    if (model[defaultDateeArray[0].replace("\"", "")] !== null && model[defaultDateeArray[0].replace("\"", "")] !== undefined)
+                                                                    {
+                                                                        preDate = new Date(angular.copy(model[defaultDateeArray[0].replace("\"", "")]));
+                                                                    }
+                                                                }
+
+                                                                var noOfDaysToBeAddedOrSubtracted;
+                                                                if (skipHoliday === true || skipHoliday === 'true') {
+                                                                    // If skip holiday true , call the method and bring the total no of days.e.g if i say add 3 and there is 1 Sunday and 1 holiday,then method will return 5
+                                                                    noOfDaysToBeAddedOrSubtracted = $scope.updateDateWithHoliday(preDate, defaultDateeArray[1].toString(), $scope[numValue]);
+                                                                } else
+                                                                {
+                                                                    // If skip holiday false,add 3 only
+                                                                    noOfDaysToBeAddedOrSubtracted = $scope[numValue];
+                                                                }
+                                                                var isDate = function (date) {
+                                                                    return ((new Date(date)).toString() !== "Invalid Date") ? true : false;
+                                                                };
+                                                                if (defaultDateeArray[1].toString() === '+')
+                                                                {
+
+                                                                    if (preDate !== null && preDate !== undefined && noOfDaysToBeAddedOrSubtracted !== null && noOfDaysToBeAddedOrSubtracted !== undefined) {
+
+                                                                        if (Object.prototype.toString.call(preDate) === "[object Date]") {
+                                                                            if (isDate(preDate)) {
+
+                                                                                var modelToBeSet = new Date(preDate.setDate(preDate.getDate() + parseInt(noOfDaysToBeAddedOrSubtracted)));
+                                                                                if (isDate(modelToBeSet)) {
+                                                                                    model[keyForDate] = angular.copy(modelToBeSet);
+                                                                                }
+                                                                                ;
+                                                                            }
+                                                                        }
+
+
+                                                                    }
+                                                                }
+                                                                if (defaultDateeArray[1].toString() === '-')
+                                                                {
+                                                                    if (preDate !== null && preDate !== undefined && noOfDaysToBeAddedOrSubtracted !== null && noOfDaysToBeAddedOrSubtracted !== undefined) {
+
+                                                                        if (isDate(preDate)) {
+                                                                            model[keyForDate] = new Date(preDate.setDate(preDate.getDate() - parseInt(noOfDaysToBeAddedOrSubtracted)));
+                                                                        }
+                                                                    }
+                                                                }
+
+
+                                                            }
+
+                                                        }
+
+
+
+                                                    }
+                                                });
+
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+
+                                            }
+                                            else if (['text', 'textarea'].indexOf(field.type) > -1) {
+                                                if (angular.isDefined(field.splitBy)) {
+                                                    newElement.attr('ng-list', field.splitBy);
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                            }
+                                            else if (field.type === 'checkbox') {
+                                                if (angular.isDefined(field.isOn)) {
+                                                    newElement.attr('ng-true-value', field.isOn);
+                                                }
+                                                if (angular.isDefined(field.isOff)) {
+                                                    newElement.attr('ng-false-value', field.isOff);
+                                                }
+                                                if (angular.isDefined(field.slaveTo)) {
+                                                    newElement.attr('ng-checked', field.slaveTo);
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                model[field.model] = angular.copy(field.val);
+                                            }
+                                            else if (field.type === 'checklist') {
+
+                                                if (angular.isDefined(field.val)) {
+                                                    model[field.model] = angular.copy(field.val);
+                                                }
+                                                if (angular.isDefined(field.values)) {
+                                                    if (!(angular.isDefined(model[field.model]) && angular.isObject(model[field.model]))) {
+                                                        model[field.model] = {};
+                                                    }
+                                                    angular.forEach(field.values, function (option, childId) {
+                                                        newChild = angular.element('<input type="checkbox" />');
+                                                        newChild.attr('name', field.model + '.' + childId);
+                                                        newChild.attr('ng-model', attrs.ngModel + "['" + field.model + "']" + "['" + childId + "']");
+                                                        if (angular.isDefined(option['class'])) {
+                                                            newChild.attr('ng-class', option['class']);
+                                                        }
+                                                        if (angular.isDefined(field.disabled)) {
+                                                            newChild.attr('ng-disabled', field.disabled);
+                                                        }
+                                                        if (angular.isDefined(field.readonly)) {
+                                                            newChild.attr('ng-readonly', field.readonly);
+                                                        }
+                                                        if (angular.isDefined(field.required)) {
+                                                            newChild.attr('ng-required', field.required);
+                                                        }
+                                                        if (angular.isDefined(field.callback)) {
+                                                            newChild.attr('ng-change', field.callback);
+                                                        }
+                                                        if (angular.isDefined(option.isOn)) {
+                                                            newChild.attr('ng-true-value', option.isOn);
+                                                        }
+                                                        if (angular.isDefined(option.isOff)) {
+                                                            newChild.attr('ng-false-value', option.isOff);
+                                                        }
+                                                        if (angular.isDefined(option.slaveTo)) {
+                                                            newChild.attr('ng-checked', option.slaveTo);
+                                                        }
+                                                        if (angular.isDefined(option.val)) {
+                                                            model[field.model][childId] = angular.copy(option.val);
+                                                            newChlid.attr('value', field.val);
+                                                        }
+
+                                                        if (angular.isDefined(option.label)) {
+                                                            newChild = newChild.wrap('<label class="col-md-4"></label>').parent();
+                                                            newChild = newChild.append('{{' + attrs.internationalizationLabel + '+\'' + option.label + '\'| translate }}');
+                                                        }
+                                                        newElement.append(newChild);
+                                                    });
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'radio') {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (angular.isDefined(field.val)) {
+                                                    model[field.model] = angular.copy(field.val);
+                                                }
+                                                if (angular.isDefined(field.values)) {
+                                                    angular.forEach(field.values, function (label, val) {
+                                                        newChild = angular.element('<input type="radio" />');
+                                                        newChild.attr('name', field.model);
+                                                        newChild.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                        if (angular.isDefined(field['class'])) {
+                                                            newChild.attr('ng-class', field['class']);
+                                                        }
+                                                        if (angular.isDefined(field.disabled)) {
+                                                            newChild.attr('ng-disabled', field.disabled);
+                                                        }
+                                                        if (angular.isDefined(field.callback)) {
+                                                            newChild.attr('ng-change', field.callback);
+                                                        }
+                                                        if (angular.isDefined(field.readonly)) {
+                                                            newChild.attr('ng-readonly', field.readonly);
+                                                        }
+                                                        if (angular.isDefined(field.required)) {
+                                                            newChild.attr('ng-required', field.required);
+                                                        }
+                                                        newChild.attr('value', parseInt(val));
+                                                        if (angular.isDefined(field.val) && field.val === val) {
+                                                            newChild.attr('checked', 'checked');
+                                                        }
+
+                                                        if (label) {
+                                                            newChild = newChild.wrap('<label class="radio-inline"></label>').parent();
+                                                            newChild = newChild.append('{{' + attrs.internationalizationLabel + '+\'' + label + '\'| translate }}');
+                                                        }
+                                                        newElement.append(newChild);
+                                                    });
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+
+                                            // added by Shifa as previous component was not working
+                                            else
+                                            if (field.type === 'select')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr('ng-change', 'changeData(' + field.model + ')');
+                                                if (field.fieldHasException === true || field.fieldHasException === 'true') {
+
+                                                } else {
+                                                    newElement.attr('ng-options', 'drpdwn.id as drpdwn.text for drpdwn in dropdown');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.attr('class', 'form-control is-disabled');
+                                                } else {
+                                                    newElement.attr('class', 'form-control');
+                                                }
+                                                var displayShortcutCode;
+                                                if (field.displayShortcutCode !== null && field.displayShortcutCode !== undefined)
+                                                {
+                                                    displayShortcutCode = field.displayShortcutCode;
+
+                                                } else
+                                                {
+                                                    displayShortcutCode = false;
+                                                }
+                                                var element = '<option value="">Select</option>';
+                                                newElement.prepend(element);
+                                                var newt = "<div  ng-controller='SingleSelectGridController' ng-init='defineLabelForSingleSelect(\"" + field.label + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + field.val + "\",\"" + attrs.isDiamond + "\",\"" + field.fieldId + "\",\"" + displayShortcutCode + "\");'> </div>";
+                                                //Added directive to add master value inline
+                                                var newSubt;
+                                                if (field.model !== 'carate_range_of_lot$DRP$Long' && field.model !== 'carate_range_of_packet$DRP$Long' && field.model !== 'machine_to_process_in') {
+                                                    newSubt = '<div class="hkg-nopadding" ng-class="{\'col-md-10\':canAccess(\'addMasterValueShortcut\'),\'col-md-10\':!canAccess(\'addMasterValueShortcut\')}"></div>';
+                                                } else {
+                                                    newSubt = '<div class="col-md-12"></div>';
+                                                }
+                                                newElement = newElement.wrap(newSubt).parent();
+                                                newElement = newElement.wrap(newt).parent();
+                                                var singleSelectValue = attrs.ngModel + "." + field.model;
+                                                //Exception in cases : carate_range_of_lot, carate_range_of_packet, machine_to_process_in
+                                                if (field.model !== 'carate_range_of_lot$DRP$Long' && field.model !== 'carate_range_of_packet$DRP$Long' && field.model !== 'machine_to_process_in$DRP$Long') {
+                                                    newElement.append('<add-master-value ng-show="$root.canAccess(\'addMasterValueShortcut\')" class="col-md-2" records="dropdown" model-value="' + singleSelectValue + '" master-code="{{fieldId}}" is-diamond ="' + attrs.isDiamond + '" is-custom="true" is-dropdown="true" modal-name="' + field.modelWithoutSeperators + '"></add-master-value>');
+                                                }
+                                                else
+                                                {
+
+                                                }
+                                                $scope.$watch(singleSelectValue, function () {
+                                                    if ($scope.$eval(attrs.ngModel) !== undefined) {
+                                                        $scope.multiSelectValue = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                        if (field.fieldHasException === true || field.fieldHasException === 'true') {
+                                                            newElement.removeAttr('ng-options');
+
+                                                        } else {
+//                                                   
+                                                            newElement.attr('ng-options', 'color.id as color.text for color in dropdown');
+                                                        }
+                                                        if (singleSelectValue !== undefined)
+                                                        {
+
+                                                            // Call master method
+//                                                        if ($scope.multiSelectValue !== null && $scope.multiSelectValue !== undefined)
+//                                                        {
+                                                            var excUrl;
+                                                            if (attrs.isDiamond === true || attrs.isDiamond === 'true')
+                                                            {
+                                                                // Call center method
+                                                                excUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveExceptionsDependantOnField?param=" + field.fieldId + "&param2=" + $scope.multiSelectValue);
+//                                             
+                                                            } else
+                                                            {
+                                                                // Call master method
+                                                                excUrl = rootScope.appendAuthToken(rootScope.apipath + "customfield/retrieveExceptionsDependantOnField?param=" + field.fieldId + "&param2=" + $scope.multiSelectValue);
+//                                             
+                                                            }
+
+
+//                                                    rootScope.maskLoading();
+                                                            $.ajax({
+                                                                url: excUrl,
+                                                                type: 'GET',
+                                                                error: function () {
+                                                                },
+                                                                success: function (data)
+                                                                {
+
+                                                                    if (data !== null && data !== undefined && data !== "") {
+                                                                        angular.forEach(data, function (res)
+                                                                        {
+                                                                            var dependantDropdownMapVal = [];
+                                                                            if (res.isActive === true || res.isActive === "true") {
+
+                                                                                var isExceptionSatisfied;
+                                                                                isExceptionSatisfied = false;
+
+
+                                                                                if (res.forUsers !== null && res.forUsers !== undefined)
+                                                                                {
+
+                                                                                    for (var fuser in res.forUsers)
+                                                                                    {
+                                                                                        var splitArray = [];
+                                                                                        splitArray = res.forUsers[fuser].split(":");
+                                                                                        if (splitArray[1] !== null && splitArray[1] !== undefined)
+                                                                                        {
+                                                                                            switch (splitArray[1]) {
+                                                                                                case "E" :
+                                                                                                    if (rootScope.session.id.toString() === (splitArray[0])) {
+                                                                                                        isExceptionSatisfied = true;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case "D":
+
+                                                                                                    if (rootScope.session.department !== null && rootScope.session.department.toString() === (splitArray[0])) {
+                                                                                                        isExceptionSatisfied = true;
+                                                                                                    }
+                                                                                                    break;
+                                                                                                case "R":
+
+
+                                                                                                    if (rootScope.session.roleIds.indexOf(parseInt(splitArray[0])) > -1) {
+                                                                                                        isExceptionSatisfied = true;
+                                                                                                    }
+                                                                                                case "All":
+                                                                                                    // FOr All users
+                                                                                                    isExceptionSatisfied = true;
+                                                                                                    break;
+
+                                                                                            }
+                                                                                        }
+                                                                                    }
+
+                                                                                } else
+                                                                                {
+                                                                                    isExceptionSatisfied = true;
+                                                                                }
+                                                                                if (isExceptionSatisfied === true) {
+
+                                                                                    for (var key in res.custom1)
+                                                                                    {
+                                                                                        dependantDropdownMapVal.push({id: key, text: res.custom1[key]});
+                                                                                    }
+                                                                                    var modelDrp = res.commonId.toString();
+                                                                                    rootScope[modelDrp + 'exc'] = angular.copy(dependantDropdownMapVal);
+//                                                                  // till hete on the basis of first we got the value of second,now will try to get second element and set in it
+                                                                                    var seocndElemSplit = modelDrp.split("$");
+                                                                                    var dropElemnt = angular.element(document.querySelector('#' + seocndElemSplit[0]));
+                                                                                    var s = rootScope[modelDrp + 'exc'];
+                                                                                    if (s !== null && s !== undefined) {
+//                                                                               model[modelDrp]=null;
+
+                                                                                        var str = JSON.stringify(rootScope[modelDrp + 'exc']).replace("[", "").replace("]", "");
+                                                                                        var jsonObj = $.parseJSON('[' + str + ']');
+
+//                                                          
+//                                                           
+                                                                                        var dropOptElemnt = angular.element(document.querySelector('#' + seocndElemSplit[0]));
+
+                                                                                        dropOptElemnt.find('option').remove();
+                                                                                        var el = document.createElement("option");
+                                                                                        el.textContent = "Select";
+                                                                                        el.value = "";
+                                                                                        dropElemnt.append(el);
+                                                                                        for (var i = 0; i < jsonObj.length; i++) {
+                                                                                            var opt = jsonObj[i];
+                                                                                            var el = document.createElement("option");
+                                                                                            el.textContent = opt.text;
+                                                                                            el.value = opt.id;
+                                                                                            dropElemnt.append(el);
+                                                                                        }
+//                                                                                        $scope[attrs.ngModel][modelDrp] = "";
+                                                                                    }
+                                                                                }
+                                                                            } else
+                                                                            {
+                                                                                var modelDrp = res.commonId.toString();
+                                                                                var seocndElemSplit = modelDrp.split("$");
+
+                                                                                var dropElemnt = angular.element(document.querySelector('#' + seocndElemSplit[0]));
+
+                                                                                var dropOptElemnt = angular.element(document.querySelector('#' + seocndElemSplit[0]));
+
+                                                                                dropOptElemnt.find('option').remove();
+
+                                                                                var el = document.createElement("option");
+                                                                                el.textContent = "Select";
+                                                                                el.value = "";
+                                                                                dropElemnt.append(el);
+                                                                                var finalModelVal = $parse(attrs.ngModel + "." + modelDrp);
+                                                                                finalModelVal.assign($scope, "");
+//                                                                                $scope[attrs.ngModel][modelDrp] = "";
+                                                                                // Remove weird option which gets added
+                                                                                $("option[value='? string: ?']").remove();
+                                                                            }
+                                                                        });
+                                                                    }
+//                                                                    
+
+                                                                }
+                                                            });
+//                                                        }
+
+                                                            if (field.allExceptionsDependantOnField !== null && field.allExceptionsDependantOnField !== undefined)
+                                                            {
+                                                                angular.forEach(field.allExceptionsDependantOnField, function (listOfFields) {
+                                                                    var dependantOnValues = [];
+                                                                    var selectedValueofDropDown = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                                    dependantOnValues = listOfFields.dependantOnException;
+                                                                    if (dependantOnValues.indexOf(selectedValueofDropDown) > -1)
+                                                                    {
+
+
+                                                                        var dependantDropdownMapVal = [];
+                                                                    }
+                                                                });
+                                                            }
+                                                            var templateNew = [];
+                                                            $scope.multiSelectValue = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                            var fieldIdsToBeLoaded = [];
+                                                            if ($scope.multiSelectValue !== undefined && $scope.multiSelectValue !== null) {
+                                                                if (field.dependantFieldsOnSingleSelectList !== null && field.dependantFieldsOnSingleSelectList !== undefined) {
+                                                                    var DependantFieldIdWithValues = field.dependantFieldsOnSingleSelectList.split(',');
+                                                                    for (var i = 0; i < DependantFieldIdWithValues.length; i++)
+                                                                    {
+                                                                        var splitByDelimiter = DependantFieldIdWithValues[i].split('A');
+                                                                        if (splitByDelimiter[0].toString() === $scope.multiSelectValue.toString())
+                                                                        {
+                                                                            fieldIdsToBeLoaded.push(splitByDelimiter[1]);
+                                                                        }
+                                                                    }
+                                                                    var fieldsDependantOnSelect = [];
+                                                                    angular.forEach(template, function (templates)
+                                                                    {
+
+                                                                        if (templates.dependantMasterId !== null && templates.dependantMasterId !== undefined)
+
+                                                                        {
+                                                                            if (templates.dependantMasterId.toString() === field.fieldId.toString())
+                                                                            {
+                                                                                fieldsDependantOnSelect.push(templates);
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                    if (fieldIdsToBeLoaded !== undefined)
+                                                                    {
+                                                                        angular.forEach(fieldIdsToBeLoaded, function (fieldIdsToBeLoaded)
+                                                                        {
+//                                                                
+                                                                            var index = $filter('filter')(template, function (result) {
+                                                                                return fieldIdsToBeLoaded.toString() === result.fieldId.toString();
+                                                                            })[0];
+                                                                            if (index !== null && index !== undefined) {
+                                                                                templateNew.push(index);
+                                                                            }
+                                                                        });
+                                                                        angular.forEach(fieldsDependantOnSelect, function (temp)
+                                                                        {
+                                                                            var dependantField = angular.element(document.querySelector('td div #dv_' + temp.modelWithoutSeperators));
+                                                                            dependantField.addClass('ng-hide');
+                                                                        });
+                                                                        if (templateNew !== undefined && templateNew !== null)
+                                                                        {
+                                                                            angular.forEach(templateNew, function (temp)
+                                                                            {
+                                                                                temp.isDependant = false;
+                                                                                var dependantField = angular.element(document.querySelector('td div #dv_' + temp.modelWithoutSeperators));
+                                                                                var viewField = angular.element(document.querySelector('td div #dv_view_' + temp.modelWithoutSeperators));
+                                                                                dependentIdsToBeViewed.push('td div #dv_' + temp.modelWithoutSeperators);
+                                                                                dependentIdsToBeViewed.push('td div #dv_view_' + temp.modelWithoutSeperators);
+                                                                                if (dependantField.hasClass('ng-hide'))
+                                                                                {
+                                                                                    dependantField.removeClass('ng-hide');
+                                                                                }
+                                                                                if (viewField.hasClass('ng-hide'))
+                                                                                {
+                                                                                    viewField.removeClass('ng-hide');
+                                                                                }
+
+                                                                            });
+                                                                        }
+
+
+
+
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                });
+//                                          
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            // added By Shifa for subEntity on 22 January 2015
+                                            else
+                                            if (field.type === 'subEntity')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                var element = '<option value="">Select</option>';
+                                                newElement.prepend(element);
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                newElement.attr('ng-options', 'color.text as color.id for color in dropdownForSubEntity');
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.attr('class', 'form-control is-disabled');
+                                                } else {
+                                                    newElement.attr('class', 'form-control');
+                                                }
+                                                var newt = "<div ng-controller='SubEntityGridController' ng-init='defineLabelForSubEntity(\"" + field.CustomFieldId + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + attrs.isDiamond + "\");'> </div>";
+                                                newElement = newElement.wrap(newt).parent();
+                                            }
+
+                                            // added by Shifa on 29 December for pointer select
+                                            else
+                                            if (field.type === 'pointerselect')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+
+                                                newElement.attr('ng-options', 'color.id as color.text for color in dropdown');
+//                                                newElement.attr('ng-change','changeDrop(\"" + color + "\")');
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.attr('class', 'form-control is-disabled');
+                                                } else {
+                                                    newElement.attr('class', 'form-control');
+                                                }
+                                                var displayShortcutCode;
+                                                if (field.displayShortcutCode !== null && field.displayShortcutCode !== undefined)
+                                                {
+                                                    displayShortcutCode = field.displayShortcutCode;
+
+                                                } else
+                                                {
+                                                    displayShortcutCode = false;
+                                                }
+                                                var element = '<option value="">Select</option>';
+                                                newElement.prepend(element);
+                                                var elementId = newElement.attr('id');
+                                                var newt = "<div ng-controller='SingleSelectGridController' ng-init='defineLabelForSingleSelect(\"" + field.pointerlabel + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + field.val + "\",\"" + attrs.isDiamond + "\",\"" + field.pointerFieldId + "\",\"" + displayShortcutCode + "\");'> </div>";
+                                                //Added directive to add master value inline
+                                                var newSubt = '<div ng-class="{\'col-md-10\':canAccess(\'addMasterValueShortcut\'),\'col-md-10\':!canAccess(\'addMasterValueShortcut\')}"></div>';
+                                                newElement = newElement.wrap(newSubt).parent();
+                                                newElement = newElement.wrap(newt).parent();
+                                                var singleSelectValue = attrs.ngModel + "." + field.model;
+                                                newElement.append('<add-master-value ng-show="$root.canAccess(\'addMasterValueShortcut\')" class="col-md-2" records="dropdown" model-value="' + singleSelectValue + '" is-diamond ="' + attrs.isDiamond + '" master-code="{{fieldId}}" is-custom="true" modal-name="' + field.modelWithoutSeperators + '" is-dropdown="true"></add-master-value>');
+                                            }
+// code added by Shifa on 3 February 2015 for formula component
+                                            else
+                                            if (field.type === 'formula')
+                                            {
+
+//                                                if (field.isInvolvedInFormula === true)
+//                                                {
+                                                var numValue = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(numValue, function () {
+//                                                    ////console.log("in formual...." + field.isInvolvedInFormula + "---model" + field.model)
+                                                    if (numValue !== undefined && numValue !== null && $scope.$eval(attrs.ngModel + "." + field.model) !== undefined)
+                                                    {
+                                                        $scope[numValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                        ////console.log("FFFFFFFnum value..." + $scope[numValue])
+                                                        for (var key in field.formulaWithDbField)
+                                                        {
+                                                            var formulaArray = field.formulaWithDbField[key].split("|");
+                                                            for (var j = 0; j < formulaArray.length; j++)
+                                                            {
+                                                                var formulaSplit = [];
+                                                                if (formulaArray[j].indexOf(".") > -1)
+                                                                {
+                                                                    ////console.log("FFFFFisFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                    if (isFloat(formulaArray[j]))
+                                                                    {
+                                                                        ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                    } else {
+                                                                        ////console.log("FFFFFFFFFelse ,a k")
+                                                                        formulaSplit = formulaArray[j].split(".");
+                                                                        formulaArray[j] = formulaSplit[1];
+                                                                    }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                }
+                                                            }
+
+                                                            ////console.log('FFFFFFFFFFformula array : ' + formulaArray);
+                                                            for (var k = 0; k < formulaArray.length; k++)
+                                                            {
+                                                                var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                //////console.log('value to replace : ' + ValueToReplace + " scope value is : " + $scope[ValueToReplace])
+                                                                if ($scope[ValueToReplace] !== undefined)
+                                                                {
+                                                                    formulaArray[k] = $scope[ValueToReplace];
+                                                                }
+                                                            }
+                                                            ////console.log('FFFFFFFFFformula array after : ' + formulaArray);
+
+                                                            var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+//
+                                                            try {
+                                                                var math = mathjs();
+                                                                var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                ////console.log("keyyyyy" + key);
+                                                                ////console.log("output" + mathevalNum)
+                                                                var roundOff;
+                                                                if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                {
+                                                                    roundOff = field.formulaRoundOff[key];
+
+                                                                } else {
+                                                                    roundOff = "2";
+                                                                }
+                                                                model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+
+                                                            }
+                                                            catch (Exception)
+                                                            {
+                                                                model[key] = "";
+                                                            }
+//                                                            if ($scope[key + 'form'] !== undefined)
+//                                                            {
+//
+//                                                                // This code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+//                                                                // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+//                                                                var form_Value = angular.copy($scope[key + 'form']);
+//                                                                for (var k = 0; k < form_Value.length; k++)
+//                                                                {
+//                                                                    var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+//                                                                    if ($scope[ValueToReplace] !== undefined)
+//                                                                    {
+//                                                                        form_Value[k] = $scope[ValueToReplace];
+//                                                                    }
+//                                                                }
+//
+//                                                                var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+//                                                                try {
+//                                                                    var math = mathjs();
+//                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+//                                                                    model[key] = mathevalNum;
+//                                                                    ////console.log("2...." + key + "---" + model[key])
+//                                                                }
+//                                                                catch (Exception)
+//                                                                {
+//                                                                    model[key] = "";
+//                                                                }
+//                                                            }
+                                                        }
+                                                    }
+                                                });
+//                                                }
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                newElement.attr('ng-readonly', true);
+                                                // array of operators which needs to be bypassed
+                                                var alloperatorsArray = ["+", "-", "*", "/", "(", ")", "SUM", "MIN", "MAX", "AVG", "COUNT"];
+                                                var operatorsArray = ["+", "-", "*", "/", "(", ")"];
+                                                // removing double quotes from string and separating by delimiter
+                                                var formulaArray = field.formulaValue.replace(/(^"|"$)/g, '').split('|');
+                                                var formulaArray1 = [];
+                                                var finalFormulaArrayWithoutFeature = [];
+                                                for (var j = 0; j < formulaArray.length; j++)
+                                                {
+                                                    if (formulaArray[j].indexOf("invoice") > -1)
+                                                    {
+
+                                                        formulaArray1.push(formulaArray[j].replace("invoice.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("parcel") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("parcel.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("lot") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("lot.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("packet") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("packet.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("plan") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("plan.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("sell") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("sell.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("transfer") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("transfer.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("issue") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("issue.", ""));
+                                                    }
+                                                    else if (formulaArray[j].indexOf("purchase") > -1)
+                                                    {
+                                                        formulaArray1.push(formulaArray[j].replace("purchase.", ""));
+                                                    }
+                                                    else
+                                                    {
+                                                        formulaArray1.push(formulaArray[j]);
+                                                    }
+                                                }
+                                                for (var k = 0; k < formulaArray1.length; k++)
+                                                {
+                                                    if (formulaArray1[k] !== "SUM" && formulaArray1[k] !== "MIN" && formulaArray1[k] !== "MAX" && formulaArray1[k] !== "AVG" && formulaArray1[k] !== "COUNT" && formulaArray1[k] !== "(" && formulaArray1[k] !== ")") {
+                                                        finalFormulaArrayWithoutFeature.push(formulaArray1[k]);
+                                                    }
+                                                }
+                                                var formulaString = formulaArray.toString().replace(/,/g, '');
+                                                var newFormulaArray = [];
+                                                var tempnewFormulaArray = [];
+                                                var instanceListWithAggregrate = [];
+                                                var instanceListWithoutAggregrate = [];
+                                                var formulaWithAggregrateArray = [];
+                                                var featureMap = {};
+                                                var isFormulaValid;
+                                                //
+                                                for (var i = 0; i < formulaArray.length; i++)
+                                                {
+                                                    if (formulaArray[i] === 'SUM' || formulaArray[i] === 'MIN' || formulaArray[i] === 'MAX' || formulaArray[i] === 'AVG' || formulaArray[i] === 'COUNT')
+                                                    {
+// if you are getting aggregrate functions you need to push aggregrate function along with() and its value
+                                                        formulaWithAggregrateArray.push(formulaArray[i] + formulaArray[i + 1] + formulaArray[i + 2] + formulaArray[i + 3]);
+                                                    }
+                                                    else
+                                                    {
+                                                        if (formulaArray[i] === '(' || formulaArray[i] === ')')
+                                                        {
+                                                            // don't push
+//                                                        continue;
+                                                        }
+
+                                                        else if (i > 3 && (formulaArray[i - 2] === 'SUM' || formulaArray[i - 2] === 'SUM' || formulaArray[i - 2] === 'MIN' || formulaArray[i - 2] === 'MAX' || formulaArray[i - 2] === 'AVG' || formulaArray[i - 2] === 'COUNT'))
+                                                        {
+                                                            // Since we have already pushed that array index in SUM,MIN,MAX,AVG so dnt push
+//                                                        continue;
+                                                        }
+                                                        else
+                                                        {
+                                                            // all others are pushed
+                                                            formulaWithAggregrateArray.push(formulaArray[i])
+                                                        }
+
+                                                    }
+                                                }
+                                                //
+//
+                                                angular.forEach(formulaWithAggregrateArray, function (formulaObj)
+                                                {
+                                                    // operatorsArray array used because here we want dbfieldname and aggregrate functions
+                                                    if (operatorsArray.indexOf(formulaObj) > -1)
+                                                    {
+
+                                                        newFormulaArray.push(formulaObj);
+                                                    } else
+                                                    {
+                                                        // tilt added so as to identify whose value we have to bring from mongo
+                                                        newFormulaArray.push('~' + formulaObj);
+                                                    }
+                                                });
+                                                // on the basis of newFormulaArray created a array which has the list of values which need to be fetched from mongo
+                                                angular.forEach(newFormulaArray, function (newFormula)
+                                                {
+
+                                                    if (newFormula.indexOf('~') >= 0)
+                                                    {
+                                                        var tempFormula = newFormula.slice(1, newFormula.length);
+                                                        instanceListWithAggregrate.push(tempFormula);
+                                                    }
+                                                });
+                                                angular.forEach(formulaArray, function (formulaObj)
+                                                {
+                                                    // alloperator array used because here we want only dbfieldname and not aggregrate functions
+                                                    if (alloperatorsArray.indexOf(formulaObj) > -1)
+                                                    {
+
+                                                        tempnewFormulaArray.push(formulaObj);
+                                                    } else
+                                                    {
+                                                        // tilt added so as to identify whose value we have to bring from mongo
+                                                        tempnewFormulaArray.push('~' + formulaObj);
+                                                    }
+                                                });
+                                                // on the basis of newFormulaArray created a array which has the list of values which need to be fetched from mongo
+                                                angular.forEach(tempnewFormulaArray, function (newFormula)
+                                                {
+
+                                                    if (newFormula.indexOf('~') >= 0)
+                                                    {
+                                                        var tempInstanceFormula = newFormula.slice(1, newFormula.length);
+                                                        instanceListWithoutAggregrate.push(tempInstanceFormula);
+                                                    }
+                                                });
+                                                // ajax call to fetch the feature associtaed
+                                                //console.log("instamce list wid aggregrate" + JSON.stringify(instanceListWithoutAggregrate));
+                                                //console.log("invoice id..." + attrs.invoiceId)
+                                                var newUrl;
+//                                                ////console.log("invoice id..." + attrs.invoiceId)
+                                                if (attrs.isDiamond === true || attrs.isDiamond === 'true')
+                                                {
+                                                    // Call center method
+                                                    newUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveValueFromMongoForFormula?param=" + instanceListWithAggregrate + "&param2=" + attrs.invoiceId + "&param3=" + attrs.parcelId + "&param4=" + attrs.lotId + "&param5=" + attrs.packetId);
+//                                             
+                                                } else
+                                                {
+                                                    // Call master method
+                                                    newUrl = rootScope.appendAuthToken(rootScope.apipath + "customfield/retrieveValueFromMongoForFormula?param=" + instanceListWithAggregrate + "&param2=" + attrs.invoiceId + "&param3=" + attrs.parcelId + "&param4=" + attrs.lotId + "&param5=" + attrs.packetId);
+//                                             
+                                                }
+//                                                    rootScope.maskLoading();
+                                                $.ajax({
+//                                                url: 'api/customfield/retrieveObjectIdDetailsFromMongo?param=' + (constraintShifa),
+                                                    url: newUrl,
+                                                    type: 'GET',
+                                                    error: function () {
+
+                                                    },
+                                                    success: function (result) {
+                                                        //console.log("successs res" + JSON.stringify(result))
+                                                        var finalFormulaArray = [];
+                                                        angular.forEach(finalFormulaArrayWithoutFeature, function (oldFormula)
+                                                        {
+                                                            //console.log("old" + oldFormula + "-----" + result[oldFormula])
+                                                            if (result.hasOwnProperty(oldFormula))
+                                                            {
+                                                                finalFormulaArray.push(result[oldFormula]);
+                                                            } else
+                                                            {
+                                                                finalFormulaArray.push(oldFormula);
+                                                            }
+                                                        });
+                                                        //console.log("fin " + JSON.stringify(finalFormulaArray))
+                                                        var finalFormulaString = finalFormulaArray.toString().replace(/,/g, '');
+                                                        if (finalFormulaString.indexOf("N/A") > -1)
+                                                        {
+                                                        }
+                                                        else
+                                                        {
+                                                            //console.log("final formula string" + finalFormulaString)
+                                                            var math = mathjs();
+                                                            try {
+                                                                var matheval = math.eval(finalFormulaString);
+                                                                model[field.model] = angular.copy(matheval);
+                                                            } catch (Exception)
+                                                            {
+                                                                $scope[field.model + 'form'] = finalFormulaArray;
+                                                                //console.log("final form " + finalFormulaArray)
+                                                            }
+//                                                            rootScope.unMaskLoading();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            else if (field.type === 'image') {
+                                                if (angular.isDefined(field.label)) {
+                                                    newElement.attr('alt', field.label);
+                                                }
+                                                if (angular.isDefined(field.source)) {
+                                                    newElement.attr('src', field.source);
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'AutoGenerated') {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                newElement.removeAttr('ng-maxLength');
+                                                newElement.attr('maxlength', field.maxLength);
+                                                newElement.attr('numbers-only', true);
+                                                newElement.attr('negativeallowed', false);
+                                                newElement.attr('decimalallowed', false);
+                                                newElement.attr('min', 1);
+                                                //Added By Shreya for printing barcode directly from the IDs.
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                //Changed by shreya to enable autogenerated field
+//                                                newElement.attr('ng-readonly', true);
+//                                                newElement.attr('placeholder', "AutoGenerated");
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                if (attrs.isDiamond === true) {
+                                                    if ((angular.isDefined(attrs.editFlag) && attrs.editFlag === 'true') || attrs.editFlag === true) {
+                                                        attrs.editFlag = true;
+                                                    } else {
+                                                        attrs.editFlag = false;
+                                                    }
+                                                    if (attrs.editFlag && ($scope.$eval(attrs.beforeLabel) !== null && $scope.$eval(attrs.beforeLabel) !== undefined || $scope.$eval(attrs.afterLabel) !== null && $scope.$eval(attrs.afterLabel) !== undefined || field.isBarcodeRequired)) {
+                                                        if ($scope.$eval(attrs.beforeLabel) !== null && $scope.$eval(attrs.beforeLabel) !== undefined || $scope.$eval(attrs.afterLabel) !== null && $scope.$eval(attrs.afterLabel) !== undefined) {
+                                                            var newt = angular.element('<div class="input-group" style="display: inline-flex;"></div>');
+                                                            newElement = newElement.wrap(newt).parent();
+                                                        } else {
+                                                            var newt = angular.element('<div class="control-group"></div>');
+                                                            newElement = newElement.wrap(newt).parent();
+                                                        }
+
+                                                        if ($scope.$eval(attrs.beforeLabel) !== null && $scope.$eval(attrs.beforeLabel) !== undefined) {
+                                                            var spanTag = angular.element('<span class="form-control col-md-5 input-group-addon" style=\"width:45%;padding-top: 9px;padding-right:0px\">{{' + attrs.beforeLabel + '}}</span>');
+                                                            newElement = newElement.prepend(spanTag);
+                                                        }
+                                                        if ($scope.$eval(attrs.afterLabel) !== null && $scope.$eval(attrs.afterLabel) !== undefined) {
+                                                            var spansTag = angular.element('<span class="form-control col-md-5 input-group-addon" style=\"width:45%;padding-top: 9px;padding-right:0px\">{{' + attrs.afterLabel + '}}</span>');
+                                                            newElement = newElement.append(spansTag);
+                                                        }
+//                                                         if (field.isBarcodeRequired) {
+//                                                            var auto = angular.element('<print-barcode-value class="col-md-2" model-value="' + attrs.ngModel + "['" + field.model + "']" + '" field-label="{{fieldLabel}}" is-diamond ="' + attrs.isDiamond + '" is-image-name="false" "></print-barcode-value>');
+//
+//                                                            newElement.append(auto);
+//                                                        }
+                                                    }
+
+                                                }
+                                            }
+                                            else if (field.type === "fileUpload")
+                                            {
+
+                                                var acceptedFormats = JSON.stringify(field.acceptedFormats);
+                                                var maxsize = field.maxsize;
+                                                var newt = "<div ng-controller='FileUploadGridController' ng-init='defineLabel(\"" + attrs.isDiamond + "\");' flow-file-added='fileAdded($file, $flow," + acceptedFormats + "," + maxsize + "," + field.singleFile + ",\"" + attrs.ngModel + "\",\"" + field.model + "\")' flow-file-error='fileError($flow,$file,$message)' flow-file-progress='fileProgress($file);' flow-file-success='fileSuccess($file,$flow,\"" + field.model + "\",\"" + attrs.ngModel + "\"," + field.singleFile + " )' flow-files-submitted='$flow.upload()' > </div>";
+                                                newElement = newElement.wrap(newt).parent();
+                                                var targetUrl;
+                                                if (attrs.isDiamond === true || attrs.isDiamond === 'true')
+                                                {
+                                                    // Call Center
+                                                    targetUrl = rootScope.centerapipath + 'fileUpload/uploadFile';
+                                                } else
+                                                {
+                                                    // Call Master
+                                                    targetUrl = rootScope.apipath + 'fileUpload/uploadFile';
+                                                }
+                                                newElement.attr('flow-init', "{target: " + "'" + targetUrl + "'" + ",singleFile:" + field.singleFile + ", testChunks: true  ,query:{model: '" + field.model + "'}}");
+                                                $scope.flag = false;
+                                                $scope.UploadedFiles = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                var length = 0;
+                                                if ($scope.$eval(attrs.ngModel + "." + field.model)) {
+                                                    length = $scope.$eval(attrs.ngModel + "." + field.model).length;
+                                                }
+
+
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    var spanForChange = angular.element('<button class="btn btn-hkg is-disabled" ng-hide="flag || ' + attrs.ngModel + "." + field.model + ".length===1 && " + field.singleFile + '" flow-btn>Choose File</button>');
+                                                    newElement.append(spanForChange);
+                                                } else
+                                                {
+                                                    var spanForChange = angular.element('<button class="btn btn-hkg" ng-hide="flag || ' + attrs.ngModel + "." + field.model + ".length===1 && " + field.singleFile + '" flow-btn>Choose File</button>');
+                                                    newElement.append(spanForChange);
+                                                }
+
+                                                var repeatElement = angular.element('<li class="list-group-item col-md-12"></li>');
+                                                repeatElement.prepend('<label>{{file.name}}</label>');
+                                                var cancelData = "<span><input type='button' class='btn btn-info pull-right' ng-click='remove(file,\"" + field.model + "\",\"" + attrs.ngModel + "\"," + field.singleFile + ")' value='Cancel' /></span>";
+                                                var cancelIndividualElement = angular.element(cancelData);
+                                                var pauseElement = angular.element('<span ng-click="pause(file)" class="btn btn-info pull-right" ng-show="!file.isComplete()">Pause</span>');
+                                                var resumeElement = angular.element('<span ng-click="resume(file)" class="btn btn-info pull-right" ng-show="!file.isComplete()">Resume</span>');
+                                                repeatElement.attr('ng-repeat', "file in $flow.files");
+                                                var progressElement = angular.element('<div class="progress-bar" aria-valuemax="1" style="color:black;width:  {{(100*file.sizeUploaded()/file.size)| number:0}}%;"> </div>');
+                                                var divelement = angular.element('<div class="progress"></div>');
+                                                divelement.prepend(progressElement);
+                                                repeatElement.prepend(divelement);
+                                                repeatElement.prepend(pauseElement);
+                                                repeatElement.prepend(resumeElement);
+                                                repeatElement.prepend(cancelIndividualElement);
+                                                newElement.append(repeatElement);
+                                                var tem = "<span class='btn btn-info pull-right' ng-show='$flow.files.length >1' ng-click='cancel($flow,\"" + field.model + "\",\"" + attrs.ngModel + "\" )'>CancelAll</span>";
+                                                var cancelallElement = angular.element(tem);
+                                                newElement.prepend(cancelallElement);
+                                                var repeat = angular.element('<li class="list-group-item col-md-12"></li>');
+                                                var repeatData = "fileName in " + attrs.ngModel + "." + field.model + "";
+                                                repeat.attr("ng-repeat", repeatData);
+                                                var linkElement = angular.element("<a ng-href='api/fileUpload/download?filename={{fileName}}&token={{authToken}}'>{{fileName.substring(fileName.lastIndexOf('~~') + 1)}}</a>");
+                                                repeat.append(linkElement);
+                                                var linkCancelElement = angular.element("<span class='glyphicon glyphicon-remove pull-right text-danger' ng-click='removeLink(fileName,\"" + field.model + "\",\"" + attrs.ngModel + "\"," + field.singleFile + ")'/>");
+                                                repeat.append(linkCancelElement);
+                                                repeat.wrap('<div style="position:relative"> </div>').parent();
+                                                var downloadAllLinkElement = angular.element("<a ng-show=\"" + attrs.ngModel + '.' + field.model + ' && !(' + attrs.ngModel + '.' + field.model + '.length <= 1)' + " ng-href='api/fileUpload/downloadAll?filenames={{" + attrs.ngModel + '.' + field.model + "}}&{{authToken}}'>DownLoadAll</a>");
+                                                newElement.append(repeat);
+                                                newElement.append(downloadAllLinkElement);
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'file') {
+                                            }
+                                            else if (field.type === 'fileDownload') {
+                                                var newt = "<div> </div>";
+                                                newElement = newElement.wrap(newt).parent();
+                                                var repeatElement = angular.element('<li class="list-group-item"></li>');
+                                                var repeatData = "fileName in [" + field.data + "]";
+                                                repeatElement.attr("ng-repeat", repeatData);
+                                                var temp = angular.element("<a ng-href='api/fileUpload/download?filename={{fileName}}&token={{authToken}}'>{{fileName}}</a>");
+                                                repeatElement.prepend(temp);
+                                                newElement.append(repeatElement);
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'imageUpload') {
+
+                                                var imageFileFormat = JSON.stringify(field.fileFormat);
+                                                var maxsize = field.maxsize;
+                                                newElement.attr('flow-btn', "true");
+                                                newElement.attr('singleFile', "true");
+                                                var newt = "<div ng-controller='ImageUploadGridController' ng-init='defineLabel(\"" + attrs.isDiamond + "\");'  flow-file-added='fileAdded($file, $flow," + imageFileFormat + "," + maxsize + ")' flow-file-error='fileError($flow,$file,$message)' flow-file-completed='complete($file)' flow-file-progress='fileProgress($file);' flow-file-success='fileSuccess($file,$flow,\"" + field.model + "\",\"" + attrs.ngModel + "\"," + field.singleFile + " )'   flow-files-submitted='$flow.upload()' > </div>"
+                                                newElement = newElement.wrap(newt).parent();
+                                                var booleanFlag = "true";
+                                                var targetUrl;
+                                                if (attrs.isDiamond === true || attrs.isDiamond === 'true')
+                                                {
+                                                    // Call Center
+                                                    targetUrl = rootScope.centerapipath + 'fileUpload/uploadFile';
+                                                } else
+                                                {
+                                                    // Call Master
+                                                    targetUrl = rootScope.apipath + 'fileUpload/uploadFile';
+                                                }
+                                                newElement.attr('flow-init', "{target: " + "'" + targetUrl + "'" + ",singleFile:true, testChunks:" + booleanFlag + ",query:{model: '" + field.model + "'}}");
+                                                var thumbnailElementForImage = angular.element('<div class="thumbnail col-md-11" ng-show="' + attrs.ngModel + '.' + field.model + '" style="margin-bottom:0px;"></div>');
+                                                var imageElement = angular.element('<img ng-src="{{' + attrs.ngModel + field.model + '}}"  style= "width:' + field.width + ';height:' + field.height + '" />');
+                                                thumbnailElementForImage = thumbnailElementForImage.prepend(imageElement);
+                                                newElement.prepend(thumbnailElementForImage);
+                                                var thumbnailElement = angular.element('<div class="thumbnail" ng-show="!' + attrs.ngModel + '.' + field.model + '" style="margin-bottom:0px;"></div>');
+                                                var noimageElement = angular.element('<img src="images/noImage.gif" />');
+                                                thumbnailElement = thumbnailElement.prepend(noimageElement);
+                                                newElement.prepend(thumbnailElement);
+                                                var remove = "<span style='display:inline;font-size:18px;cursor: pointer;' title='Remove image' ng-click='remove(\"" + field.model + "\",\"" + attrs.ngModel + "\")' ng-show='" + attrs.ngModel + "." + field.model + "'' class='glyphicon glyphicon-remove text-danger'></span>"; //Remove
+                                                var removeElement = angular.element(remove);
+                                                newElement.append(removeElement);
+                                                newElement.append(removeElement);
+                                                var wrapElm = angular.element("<div class='text-right' ng-class=\"{'col-md-11':" + attrs.ngModel + "." + field.model + ",'col-md-12':!" + attrs.ngModel + "." + field.model + "}\"></div>");
+                                                var topElm = '<div class="row"></div>';
+                                                var change = "<span  class='glyphicon glyphicon-folder-open text-info' style='font-size:18px;cursor: pointer;' title='Upload from drive'  ng-show='" + attrs.ngModel + "." + field.model + "' flow-btn></span>"; //Change
+                                                var spanForChange = angular.element(change);
+                                                var changeParentElement = "<span  style='display:inline' class='col-md-offset-1'></span>";
+                                                spanForChange = spanForChange.wrap(changeParentElement).parent();
+                                                wrapElm.append(spanForChange);
+                                                var spanForSelect;
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    spanForSelect = angular.element('<span class="is-disabled glyphicon glyphicon-folder-open text-info" title="Upload from drive" style="font-size:18px;cursor: pointer;" ng-model="file.name" ng-show="!' + attrs.ngModel + '.' + field.model + '" flow-btn=""></span>'); //Choose file
+
+                                                } else
+                                                {
+                                                    spanForSelect = angular.element('<span class="glyphicon glyphicon-folder-open text-info" title="Upload from drive" style="font-size:18px;cursor: pointer;" ng-model="file.name" ng-show="!' + attrs.ngModel + '.' + field.model + '" flow-btn=""></span>'); //Choose file
+
+                                                }
+                                                var spanForCamera = angular.element('<camera style="display:inline;" model-name="' + field.model + '" unique-id="' + field.model + '_custom_field" model-value="' + attrs.ngModel + '.' + field.model + '" is-custom="true"></camera>');
+                                                wrapElm.append(spanForSelect);
+                                                wrapElm.append(spanForCamera);
+                                                var element = angular.element(' <a class="col-md-offset-1" ng-href="api/surveys/download?filename={{file.fileName}}&token={{authToken}}">{{file.fileName}}</a>');
+                                                wrapElm.append(element);
+                                                wrapElm = wrapElm.wrap(topElm).parent();
+                                                newElement.append(wrapElm);
+                                                if ((attrs.disableFlag && attrs.disableFlag === true) || (field.isViewFromDesignation === true))
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'percent')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr('numbers-only', true);
+                                                if (field.negativeAllowed !== null && field.negativeAllowed !== undefined && (field.negativeAllowed === true || field.negativeAllowed === 'true'))
+                                                {
+                                                    newElement.attr('negativeallowed', field.negativeAllowed)
+                                                }
+
+                                                if (field.decimalallowed !== null && field.decimalallowed !== undefined && (field.decimalallowed === true || field.decimalallowed === 'true'))
+                                                {
+                                                    newElement.attr('decimalallowed', field.decimalallowed)
+                                                }
+                                                if (angular.isDefined(field.required)) {
+
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+
+                                                if (angular.isDefined(field.min) && field.min !== null) {
+                                                    newElement.attr('min', field.min);
+                                                }
+                                                if (angular.isDefined(field.max) && field.max !== null) {
+                                                    newElement.attr('max', field.max);
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    newElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    newElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                newElement = newElement.wrap('<div class="input-group"> </div>').parent();
+                                                var suffixElement = angular.element('<div class="input-group-addon"></div>');
+                                                suffixElement.append(document.createTextNode("%"));
+                                                newElement.append(suffixElement);
+                                                // Code added By Shifa Salheen on 21 Feb for formula evaluation if in formula number component is involved
+                                                if (field.isInvolvedInFormula === true)
+                                                {
+                                                    var numValue = attrs.ngModel + "." + field.model;
+                                                    $scope.$watch(numValue, function () {
+                                                        if (numValue !== undefined && numValue !== null)
+                                                        {
+                                                            $scope[numValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+//                                                      
+                                                            for (var key in field.formulaWithDbField)
+                                                            {
+                                                                var formulaArray = field.formulaWithDbField[key].split("|");
+                                                                for (var j = 0; j < formulaArray.length; j++)
+                                                                {
+                                                                    var formulaSplit = [];
+                                                                    if (formulaArray[j].indexOf(".") > -1)
+                                                                    {
+                                                                        ////console.log("isFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                        if (isFloat(formulaArray[j]))
+                                                                        {
+                                                                            ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                        } else {
+                                                                            ////console.log("else ,a k")
+                                                                            formulaSplit = formulaArray[j].split(".");
+                                                                            formulaArray[j] = formulaSplit[1];
+                                                                        }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                    }
+                                                                }
+
+                                                                for (var k = 0; k < formulaArray.length; k++)
+                                                                {
+                                                                    var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                    if ($scope[ValueToReplace] !== undefined)
+                                                                    {
+                                                                        formulaArray[k] = $scope[ValueToReplace];
+                                                                    }
+                                                                }
+
+
+                                                                var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+                                                                try {
+                                                                    ////console.log('finalFormulaStringNUm : ' + finalFormulaStringNUm)
+                                                                    var math = mathjs();
+                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+
+                                                                    var roundOff;
+                                                                    if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                    {
+                                                                        roundOff = field.formulaRoundOff[key];
+
+                                                                    } else {
+                                                                        roundOff = "2";
+                                                                    }
+//                                                                    //console.log("er"+round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, ""))));
+                                                                    model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+
+                                                                    ////console.log("3----" + model[key])
+                                                                }
+                                                                catch (Exception)
+                                                                {
+                                                                    model[key] = "";
+                                                                }
+                                                                ////console.log("key + formmm" + key + 'form' + "----scopevall" + $scope[key + 'form'])
+                                                                if ((model[key] === undefined || model[key].length === 0) && $scope[key + 'form'] !== undefined)
+                                                                {
+
+                                                                    // This code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+                                                                    // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+                                                                    var form_Value = angular.copy($scope[key + 'form']);
+                                                                    ////console.log("form_Value..." + form_Value)
+                                                                    for (var k = 0; k < form_Value.length; k++)
+                                                                    {
+                                                                        var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+                                                                        if ($scope[ValueToReplace] !== undefined)
+                                                                        {
+                                                                            form_Value[k] = $scope[ValueToReplace];
+                                                                        }
+                                                                    }
+
+                                                                    var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+                                                                    try {
+                                                                        var math = mathjs();
+                                                                        var mathevalNum = math.eval(finalFormulaStringNUm);
+
+                                                                        model[key] = mathevalNum;
+                                                                        ////console.log("4-----" + model[key])
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        model[key] = "";
+                                                                    }
+                                                                }
+                                                            }
+
+//                                                      
+                                                        }
+
+                                                    });
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'Angle')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr('numbers-only', true);
+                                                if (field.negativeAllowed !== null && field.negativeAllowed !== undefined && (field.negativeAllowed === true || field.negativeAllowed === 'true'))
+                                                {
+                                                    newElement.attr('negativeallowed', field.negativeAllowed)
+                                                }
+                                                if (field.decimalallowed !== null && field.decimalallowed !== undefined && (field.decimalallowed === true || field.decimalallowed === 'true'))
+                                                {
+                                                    newElement.attr('decimalallowed', field.decimalallowed)
+                                                }
+                                                if (angular.isDefined(field.required)) {
+
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+                                                if (angular.isDefined(field.min) && field.min !== null) {
+                                                    newElement.attr('min', field.min);
+                                                }
+                                                if (angular.isDefined(field.max) && field.max !== null) {
+                                                    newElement.attr('max', field.max);
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    newElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    newElement.attr('ng-readonly', field.readonly);
+                                                }
+
+                                                newElement = newElement.wrap('<div class="input-group"> </div>').parent();
+                                                var suffixElement = angular.element('<div class="input-group-addon" ><span class="">&#176</span></div>');
+                                                newElement.append(suffixElement);
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                // Code added By Shifa Salheen on 21 Feb for formula evaluation if in formula number component is involved
+                                                if (field.isInvolvedInFormula === true)
+                                                {
+                                                    var numValue = attrs.ngModel + "." + field.model;
+                                                    $scope.$watch(numValue, function () {
+                                                        if (numValue !== undefined && numValue !== null)
+                                                        {
+                                                            $scope[numValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                            for (var key in field.formulaWithDbField)
+                                                            {
+                                                                var formulaArray = field.formulaWithDbField[key].split("|");
+                                                                for (var j = 0; j < formulaArray.length; j++)
+                                                                {
+                                                                    var formulaSplit = [];
+                                                                    if (formulaArray[j].indexOf(".") > -1)
+                                                                    {
+                                                                        ////console.log("isFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                        if (isFloat(formulaArray[j]))
+                                                                        {
+                                                                            ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                        } else {
+                                                                            ////console.log("else ,a k")
+                                                                            formulaSplit = formulaArray[j].split(".");
+                                                                            formulaArray[j] = formulaSplit[1];
+                                                                        }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                    }
+                                                                }
+
+                                                                for (var k = 0; k < formulaArray.length; k++)
+                                                                {
+                                                                    var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                    if ($scope[ValueToReplace] !== undefined)
+                                                                    {
+                                                                        formulaArray[k] = $scope[ValueToReplace];
+                                                                    }
+                                                                }
+
+
+                                                                var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+                                                                try {
+                                                                    var math = mathjs();
+                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                    var roundOff;
+                                                                    if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                    {
+                                                                        roundOff = field.formulaRoundOff[key];
+
+                                                                    } else {
+                                                                        roundOff = "2";
+                                                                    }
+                                                                    model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+
+                                                                    ////console.log("5-----" + model[key])
+                                                                }
+                                                                catch (Exception)
+                                                                {
+                                                                    model[key] = "";
+                                                                }
+                                                                if ((model[key] === undefined || model[key].length === 0) && $scope[key + 'form'] !== undefined)
+                                                                {
+
+                                                                    // This code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+                                                                    // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+                                                                    var form_Value = angular.copy($scope[key + 'form']);
+                                                                    for (var k = 0; k < form_Value.length; k++)
+                                                                    {
+                                                                        var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+                                                                        if ($scope[ValueToReplace] !== undefined)
+                                                                        {
+                                                                            form_Value[k] = $scope[ValueToReplace];
+                                                                        }
+                                                                    }
+
+                                                                    var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+                                                                    try {
+                                                                        var math = mathjs();
+                                                                        var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                        ////console.log("6-----" + model[key])
+                                                                        model[key] = mathevalNum;
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        model[key] = "";
+                                                                    }
+                                                                }
+                                                            }
+
+//                                                      
+                                                        }
+
+                                                    });
+                                                }
+
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'currency') {
+                                                ////console.log("currency :::" + field.currencyCode);
+                                                newElement.removeAttr('name');
+                                                newElement.removeAttr('ng-model');
+                                                newElement.removeAttr('id');
+                                                newElement.removeAttr('ng-required');
+                                                newElement.removeAttr('required');
+                                                var currencyTextElement = angular.element('<input type="text" class="form-control " >');
+//                                            newElement.attr('currencyallowed', true);
+                                                if (angular.isDefined(field.required) && (field.required === true || field.required === 'true')) {
+                                                    {
+                                                        currencyTextElement.attr('ng-required', field.required);
+                                                    }
+                                                }
+                                                currencyTextElement.attr('name', field.model);
+                                                currencyTextElement.attr('id', field.model)
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    currencyTextElement.addClass('is-disabled');
+                                                }
+                                                if (angular.isDefined(field.min)) {
+                                                    currencyTextElement.attr('min', field.min);
+                                                }
+                                                if (angular.isDefined(field.max)) {
+                                                    currencyTextElement.attr('max', field.max);
+                                                }
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    currencyTextElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    currencyTextElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    currencyTextElement.removeAttr('style');
+                                                }
+                                                currencyTextElement.attr('numbers-only', true);
+                                                if (angular.isDefined(field.decimalallowed) && (field.decimalallowed === true || field.decimalallowed === 'true'))
+                                                {
+                                                    currencyTextElement.attr('decimalallowed', true);
+                                                } else
+                                                {
+                                                    currencyTextElement.attr('decimalallowed', false);
+                                                }
+                                                if (field.negativeAllowed !== null && field.negativeAllowed !== undefined && (field.negativeAllowed === true || field.negativeAllowed === 'true'))
+                                                {
+                                                    currencyTextElement.attr('negativeallowed', field.negativeAllowed)
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    currencyTextElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                if (angular.isDefined(field.readonly)) {
+                                                    currencyTextElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                if (angular.isDefined(field.validate)) {
+                                                    currencyTextElement.attr('ng-pattern', field.validate);
+                                                }
+
+                                                currencyTextElement.addClass('col-md-4');
+                                                currencyTextElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                var divElement = angular.element('<div id="new" ng-model="div" class=""> </div>');
+                                                newElement = newElement.wrap(divElement).parent();
+                                                var codeVal = field.model + "*CurrencyCode";
+                                                var currencyCodeModel = $scope[attrs.ngModel + "." + field.model];
+                                                if (!attrs.editFlag) {
+                                                    // Create Time
+
+                                                    model[codeVal] = field.currencyCode;
+                                                }
+                                                else
+                                                {
+                                                    // Update Time
+                                                    /* This scenario will be if I create a document at that time there was no currency component but now I add a component and then if i edit
+                                                     if it does not have value in mongo bring it from postgres */
+                                                    var s = field.model + "*CurrencyCode";
+                                                    if ($scope.$eval(attrs.ngModel + "." + s) === undefined)
+                                                    {
+                                                        model[codeVal] = field.currencyCode;
+                                                    }
+                                                }
+                                              if (field.currencySymbolPosition !== null && (field.currencySymbolPosition === true || field.currencySymbolPosition === 'true' || field.currencySymbolPosition === false || field.currencySymbolPosition === 'false'))
+                                                {
+                                                var idElement = angular.element("<input type='text' ng-readonly='true'  id='selectCurrencyCode' class='form-control input-group-addon' style=\"width:45%;\"></input>");
+                                                //idElement.prepend(element);
+                                                //if (field.isViewFromDesignation === true)
+                                                {
+                                                    idElement.addClass('is-disabled');
+                                                }
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    idElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+
+                                                    idElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    idElement.removeAttr('style');
+                                                }
+                                                idElement.attr('value', field.currencyCode);
+                                                var newt = "<div ng-controller='CurrencyGridController' class='input-group' style=\"display:inline-flex;\"> </div>";
+                                                idElement = idElement.wrap(newt).parent();
+
+                                                idElement = idElement.append(currencyTextElement);
+                                                newElement = newElement.append(idElement);
+                                                }
+                                                else
+                                                {
+                                                          newElement = newElement.append(currencyTextElement);
+                                                }
+
+//                                                var codeModel = "['" + field.model + "*CurrencyCode']";
+//                                                idElement.attr('ng-model', attrs.ngModel + codeModel);
+//                                                var newt = "<div ng-controller='CurrencyGridController' class='input-group' style=\"display:inline-flex;\"> </div>";
+////                                                var newt = "<div ng-controller='CurrencyGridController' class='input-group' style=\"display:inline-flex;\" ng-init='fillDropDownForCurrencyCode(\"" + field.CustomFieldId + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + attrs.isDiamond + "\");'> </div>";
+//                                                idElement = idElement.wrap(newt).parent();
+//                                                idElement = idElement.append(currencyTextElement);
+//                                                newElement = newElement.append(idElement);
+                                                // Code added By Shifa Salheen on 21 Feb for formula evaluation if in formula number component is involved
+                                                if (field.isInvolvedInFormula === true)
+                                                {
+                                                    var numValue = attrs.ngModel + "." + field.model;
+                                                    $scope.$watch(numValue, function () {
+                                                        if (numValue !== undefined && numValue !== null)
+                                                        {
+                                                            $scope[numValue] = $scope.$eval(attrs.ngModel + "." + field.model);
+//                                                      
+                                                            for (var key in field.formulaWithDbField)
+                                                            {
+                                                                var formulaArray = field.formulaWithDbField[key].split("|");
+                                                                for (var j = 0; j < formulaArray.length; j++)
+                                                                {
+                                                                    var formulaSplit = [];
+                                                                    if (formulaArray[j].indexOf(".") > -1)
+                                                                    {
+                                                                        ////console.log("isFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                        if (isFloat(formulaArray[j]))
+                                                                        {
+                                                                            ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                        } else {
+                                                                            ////console.log("else ,a k")
+                                                                            formulaSplit = formulaArray[j].split(".");
+                                                                            formulaArray[j] = formulaSplit[1];
+                                                                        }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                    }
+                                                                }
+
+                                                                for (var k = 0; k < formulaArray.length; k++)
+                                                                {
+                                                                    var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                    if ($scope[ValueToReplace] !== undefined)
+                                                                    {
+                                                                        formulaArray[k] = $scope[ValueToReplace];
+                                                                    }
+                                                                }
+
+
+                                                                var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+                                                                try {
+                                                                    var math = mathjs();
+                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                    ////console.log("7-----" + model[key])
+                                                                    var roundOff;
+                                                                    if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                    {
+                                                                        roundOff = field.formulaRoundOff[key];
+
+                                                                    } else {
+                                                                        roundOff = "2"
+                                                                    }
+                                                                    model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+
+                                                                }
+                                                                catch (Exception)
+                                                                {
+                                                                    model[key] = "";
+                                                                }
+                                                                if ((model[key] === undefined || model[key].length === 0) && $scope[key + 'form'] !== undefined)
+                                                                {
+
+                                                                    // This code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+                                                                    // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+                                                                    var form_Value = angular.copy($scope[key + 'form']);
+                                                                    for (var k = 0; k < form_Value.length; k++)
+                                                                    {
+                                                                        var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+                                                                        if ($scope[ValueToReplace] !== undefined)
+                                                                        {
+                                                                            form_Value[k] = $scope[ValueToReplace];
+                                                                        }
+                                                                    }
+
+                                                                    var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+                                                                    try {
+                                                                        var math = mathjs();
+                                                                        var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                        ////console.log("8-----" + model[key])
+                                                                        var roundOff;
+                                                                        if (field.formulaRoundOff !== null && field.formulaRoundOff !== undefined && field.formulaRoundOff[key] !== null && field.formulaRoundOff[key] !== undefined)
+                                                                        {
+                                                                            roundOff = field.formulaRoundOff[key];
+
+                                                                        } else {
+                                                                            roundOff = "2"
+                                                                        }
+                                                                        model[key] = round(parseFloat(mathevalNum), parseFloat(roundOff.replace(/"/g, "")));
+
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        model[key] = "";
+                                                                    }
+                                                                }
+                                                            }
+
+//                                                      
+                                                        }
+
+                                                    });
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'exchangeRate') {
+                                                ////console.log('in else if..')
+
+                                                newElement.removeAttr('name');
+                                                newElement.removeAttr('ng-model');
+                                                newElement.removeAttr('id');
+                                                newElement.removeAttr('ng-required');
+                                                newElement.removeAttr('required');
+
+                                                var eXRTextElement = angular.element('<input type="text" class="form-control " >');
+//                                            newElement.attr('currencyallowed', true);
+                                                if (angular.isDefined(field.required) && (field.required === true || field.required === 'true')) {
+                                                    eXRTextElement.attr('ng-required', field.required);
+                                                }
+                                                eXRTextElement.attr('name', field.model);
+                                                eXRTextElement.attr('id', field.model);
+                                                if (field.isViewFromDesignation === true) {
+                                                    eXRTextElement.addClass('is-disabled');
+                                                }
+                                                if (angular.isDefined(field.backgroundColor)) {
+                                                    eXRTextElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                }
+                                                eXRTextElement.attr('numbers-only', true);
+                                                eXRTextElement.attr('decimalallowed', true);
+
+                                                if (angular.isDefined(field.readonly)) {
+                                                    eXRTextElement.attr('ng-readonly', field.readonly);
+                                                }
+                                                if (angular.isDefined(field.validate)) {
+                                                    eXRTextElement.attr('ng-pattern', field.validate);
+                                                }
+
+                                                eXRTextElement.addClass('col-md-4');
+
+                                                eXRTextElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                var divElement = angular.element('<div id="new" ng-model="div" class=""> </div>');
+                                                newElement = newElement.wrap(divElement).parent();
+
+                                                var idElement = angular.element("<input type='text' ng-readonly='true' id='selectEXRCode' class='form-control input-group-addon' style=\"width:45%;\"></input>");
+                                                idElement.addClass('is-disabled');
+                                                if (angular.isDefined(field.backgroundColor)) {
+                                                    idElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                }
+                                                idElement.attr('value', field.currencyCode);
+                                                // var newt = "<div class='input-group' style=\"display:inline-flex;\"> </div>";
+                                                ////console.log('in exchange ++++++++++++++++++++==')
+                                                var newt = "<div ng-controller='ReferenceRateGridController' class='input-group' style=\"display:inline-flex;\" ng-init='fillReferenceRateForCurrency(\"" + field.currencyCode + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + attrs.isDiamond + "\");'> </div>";
+                                                idElement = idElement.wrap(newt).parent();
+
+                                                idElement = idElement.append(eXRTextElement);
+                                                newElement = newElement.append(idElement);
+
+                                                // Code added By Shifa Salheen on 21 Feb for formula evaluation if in formula number component is involved
+                                                if (field.isInvolvedInFormula === true)
+                                                {
+                                                    var numValue = attrs.ngModel + "." + field.model;
+                                                    $scope.$watch(numValue, function () {
+                                                        if (numValue !== undefined && numValue !== null)
+                                                        {
+                                                            $scope[numValue] = $scope[attrs.ngModel][field.model];
+//                                                      
+                                                            for (var key in field.formulaWithDbField)
+                                                            {
+                                                                var formulaArray = field.formulaWithDbField[key].split("|");
+                                                                if (formulaArray[j].indexOf(".") > -1)
+                                                                {
+                                                                    ////console.log("isFloat...beforeee" + formulaArray[j] + "res" + isFloat(formulaArray[j]));
+                                                                    if (isFloat(formulaArray[j]))
+                                                                    {
+                                                                        ////console.log("isFloat..." + formulaArray[j] + "sdf--" + formulaArray[j])
+                                                                    } else {
+                                                                        ////console.log("else ,a k")
+                                                                        formulaSplit = formulaArray[j].split(".");
+                                                                        formulaArray[j] = formulaSplit[1];
+                                                                    }
+//                                                                        ////console.log("num frm array last" + formulaArray[j])
+                                                                }
+
+
+                                                                for (var k = 0; k < formulaArray.length; k++)
+                                                                {
+                                                                    var ValueToReplace = attrs.ngModel + "." + formulaArray[k];
+                                                                    if ($scope[ValueToReplace] !== undefined)
+                                                                    {
+                                                                        formulaArray[k] = $scope[ValueToReplace];
+                                                                    }
+                                                                }
+
+
+                                                                var finalFormulaStringNUm = formulaArray.toString().replace(/,/g, '');
+                                                                try {
+                                                                    var math = mathjs();
+                                                                    var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                    ////console.log("9-----" + model[key])
+                                                                    model[key] = mathevalNum;
+                                                                }
+                                                                catch (Exception)
+                                                                {
+                                                                    model[key] = "";
+                                                                }
+                                                                if ((model[key] === undefined || model[key].length === 0) && $scope[key + 'form'] !== undefined)
+                                                                {
+
+                                                                    // This code is for resolving formulas of type e.g. invoice.a +parcel.b +SUM(lot.c)
+                                                                    // now we have stored invoice.a and sum but on filling parcel.b on parcel page the formula will evaluate
+                                                                    var form_Value = angular.copy($scope[key + 'form']);
+                                                                    for (var k = 0; k < form_Value.length; k++)
+                                                                    {
+                                                                        var ValueToReplace = attrs.ngModel + "." + form_Value[k];
+                                                                        if ($scope[ValueToReplace] !== undefined)
+                                                                        {
+                                                                            form_Value[k] = $scope[ValueToReplace];
+                                                                        }
+                                                                    }
+
+                                                                    var finalFormulaStringNUm = form_Value.toString().replace(/,/g, '');
+                                                                    try {
+                                                                        var math = mathjs();
+                                                                        var mathevalNum = math.eval(finalFormulaStringNUm);
+                                                                        ////console.log("10-----" + model[key])
+                                                                        model[key] = mathevalNum;
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        model[key] = "";
+                                                                    }
+                                                                }
+                                                            }
+
+//                                                      
+                                                        }
+
+                                                    });
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+                                            else if (field.type === 'multiSelect')
+                                            {
+
+                                                if (angular.isDefined(field.required)) {
+
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr('ui-select2', 'autoComplete');
+//                                                newElement.attr('class', 'col-xs-12 ');
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.attr('class', 'col-xs-12 hkg-nopadding is-disabled');
+                                                } else {
+                                                    newElement.attr('class', 'col-xs-12 hkg-nopadding');
+                                                }
+                                                //console.log("field.....ms"+JSON.stringify(field))
+var displayShortcutCode;
+                                                if (field.displayShortcutCode !== null && field.displayShortcutCode !== undefined)
+                                                {
+                                                    displayShortcutCode = field.displayShortcutCode;
+
+                                                } else
+                                                {
+                                                    displayShortcutCode = false;
+                                                }
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                var elementId = newElement.attr('id');
+                                                var newt = "<div  ng-controller='MultiSelectGridController' ng-init='defineLabel(\"" + field.label + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + field.val + "\",\"" + attrs.isDiamond + "\",\"" + field.fieldId + "\",\""+displayShortcutCode+"\");'> </div>";
+                                                //Added directive to add master value inline
+                                                var newSubt = '<div ng-class="{\'col-md-10\':canAccess(\'addMasterValueShortcut\'),\'col-md-10\':!canAccess(\'addMasterValueShortcut\')}"></div>';
+                                                newElement = newElement.wrap(newSubt).parent();
+                                                newElement = newElement.wrap(newt).parent();
+                                                // code added by Shifa on 3 JAnuary for handling dependant conditions
+                                                var multiSelectValue = attrs.ngModel + "." + field.model;
+                                                newElement.append('<add-master-value ng-show="$root.canAccess(\'addMasterValueShortcut\')" class="col-md-2" records="names" model-value="' + multiSelectValue + '" master-code="{{fieldId}}" is-diamond ="' + attrs.isDiamond + '" is-custom="true" is-multiselect="true" element-id="' + elementId + '" modal-name="' + field.modelWithoutSeperators + '"></add-master-value>');
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + field.backgroundColor);
+                                                }
+                                                $scope.$watch(multiSelectValue, function () {
+                                                    if (multiSelectValue !== undefined)
+                                                    {
+
+                                                        var templateNew = [];
+                                                        $scope.multiSelectValue = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                        if ($scope.multiSelectValue instanceof Array) {
+                                                            var multiSelectArray = [];
+                                                            var multiSelectModelArray = [];
+                                                            multiSelectArray = $scope.multiSelectValue;
+                                                            angular.forEach(multiSelectArray, function (multiSelect)
+                                                            {
+                                                                multiSelectModelArray.push(multiSelect.id);
+                                                            });
+                                                            var fieldIdsToBeLoaded = [];
+                                                            if ($scope.multiSelectValue !== undefined && $scope.multiSelectValue !== null) {
+                                                                if (field.dependantFieldsOnMultiSelectList !== null && field.dependantFieldsOnMultiSelectList !== undefined) {
+                                                                    var DependantFieldIdWithValues = field.dependantFieldsOnMultiSelectList.split(',');
+                                                                    for (var i = 0; i < DependantFieldIdWithValues.length; i++)
+                                                                    {
+                                                                        var splitByDelimiter = DependantFieldIdWithValues[i].replace("\"", "").split('A');
+                                                                        var splitArray = splitByDelimiter[0].split('~M');
+                                                                        for (var k = 0; k < multiSelectModelArray.length; k++)
+                                                                        {
+                                                                            for (var l = 0; l < splitArray.length; l++) {
+                                                                                if (multiSelectModelArray[k].toString() === splitArray[l].replace("\"", "").toString())
+                                                                                    fieldIdsToBeLoaded.push(splitByDelimiter[1]);
+                                                                            }
+                                                                        }
+
+
+
+                                                                    }
+                                                                    var fieldsDependantOnSelect = [];
+                                                                    angular.forEach(template, function (templates)
+                                                                    {
+
+                                                                        if (templates.dependantMasterId !== null && templates.dependantMasterId !== undefined)
+
+                                                                        {
+                                                                            if (templates.dependantMasterId.toString() === field.fieldId.toString())
+                                                                            {
+                                                                                fieldsDependantOnSelect.push(templates);
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                    if (fieldIdsToBeLoaded !== undefined)
+                                                                    {
+                                                                        angular.forEach(fieldIdsToBeLoaded, function (fieldIdsToBeLoaded)
+                                                                        {
+//                                                                
+                                                                            var index = $filter('filter')(template, function (result) {
+
+                                                                                return fieldIdsToBeLoaded.toString() === result.fieldId.toString();
+                                                                            })[0];
+                                                                            if (index !== null && index !== undefined) {
+                                                                                templateNew.push(index);
+                                                                            }
+                                                                        });
+                                                                        angular.forEach(fieldsDependantOnSelect, function (temp)
+                                                                        {
+                                                                            var dependantField = angular.element(document.querySelector('td div #dv_' + temp.modelWithoutSeperators));
+                                                                            dependantField.addClass('ng-hide');
+                                                                        });
+                                                                        if (templateNew !== undefined)
+                                                                        {
+                                                                            angular.forEach(templateNew, function (temp)
+                                                                            {
+                                                                                temp.isDependant = false;
+                                                                                var dependantField = angular.element(document.querySelector('td div #dv_' + temp.modelWithoutSeperators));
+                                                                                dependentIdsToBeViewed.push('td div #dv_' + temp.modelWithoutSeperators);
+                                                                                dependentIdsToBeViewed.push('td div #dv_view_' + temp.modelWithoutSeperators);
+                                                                                if (dependantField.hasClass('ng-hide'))
+                                                                                {
+                                                                                    dependantField.removeClass('ng-hide')
+                                                                                }
+
+                                                                            });
+                                                                        }
+
+
+
+
+
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                                //
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+
+                                            }
+                                            // added by Shifa on 29 December for handling pointer multiselect
+                                            else if (field.type === 'pointer_multiSelect')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + field.backgroundColor);
+                                                }
+                                                if (angular.isDefined(field.required)) {
+
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+var displayShortcutCode;
+                                                if (field.displayShortcutCode !== null && field.displayShortcutCode !== undefined)
+                                                {
+                                                    displayShortcutCode = field.displayShortcutCode;
+
+                                                } else
+                                                {
+                                                    displayShortcutCode = false;
+                                                }
+                                                newElement.attr('ui-select2', 'autoComplete');
+                                                newElement.attr('class', 'col-xs-12 ');
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                var elementId = newElement.attr('id');
+                                                var newt = "<div ng-controller='MultiSelectGridController' ng-init='defineLabel(\"" + field.pointerlabel + "\",\"" + field.model + "\",\"" + attrs.ngModel + "\",\"" + field.val + "\",\"" + attrs.isDiamond + "\",\"" + field.pointerFieldId + "\",\"" + displayShortcutCode +"\");'> </div>";
+                                                //Added directive to add master value inline
+                                                var newSubt = '<div ng-class="{\'col-md-10\':canAccess(\'addMasterValueShortcut\'),\'col-md-10\':!canAccess(\'addMasterValueShortcut\')}"></div>';
+                                                newElement = newElement.wrap(newSubt).parent();
+                                                newElement = newElement.wrap(newt).parent();
+                                                var multiSelectValue = attrs.ngModel + "." + field.model;
+                                                newElement.append('<add-master-value ng-show="$root.canAccess(\'addMasterValueShortcut\')" class="col-md-2" records="names" model-value="' + multiSelectValue + '" master-code="{{fieldId}}" is-custom="true" is-diamond ="' + attrs.isDiamond + '" is-multiselect="true" element-id="' + elementId + '" modal-name="' + field.modelWithoutSeperators + '"></add-master-value>');
+                                                //
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                            }
+
+                                            else if (field.type === 'UserMultiSelect')
+                                            {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    colorElementsForUISelect.push(field.modelWithoutSeperators + "~@~" + field.backgroundColor);
+                                                }
+
+                                                if (angular.isDefined(field.required)) {
+
+                                                    newElement.attr('ng-required', field.required);
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    if (field.model === 'allot_to_lot$UMS$String' || field.model === 'allot_to_packet$UMS$String') {
+                                                        newElement.attr('ng-disabled', true);
+                                                    }
+                                                }
+                                                var showParamForEmp;
+
+                                                var depListFrEmp;
+                                                var desgListFrEmp;
+                                                if (field.selectedParameter !== null && field.selectedParameter !== undefined)
+                                                {
+                                                    if (field.selectedParameter === 1)
+                                                    {
+                                                        showParamForEmp = "Dept";
+                                                        if (field.deptList !== null && field.deptList !== undefined)
+                                                        {
+                                                            depListFrEmp = field.deptList;
+                                                        }
+                                                    }
+                                                    if (field.selectedParameter === 2)
+                                                    {
+                                                        showParamForEmp = "Desg";
+                                                        if (field.desgList !== null && field.desgList !== undefined)
+                                                        {
+                                                            desgListFrEmp = field.desgList;
+                                                        }
+                                                    }
+                                                    if (field.selectedParameter === 3)
+                                                    {
+                                                        showParamForEmp = "All";
+                                                    }
+
+                                                }
+                                                newElement.attr('ng-model', attrs.ngModel + "['" + field.model + "']");
+                                                newElement.attr('ui-select2', 'autoCompleteUser');
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.attr('class', 'col-xs-12 hkg-nopadding is-disabled');
+                                                } else {
+                                                    newElement.attr('class', 'col-xs-12 hkg-nopadding');
+                                                }
+                                                var newt = angular.element("<div ng-controller='UserMultiSelectGridController' ng-init='defineLabel(\"" + field.isEmployee + "\",\"" + field.isDepartment + "\",\"" + field.isDesignation + "\",\"" + field.isFranchise + "\",\"" + field.model + "\",\"" + field.isMultiSelect + "\",\"" + attrs.ngModel + "\",\"" + attrs.isDynamic + "\",\"" + showParamForEmp + "\",\"" + depListFrEmp + "\",\"" + desgListFrEmp + "\");'> </div>");
+                                                var newEle = angular.element("<div ng-controller='UserSingleSelectGridController' ng-init='defineLabel(\"" + field.isEmployee + "\",\"" + field.isDepartment + "\",\"" + field.isDesignation + "\",\"" + field.isFranchise + "\",\"" + field.model + "\",\"" + field.isMultiSelect + "\",\"" + attrs.ngModel + "\",\"" + attrs.designationIdForAllot + "\",\"" + attrs.designationIdForInStock + "\",\"" + attrs.isDynamic + "\",\"" + attrs.isDiamond + "\",\"" + attrs.carrierBoyDes + "\",\"" + showParamForEmp + "\",\"" + depListFrEmp + "\",\"" + desgListFrEmp + "\");'> </div>");
+
+                                                newElement = newElement.wrap('<div  class="input-group"></div>').parent();
+                                                newElement = newElement.append('<span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{customPopover}}"  tooltip-trigger="mouseenter" tooltip-placement="left"></span></span>');
+                                                if (field.isMultiSelect !== undefined && (field.isMultiSelect === true || field.isMultiSelect === 'true')) {
+                                                    newElement = newElement.wrap(newt).parent();
+                                                } else {
+                                                    newElement = newElement.wrap(newEle).parent();
+                                                }
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+
+                                            }
+
+                                            else if (field.type === 'date' && field.attributes && field.attributes.type && (field.attributes.type === 'timerange' || field.attributes.type === 'daterange' || field.attributes.type === 'datetimerange')) {
+                                                if (angular.isDefined($scope.screenRules[field.model])) {
+                                                    newElement.attr('style', 'background-color:' + $scope.screenRules[field.model].colorCode);
+                                                }
+                                                else if (angular.isDefined(field.backgroundColor)) {
+                                                    newElement.attr('style', 'background-color:' + field.backgroundColor + "; color:#000000");
+                                                } else {
+                                                    newElement.removeAttr('style');
+                                                }
+
+                                                if (field.isViewFromDesignation === true)
+                                                {
+                                                    newElement.addClass('is-disabled');
+                                                }
+                                                newElement.attr('submitted', submitFlagName);
+                                                newElement.attr('form', attrs.formName);
+                                                newElement.attr('input-class', 'col-md-12');
+                                                newElement.attr('label-class', 'col-md-12 text-center');
+                                                newElement.attr('to-label', 'To');
+                                                newElement.attr('from-label', 'From');
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                var fromModelValue = attrs.ngModel + "." + field.fromModel;
+                                                // Code added by Shifa on 21 March 2015 for handling date range issue
+                                                // This watch is called when from Date changes
+                                                $scope.$watch(fromModelValue, function ()
+                                                {
+                                                    // fromDateVal gives the model value of from date
+                                                    var fromDateVal = model[field.fromModel];
+                                                    // toDateVal gives the model value of to Date
+                                                    var toDateValue = model[field.toModel];
+                                                    // This method checks if toDate is undefined then set it same as from Date
+                                                    if (toDateValue === null || toDateValue === undefined)
+                                                    {
+                                                        // Set in the model of toDate the value of fromDate
+                                                        model[field.toModel] = fromDateVal;
+                                                    }
+
+                                                    // This method to be used if we have first set fromDate,then ToDate and 
+                                                    // then if I clear fromdate,then it should be set to the value of ToDate
+                                                    if (fromDateVal === null || fromDateVal === undefined)
+                                                    {
+                                                        if (toDateValue !== null && toDateValue !== undefined)
+                                                            model[field.fromModel] = toDateValue;
+                                                    }
+
+                                                });
+                                                var toModelValue = attrs.ngModel + "." + field.toModel;
+                                                // This watch is called when two date changes
+                                                $scope.$watch(toModelValue, function ()
+                                                {
+                                                    // toDateVal gives the model value of toDate
+                                                    var toDateVal = model[field.toModel];
+                                                    // fromDateEnteredValue gives the entered value of fromDate
+                                                    var fromDateEnteredValue = model[field.fromModel];
+                                                    // This method checks if fromDate is null or undefined them set it same as ToDate
+                                                    if (fromDateEnteredValue === null || fromDateEnteredValue === undefined)
+                                                    {
+                                                        // Set in the model of fromDate the value of ToDate
+                                                        model[field.fromModel] = toDateVal;
+                                                    }
+                                                    // This method to be used if we have first set toDate,then FromDate and 
+                                                    // then if I clear toDate,then it should be set to the value of FromDate
+                                                    if (toDateVal === null || toDateVal === undefined)
+                                                    {
+                                                        if (fromDateEnteredValue !== null && fromDateEnteredValue !== undefined)
+                                                        {
+                                                            model[field.toModel] = fromDateEnteredValue;
+                                                        }
+                                                    }
+
+                                                });
+                                                // Code for handling  date range issue ends here
+                                            }
+                                            else if (field.type === 'fieldset') {
+                                                if (attrs.disableFlag && attrs.disableFlag === true)
+                                                {
+                                                    newElement.attr('ng-disabled', true);
+                                                }
+                                                if (angular.isDefined(field.fields)) {
+                                                    var workingElement = newElement;
+                                                    angular.forEach(field.fields, buildFields, newElement);
+                                                    newElement = workingElement;
+                                                }
+                                            }
+
+                                            //  Common attributes; radio already applied these...
+                                            if (field.type !== "radio") {
+                                                if (angular.isDefined(field['class'])) {
+                                                    newElement.attr('ng-class', field['class']);
+                                                }
+                                                //  ...and checklist has already applied these.
+                                                if (field.type !== "checklist") {
+                                                    if (angular.isDefined(field.disabled)) {
+                                                        newElement.attr('ng-disabled', field.disabled);
+                                                    }
+                                                    if (angular.isDefined(field.callback)) {
+                                                        //  Some input types need listeners on click...
+                                                        if (["button", "fieldset", "image", "legend", "reset", "submit"].indexOf(field.type) > -1) {
+                                                            cbAtt = 'ng-click';
+                                                        }
+                                                        //  ...the rest on change.
+                                                        else {
+                                                            cbAtt = 'ng-change';
+                                                        }
+                                                        newElement.attr(cbAtt, field.callback);
+                                                    }
+                                                }
+                                            }
+                                            if (field.type === 'imageUpload')
+                                            {
+
+                                                var temp = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(temp, function () {
+                                                    //console.log('ahi gayu watch ma ....' + attrs.isDiamond)
+//                                                    $scope.imgsrc = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                    var a = '';
+                                                    if ($scope.$eval(attrs.ngModel + "." + field.model)) {
+                                                        a = a + $scope.$eval(attrs.ngModel + "." + field.model);
+                                                    }
+
+                                                    //console.log("a/....." + a)
+                                                    var img = attrs.ngModel + '.' + field.model;
+                                                    if (attrs.isDiamond === true || attrs.isDiamond === true)
+                                                    {
+                                                        if (a !== null && a !== undefined)
+                                                        {
+                                                            var imgurl = rootScope.appendAuthToken(rootScope.centerapipath + "fileUpload/getimage?file_name=" + a);
+//
+                                                            var finalModelVal = $parse(attrs.ngModel + field.model);
+                                                            finalModelVal.assign($scope, imgurl);
+                                                        }
+
+
+                                                    } else
+                                                    {
+                                                        if (a !== null && a !== undefined)
+                                                        {
+                                                            var imgurl = rootScope.appendAuthToken(rootScope.apipath + "fileUpload/getimage?file_name=" + a);
+//
+                                                            var finalModelVal = $parse(attrs.ngModel + field.model);
+                                                            finalModelVal.assign($scope, imgurl);
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            // Code added By Shifa on 2 Feb 2015 for handling the constraints validation 
+                                            if (field.type === 'number' || field.type === 'currency' || field.type === 'exchangeRate' || field.type === 'percent' || field.type === 'date' || field.type === 'Angle')
+                                            {
+                                                var constraint;
+                                                if (angular.isDefined(field.constraintValue) && field.constraintValue !== null && field.constraintValue !== undefined)
+                                                {
+
+                                                    // Here I have used @ as the delimiter and in the following code the constraint string is separated by delimiter to fetch
+                                                    //  the last value which is the field id on which our component is dependant
+                                                    var constraintValue = field.constraintValue.replace(/["']/g, "");
+                                                    var constraintArray = constraintValue.split("@");
+//                                                    for (var i = 0; i < constraintArray.length; i++)
+//                                                    {
+                                                    constraint = constraintArray[constraintArray.length - 1];
+//                                                    }
+                                                }
+                                                if (constraint !== undefined && constraint !== null && (attrs.invoiceId !== undefined || attrs.parcelId !== undefined || attrs.lotId !== undefined || attrs.packetId !== undefined))
+                                                {
+                                                    // ajax call to if we need to fetch the value from mongo
+                                                    var newUrl;
+                                                    if (attrs.isDiamond === true || attrs.isDiamond === 'true')
+                                                    {
+                                                        // Call center method
+                                                        newUrl = rootScope.appendAuthToken(rootScope.centerapipath + "customfield/retrieveObjectIdDetailsFromMongo?param=" + constraint + "&param2=" + attrs.invoiceId + "&param3=" + attrs.parcelId + "&param4=" + attrs.lotId + "&param5=" + attrs.packetId);
+                                                    } else
+                                                    {
+                                                        // Call master method
+                                                        newUrl = rootScope.appendAuthToken(rootScope.apipath + "customfield/retrieveObjectIdDetailsFromMongo?param=" + constraint + "&param2=" + attrs.invoiceId + "&param3=" + attrs.parcelId + "&param4=" + attrs.lotId + "&param5=" + attrs.packetId);
+                                                    }
+                                                    $.ajax({
+                                                        url: newUrl,
+                                                        type: 'GET',
+                                                        error: function () {
+                                                        },
+                                                        success: function (res) {
+
+                                                            if (field.type === 'number')
+                                                            {
+                                                                $scope.instanceValueFromMongoForNumber = res.instanceValueFromMongo;
+                                                            }
+                                                            if (field.type === 'currency')
+                                                            {
+                                                                $scope.instanceValueFromMongoForCurrency = res.instanceValueFromMongo;
+                                                            }
+                                                            if (field.type === 'exchangeRate')
+                                                            {
+                                                                $scope.instanceValueFromMongoForExchangeRate = res.instanceValueFromMongo;
+                                                            }
+                                                            if (field.type === 'percent')
+                                                            {
+                                                                $scope.instanceValueFromMongoForPercent = res.instanceValueFromMongo;
+                                                            }
+                                                            if (field.type === 'date')
+                                                            {
+                                                                var instanceValueFromMongoForDate = new Date(res.instanceValueFromMongo);
+                                                                $scope.instanceValueFromMongoForDate = instanceValueFromMongoForDate;
+                                                            }
+
+                                                        }
+                                                    });
+                                                }
+
+                                                var numValueForConstraint = attrs.ngModel + "." + field.model;
+                                                $scope.$watch(numValueForConstraint, function () {
+                                                    if ($scope.$eval(attrs.ngModel) !== undefined) {
+                                                        var fieldSelfModelValue = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                        if (numValueForConstraint !== null && numValueForConstraint !== undefined) {
+                                                            // Reverse Scenario
+                                                            if (field.listOfConstraintsOnField !== null && field.listOfConstraintsOnField !== undefined && field.listOfConstraintsOnField.length > 0)
+                                                            {
+
+                                                                var individualFieldArray = field.listOfConstraintsOnField.toString().split(",");
+                                                                for (var k in  individualFieldArray)
+                                                                {
+                                                                    // First split by delimiter for seperating constraint as well as dbfieldname
+                                                                    var splitArray = [];
+                                                                    splitArray = individualFieldArray[k].split("AS");
+                                                                    // dependentConstraintValue stores the constraint 
+                                                                    var dependentConstraintValue = splitArray[0];
+                                                                    // dependantDbFieldName stores the dbfieldname
+                                                                    var dependantDbFieldName = splitArray[1];
+                                                                    // dependantDbfieldModelValue stores the model value of dependant constraints
+
+                                                                    var fieldSelfModelValue = $scope.$eval(attrs.ngModel + "." + field.model)
+                                                                    if (fieldSelfModelValue !== null && fieldSelfModelValue !== undefined && fieldSelfModelValue)
+                                                                    {
+
+                                                                        if (field.type === 'date')
+                                                                        {
+                                                                            $scope.fieldSelfModelValue = new Date(fieldSelfModelValue);
+                                                                        } else
+                                                                        {
+                                                                            $scope.fieldSelfModelValue = fieldSelfModelValue;
+                                                                        }
+
+                                                                        if (dependentConstraintValue !== null && dependentConstraintValue !== undefined)
+                                                                        {
+                                                                            // Here I have used @ as the delimiter and in the following code the constraint string is separated by delimiter to fetch
+                                                                            //  the last value which is the field id on which our component is dependant
+                                                                            dependentConstraintValue = dependentConstraintValue.replace(/["']/g, "");
+                                                                            var dependantConstraintArray = dependentConstraintValue.split("@");
+                                                                            dependantConstraintArray[dependantConstraintArray.length - 1] = $scope.fieldSelfModelValue;
+
+                                                                            if (field.type === 'date')
+                                                                            {
+                                                                                // Evaluation for date logic
+                                                                                var instanceDependantDate = $scope.fieldSelfModelValue.getDate();
+                                                                                var nextDependantDate;
+                                                                                var finalStringDependantDate;
+                                                                                // There are two scenarios
+                                                                                //  1. Entered Date > 5 + CustomComponentDate(array contains 5 elements withe delimiter)
+                                                                                //  2. Entered date > CustomComponenetDate(array contains 3 elements)
+                                                                                var dependantDbfieldModelValueDate = $scope[dependantDbFieldName];
+                                                                                if (dependantDbfieldModelValueDate !== null && dependantDbfieldModelValueDate !== undefined) {
+                                                                                    if (dependantConstraintArray.length === 5) {
+                                                                                        if (dependantConstraintArray[dependantConstraintArray.length - 2] === '+')
+                                                                                        {
+                                                                                            // constraintArray[constraintArray.length - 3] contains arithmetic operator at this index
+                                                                                            nextDependantDate = $scope.updateDateWithHoliday($scope.fieldSelfModelValue, '+', parseInt(dependantConstraintArray[dependantConstraintArray.length - 3])) + parseInt(instanceDependantDate);
+                                                                                        }
+                                                                                        if (dependantConstraintArray[dependantConstraintArray.length - 2] === '-')
+                                                                                        {
+                                                                                            nextDependantDate = parseInt(instanceDependantDate) - $scope.updateDateWithHoliday($scope.fieldSelfModelValue, '-', parseInt(dependantConstraintArray[dependantConstraintArray.length - 3]));
+                                                                                        }
+                                                                                        $scope.changedDependantDate = angular.copy($scope.fieldSelfModelValue);
+                                                                                        $scope.changedDependantDate.setDate(nextDependantDate);
+                                                                                        // At Last index fill the date with x days added
+                                                                                        dependantConstraintArray[dependantConstraintArray.length - 1] = $scope.changedDependantDate;
+                                                                                        // finalStringDate contains "enteredDate $ RelationalOperator $ DateEvaluated(By Performing addition/subtraction of x days)
+                                                                                        finalStringDependantDate = dependantDbfieldModelValueDate + "$" + dependantConstraintArray[dependantConstraintArray.length - 4] + "$" + $scope.changedDependantDate;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.changedDependantDate = angular.copy($scope.fieldSelfModelValue)
+                                                                                        // For array with 3 elements we have directly "enteredDate $ RelationalOperator $ DateComingFromServer of custom component
+                                                                                        finalStringDependantDate = dependantDbfieldModelValueDate + "$" + dependantConstraintArray[1] + "$" + $scope.changedDependantDate;
+                                                                                    }
+
+                                                                                    var finalStringDependantDateArrray = finalStringDependantDate.split('$');
+                                                                                    var firstDependantDate = new Date(finalStringDependantDateArrray[0]);
+                                                                                    var secondDependantDate = new Date(finalStringDependantDateArrray[2])
+                                                                                    if (finalStringDependantDateArrray[1] === '>') {
+                                                                                        if (firstDependantDate > secondDependantDate)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = true;
+                                                                                        } else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = false;
+                                                                                        }
+                                                                                    }
+                                                                                    if (finalStringDependantDateArrray[1] === '<') {
+                                                                                        if (firstDependantDate < secondDependantDate)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = true;
+                                                                                        } else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = false;
+                                                                                        }
+                                                                                    }
+                                                                                    if (finalStringDependantDateArrray[1] === '>=') {
+                                                                                        if (firstDependantDate >= secondDependantDate)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = true;
+                                                                                        } else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = false;
+                                                                                        }
+                                                                                    }
+                                                                                    if (finalStringDependantDateArrray[1] === '<=') {
+                                                                                        if (firstDependantDate <= secondDependantDate)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = true;
+                                                                                        } else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = false;
+                                                                                        }
+                                                                                    }
+                                                                                    if (finalStringDependantDateArrray[1] === '===') {
+                                                                                        if (firstDependantDate - secondDependantDate === 0)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = true;
+                                                                                        } else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResultDate = false;
+                                                                                        }
+                                                                                    }
+                                                                                    var arrayOfdbfieldDate = [];
+                                                                                    arrayOfdbfieldDate = dependantDbFieldName.split("$");
+                                                                                    var constraintFieldDependantDate = angular.element(document.querySelector('#const_' + arrayOfdbfieldDate[0]));
+                                                                                    if ($scope.evaluateDependantResultDate === true)
+                                                                                    {
+                                                                                        if (constraintFieldDependantDate !== undefined) {
+                                                                                            constraintFieldDependantDate.addClass('ng-hide');
+//                                                                                  
+                                                                                            modelCtrl.$setValidity('constraint' + dependantDbFieldName, true);
+//                                                                                    
+                                                                                        }
+                                                                                    } else {
+                                                                                        if (constraintFieldDependantDate !== undefined) {
+                                                                                            if (constraintFieldDependantDate.hasClass('ng-hide'))
+                                                                                            {
+                                                                                                constraintFieldDependantDate.removeClass('ng-hide');
+                                                                                                modelCtrl.$setValidity('constraint' + dependantDbFieldName, false);
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+
+                                                                            } else
+                                                                            {
+                                                                                // Evaluation for other fields
+                                                                                // fieldSelfModelValue contains the model of the field itself on which constarint is applied
+                                                                                var dependantDbfieldModelValue = $scope.$eval(dependantDbFieldName);
+                                                                                if (dependantDbfieldModelValue !== null && dependantDbfieldModelValue !== undefined) {
+                                                                                    var dependantFinalConstraintString = dependantConstraintArray.toString().replace(/\,/g, "");
+                                                                                    var dependantFinalString = dependantDbfieldModelValue + dependantFinalConstraintString;
+                                                                                    try
+                                                                                    {
+                                                                                        var evaluateDependantResult = eval(dependantFinalString)
+                                                                                        var arrayOfdbfield = [];
+                                                                                        arrayOfdbfield = dependantDbFieldName.split("$");
+                                                                                        var dependantConstraintElement = angular.element(document.querySelector('#const_' + arrayOfdbfield[0]));
+                                                                                        // Apply constraint error on the dependant element
+                                                                                        if (evaluateDependantResult === true)
+                                                                                        {
+                                                                                            $scope.evaluateDependantResult = true;
+                                                                                            if (dependantConstraintElement !== undefined) {
+                                                                                                dependantConstraintElement.addClass('ng-hide');
+                                                                                                modelCtrl.$setValidity('constraint' + dependantDbFieldName, true);
+                                                                                            }
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            $scope.evaluateDependantResult = false;
+                                                                                            if (dependantConstraintElement !== undefined) {
+
+                                                                                                if (dependantConstraintElement.hasClass('ng-hide'))
+                                                                                                {
+                                                                                                    dependantConstraintElement.removeClass('ng-hide');
+                                                                                                    modelCtrl.$setValidity('constraint' + dependantDbFieldName, false);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    } catch (Exception)
+                                                                                    {
+                                                                                        $scope.evaluateDependantResult = false;
+                                                                                        if (dependantConstraintElement !== undefined) {
+                                                                                            if (dependantConstraintElement.hasClass('ng-hide'))
+                                                                                            {
+                                                                                                dependantConstraintElement.removeClass('ng-hide');
+                                                                                                modelCtrl.$setValidity('constraint' + dependantDbFieldName, false);
+                                                                                            }
+                                                                                        }
+
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    } else
+                                                                    {
+                                                                        $scope.evaluateDependantResult = true;
+                                                                        var arrayOfdbfield = [];
+                                                                        arrayOfdbfield = dependantDbFieldName.split("$");
+                                                                        var dependantConstraintElement = angular.element(document.querySelector('#const_' + arrayOfdbfield[0]));
+                                                                        if (dependantConstraintElement !== undefined) {
+                                                                            dependantConstraintElement.addClass('ng-hide');
+                                                                            modelCtrl.$setValidity('constraint' + dependantDbFieldName, true);
+                                                                        }
+
+                                                                    }
+
+                                                                }
+
+                                                            }
+                                                            if (numValueForConstraint !== undefined && numValueForConstraint !== null)
+                                                            {
+// Forward Scenario
+                                                                $scope[field.model] = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                                if ($scope[field.model] !== null && $scope[field.model] !== undefined) {
+                                                                    if (field.isConstraintOnSameFeature)
+                                                                    {
+                                                                        // For same feature
+                                                                        var dbFieldName = field.mapOfDbFieldWithItsConstraintDbField[field.model];
+                                                                        // This we use for showing message
+                                                                        var changedConstraintArray = constraintValue.split("@");
+                                                                        // Store the name of the field on which it is dependant
+                                                                        var dbFieldArray = [];
+                                                                        if (field.mapOfDbFieldWithLabelForContMsg !== undefined) {
+                                                                            var labelName = field.mapOfDbFieldWithLabelForContMsg[dbFieldName];
+//                                                            dbFieldArray = dbFieldName.split("$");
+                                                                            changedConstraintArray[changedConstraintArray.length - 1] = labelName;
+                                                                            if (changedConstraintArray.indexOf("<") > -1)
+                                                                            {
+                                                                                // < sign had an issue it was taking it as a tag so appended space with it
+                                                                                var indexLess = changedConstraintArray.indexOf("<");
+                                                                                changedConstraintArray[indexLess] = "< ";
+                                                                            }
+                                                                            if (changedConstraintArray.indexOf("===") > -1) {
+                                                                                var indexEqual = changedConstraintArray.indexOf("===");
+                                                                                changedConstraintArray[indexEqual] = "= ";
+                                                                            }
+
+                                                                            $scope[field.model + 'messageForConstraint'] = changedConstraintArray.toString().replace(/\,/g, "");
+                                                                            var divUniqueElem = document.getElementById('const_' + field.modelWithoutSeperators);
+                                                                            if (divUniqueElem !== null && divUniqueElem !== undefined) {
+
+
+                                                                                divUniqueElem.innerHTML = 'Value should be ' + $scope[field.model + 'messageForConstraint'].toString();
+                                                                            }
+                                                                            // ConstraintDbField stores the value of field on which other fields constarint are dependent
+                                                                            var ConstraintDbField = $scope[dbFieldName];
+                                                                            if (field.type === 'number')
+                                                                            {
+                                                                                $scope.instanceValueFromMongoForNumber = ConstraintDbField;
+                                                                            }
+                                                                            if (field.type === 'currency')
+                                                                            {
+                                                                                $scope.instanceValueFromMongoForCurrency = ConstraintDbField;
+                                                                            }
+                                                                            if (field.type === 'exchangeRate')
+                                                                            {
+                                                                                $scope.instanceValueFromMongoForExchangeRate = ConstraintDbField;
+                                                                            }
+                                                                            if (field.type === 'percent')
+                                                                            {
+                                                                                $scope.instanceValueFromMongoForPercent = ConstraintDbField;
+                                                                            }
+                                                                            if (field.type === 'Angle')
+                                                                            {
+                                                                                $scope.instanceValueFromMongoForAngle = ConstraintDbField;
+                                                                            }
+                                                                            if (field.type === 'date')
+                                                                            {
+                                                                                if (ConstraintDbField !== null && ConstraintDbField !== undefined) {
+                                                                                    var instanceValueFromMongoForDate = new Date(ConstraintDbField);
+                                                                                    $scope.instanceValueFromMongoForDate = instanceValueFromMongoForDate;
+                                                                                } else
+                                                                                {
+                                                                                    // This was done because after clearing also $scope.instanceValueFromMongoForDate was containing old value,since it was not going in else
+                                                                                    $scope.instanceValueFromMongoForDate = undefined;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+
+                                                                    // The watch is called and we have evaluated our entered value with the value returned by the ajax call
+
+                                                                    $scope.constraintModelValue = $scope.$eval(attrs.ngModel + "." + field.model);
+                                                                    if (field.constraintValue !== null && field.constraintValue !== undefined && $scope.constraintModelValue !== null && $scope.constraintModelValue !== undefined && $scope.constraintModelValue) {
+                                                                        if (field.type === 'number')
+                                                                        {
+                                                                            constraintArray[constraintArray.length - 1] = $scope.instanceValueFromMongoForNumber;
+                                                                        }
+                                                                        if (field.type === 'currency')
+                                                                        {
+                                                                            constraintArray[constraintArray.length - 1] = $scope.instanceValueFromMongoForCurrency;
+                                                                        }
+                                                                        if (field.type === 'exchangeRate')
+                                                                        {
+                                                                            constraintArray[constraintArray.length - 1] = $scope.instanceValueFromMongoForExchangeRate;
+                                                                        }
+                                                                        if (field.type === 'percent')
+                                                                        {
+                                                                            constraintArray[constraintArray.length - 1] = $scope.instanceValueFromMongoForPercent;
+                                                                        }
+                                                                        if (field.type === 'Angle')
+                                                                        {
+                                                                            constraintArray[constraintArray.length - 1] = $scope.instanceValueFromMongoForAngle;
+                                                                        }
+                                                                        if (field.type === 'date')
+                                                                        {
+                                                                            // $scope.instanceValueFromMongoForDate is the date coming from the server
+                                                                            if ($scope.instanceValueFromMongoForDate !== null && $scope.instanceValueFromMongoForDate !== undefined && $scope.instanceValueFromMongoForDate !== 'undefined')
+                                                                            {
+                                                                                var instanceDate = $scope.instanceValueFromMongoForDate.getDate();
+                                                                                var nextDate;
+                                                                                var finalStringDate;
+                                                                                // There are two scenarios
+                                                                                //  1. Entered Date > 5 + CustomComponentDate(array contains 5 elements withe delimiter)
+                                                                                //  2. Entered date > CustomComponenetDate(array contains 3 elements)
+                                                                                if (constraintArray.length === 5) {
+                                                                                    if (constraintArray[constraintArray.length - 2] === '+')
+                                                                                    {
+                                                                                        // constraintArray[constraintArray.length - 3] contains arithmetic operator at this index
+                                                                                        nextDate = $scope.updateDateWithHoliday($scope.instanceValueFromMongoForDate, '+', parseInt(constraintArray[constraintArray.length - 3])) + parseInt(instanceDate);
+                                                                                    }
+                                                                                    if (constraintArray[constraintArray.length - 2] === '-')
+                                                                                    {
+                                                                                        nextDate = parseInt(instanceDate) - $scope.updateDateWithHoliday($scope.instanceValueFromMongoForDate, '-', parseInt(constraintArray[constraintArray.length - 3]));
+                                                                                    }
+                                                                                    $scope.changedDate = angular.copy($scope.instanceValueFromMongoForDate);
+                                                                                    $scope.changedDate.setDate(nextDate);
+                                                                                    // At Last index fill the date with x days added
+                                                                                    constraintArray[constraintArray.length - 1] = $scope.changedDate;
+                                                                                    // finalStringDate contains "enteredDate $ RelationalOperator $ DateEvaluated(By Performing addition/subtraction of x days)
+                                                                                    finalStringDate = $scope.constraintModelValue + "$" + constraintArray[constraintArray.length - 4] + "$" + $scope.changedDate;
+                                                                                } else
+                                                                                {
+                                                                                    $scope.changedDate = angular.copy($scope.instanceValueFromMongoForDate)
+                                                                                    // For array with 3 elements we have directly "enteredDate $ RelationalOperator $ DateComingFromServer of custom component
+                                                                                    finalStringDate = $scope.constraintModelValue + "$" + constraintArray[1] + "$" + $scope.changedDate;
+                                                                                }
+
+                                                                                var finalStringDateArrray = finalStringDate.split('$');
+                                                                                var firstDate = new Date(finalStringDateArrray[0]);
+                                                                                var secondDate = new Date(finalStringDateArrray[2])
+                                                                                if (finalStringDateArrray[1] === '>') {
+                                                                                    if (firstDate > secondDate)
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = true;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = false;
+                                                                                    }
+                                                                                }
+                                                                                if (finalStringDateArrray[1] === '<') {
+                                                                                    if (firstDate < secondDate)
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = true;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = false;
+                                                                                    }
+                                                                                }
+                                                                                if (finalStringDateArrray[1] === '>=') {
+                                                                                    if (firstDate >= secondDate)
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = true;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = false;
+                                                                                    }
+                                                                                }
+                                                                                if (finalStringDateArrray[1] === '<=') {
+                                                                                    if (firstDate <= secondDate)
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = true;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = false;
+                                                                                    }
+                                                                                }
+                                                                                if (finalStringDateArrray[1] === '===') {
+
+                                                                                    if (firstDate - secondDate === 0)
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = true;
+                                                                                    } else
+                                                                                    {
+                                                                                        $scope.evaluateResultDate = false;
+                                                                                    }
+                                                                                }
+
+
+                                                                                var constraintFieldDate = angular.element(document.querySelector('#const_' + field.modelWithoutSeperators));
+                                                                                if ($scope.evaluateResultDate === true)
+                                                                                {
+                                                                                    if (constraintFieldDate !== undefined) {
+                                                                                        constraintFieldDate.addClass('ng-hide');
+                                                                                        modelCtrl.$setValidity('constraint' + field.model, true);
+                                                                                    }
+                                                                                } else {
+                                                                                    if (constraintFieldDate !== undefined) {
+                                                                                        if (constraintFieldDate.hasClass('ng-hide'))
+                                                                                        {
+                                                                                            constraintFieldDate.removeClass('ng-hide');
+                                                                                            modelCtrl.$setValidity('constraint' + field.model, false);
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+
+                                                                        else {
+                                                                            // For fields other than date
+                                                                            if ($scope.$eval(field.model).length > 0) {
+                                                                                var finalConstraintString = constraintArray.toString().replace(/\,/g, "");
+                                                                                var finalString = $scope.constraintModelValue + finalConstraintString;
+                                                                                try
+                                                                                {
+
+                                                                                    var evaluateResult = eval(finalString);
+                                                                                    var constraintField = angular.element(document.querySelector('#const_' + field.modelWithoutSeperators));
+                                                                                    if (evaluateResult === true)
+                                                                                    {
+                                                                                        $scope.evaluateResult = true;
+                                                                                        if (constraintField !== undefined) {
+                                                                                            constraintField.addClass('ng-hide');
+                                                                                            modelCtrl.$setValidity('constraint' + field.model, true);
+                                                                                        }
+
+                                                                                    }
+
+                                                                                    else
+                                                                                    {
+                                                                                        $scope.evaluateResult = false;
+                                                                                        if (constraintField !== undefined) {
+                                                                                            if (constraintField.hasClass('ng-hide'))
+                                                                                            {
+                                                                                                constraintField.removeClass('ng-hide');
+                                                                                                modelCtrl.$setValidity('constraint' + field.model, false);
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                } catch (Exception)
+                                                                                {
+                                                                                    $scope.evaluateResult = false;
+                                                                                    if (constraintField !== undefined) {
+                                                                                        if (constraintField.hasClass('ng-hide'))
+                                                                                        {
+                                                                                            constraintField.removeClass('ng-hide');
+                                                                                        }
+                                                                                    }
+
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    } else
+                                                                    {
+                                                                        var constraintField = angular.element(document.querySelector('#const_' + field.modelWithoutSeperators));
+//
+                                                                        $scope.evaluateResult = true;
+                                                                        if (constraintField !== undefined) {
+                                                                            constraintField.addClass('ng-hide');
+                                                                            modelCtrl.$setValidity('constraint' + field.model, true);
+                                                                        }
+
+                                                                    }
+                                                                } else
+                                                                {
+                                                                    // this case when i clear the input constraint should not get evaluated in forward scenario
+                                                                    var constraintField = angular.element(document.querySelector('#const_' + field.modelWithoutSeperators));
+//
+                                                                    $scope.evaluateResult = true;
+                                                                    if (constraintField !== undefined) {
+                                                                        constraintField.addClass('ng-hide');
+                                                                        modelCtrl.$setValidity('constraint' + field.model, true);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
+
+                                            // Code ends here
+
+                                            // Arbitrary attributes
+                                            if (angular.isDefined(field.attributes)) {
+                                                angular.forEach(field.attributes, function (val, attr) {
+                                                    newElement.attr(attr, val);
+                                                });
+                                            }
+                                        }
+
+                                        if (attrs.isDiamond === true) {
+                                            //  If there's a label, add it.
+                                            if (angular.isDefined(field.label)) {
+//                                        if (!attrs.viewOnly) {
+                                                //  Some elements have already applied their labels.
+                                                if (["image", "hidden"].indexOf(field.type) > -1) {
+                                                    angular.noop();
+                                                }
+                                                //  Fieldset elements put their labels in legend child elements.
+                                                else if (["fieldset"].indexOf(field.type) > -1) {
+                                                    newElement.prepend(angular.element($document[0].createElement('legend')).html(field.label));
+                                                }
+                                                //  Button elements get their labels from their contents.
+                                                else if (["button", "legend", "reset", "submit"].indexOf(field.type) > -1) {
+                                                    newElement.html('{{' + attrs.internationalizationLabel + '+\'' + field.label + '\'| translate }}');
+                                                } else {
+                                                    if (mainDiv === null) {
+                                                        mainDiv = angular.element('<td id="dv_' + field.modelWithoutSeperators + '" class="hkg-nopadding" style="width:' + supported[field.type].width + '"></td>');
+                                                    }
+
+                                                    if (field.type !== 'checkbox' && !(field.type === 'date' && field.attributes && (field.attributes.type === 'timerange' || field.attributes.type === 'datetimerange' || field.attributes.type === 'daterange'))) {
+
+                                                    } else if ((!attrs.noOfFieldPerRow || attrs.noOfFieldPerRow === 1) && field.type !== 'checkbox') {
+                                                    } else if (field.type === 'checkbox') {
+                                                        if (field.formatValue === 'before') {
+                                                            newElement = newElement.wrap('<div class="col-md-4 control-label"></div>').parent();
+                                                        } else if (field.formatValue === 'after') {
+                                                            newElement = newElement.wrap('<div class="col-md-8 control-label" style="text-align:left"></div>').parent();
+                                                        }
+                                                        newElement = newElement.wrap('<div ng-class="{\'has-error\': ' + attrs.formName + '.' + field.model + '.$invalid && (' + submitFlagName + ') }"  ></div>').parent();
+                                                    }
+                                                    if (field.type !== 'checkbox') {
+                                                        newElement = newElement.wrap('<div style="padding:2px;"  ng-class="{\'has-error\': ' + attrs.formName + '.' + field.model + '.$invalid && (' + submitFlagName + ') }" ></div>').parent();
+                                                    }
+                                                    if (field.type === 'textarea' && field.attributes && field.attributes.maxLength) {
+                                                        var textNumElement = angular.element("<div class='pull-right center'>{{" + field.attributes.maxLength + " - " + attrs.ngModel + "." + field.model + ".length}}&nbsp;  {{entity + 'characters left'| translate }}</div>");
+                                                        newElement = newElement.append(textNumElement);
+                                                        var clearfix = "<div class='clearfix'></div>";
+                                                        newElement = newElement.append(clearfix);
+                                                    }
+                                                    if (field.type === 'number' || field.type === 'percent' || field.type === 'currency' || field.type === 'exchangeRate' || field.type === 'date' || field.type === 'Angle')
+                                                    {
+                                                        var divvElement = angular.element('<div id="const_' + field.modelWithoutSeperators + '" class="text-danger error,help-block col-xs-12  ng-hide" > Invalid value constraint </div>');
+                                                        newElement = newElement.append(divvElement);
+                                                    }
+                                                    if (field.type === 'date') {
+                                                        var divElement = angular.element('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.min">' + field.label + ' violates minimum constraint </span>');
+                                                        newElement = newElement.append(divElement);
+                                                        divElement = angular.element('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.max">' + field.label + ' violates maximum constraint</span>');
+                                                        newElement = newElement.append(divElement);
+                                                        divElement = angular.element('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.date">' + field.label + ' invalid date format</span>');
+                                                        newElement = newElement.append(divElement);
+                                                        divElement = angular.element('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error[\'date-disabled\']">' + field.label + ' is a holiday</span>');
+                                                        newElement = newElement.append(divElement);
+                                                    }
+                                                    if (field.isUnique === true) {
+                                                        var divvElement = angular.element('<div id="uni_' + field.modelWithoutSeperators + '" class="text-danger error,help-block col-xs-12  ng-hide" > Value should be unique </div>');
+                                                        newElement = newElement.append(divvElement);
+
+                                                        var divElement = angular.element('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.unique">' + field.label + ' is not unique </span>');
+                                                        newElement = newElement.append(divElement);
+                                                    }
+                                                    if (field.type !== 'checkbox') {
+
+                                                        var divElement = angular.element(' <div ng-show="(' + attrs.formName + '.' + field.model + '.$dirty || ' + submitFlagName + ') && ' + attrs.formName + '.' + field.model + '.$invalid" class="error,help-block col-xs-12 " ></div>');
+                                                        if (field.type !== 'number' && field.type !== 'percent' && field.type !== 'Angle' && field.type !== 'currency' && field.type !== 'exchangeRate')
+                                                        {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.pattern">' + field.label + ' is invalid</span>');
+                                                            newElement = newElement.append(divElement);
+                                                        }
+                                                        divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.minlength">' + field.label + ' must contain at least ' + field.minLength + ' characters</span>');
+                                                        newElement = newElement.append(divElement);
+                                                        divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.maxlength">' + field.label + ' length exceeded</span>');
+                                                        newElement = newElement.append(divElement);
+                                                    }
+                                                    if (angular.isDefined(field.required) && field.required === true && field.type !== 'checkbox') {
+
+                                                        if (field.type === 'date') {
+                                                            divElement = divElement.prepend('<span class="help-block" ng-show="' +
+                                                                    attrs.formName + '.' + field.model + '.$error.required && !(' +
+                                                                    attrs.formName + '.' + field.model + '.$error.min || ' +
+                                                                    attrs.formName + '.' + field.model + '.$error.max || ' +
+                                                                    attrs.formName + '.' + field.model + '.$error.date) && ' +
+                                                                    submitFlagName + '">' + field.label + '  should not be empty</span>');
+                                                        } else {
+                                                            divElement = divElement.prepend('<span class="help-block" ng-show="' + attrs.formName + '.' + field.model + '.$error.required && ' + submitFlagName + '">' + field.label + '  should not be empty</span>');
+                                                        }
+                                                        newElement = newElement.append(divElement);
+                                                    }
+                                                    if (field.type === 'number' || field.type === 'percent' || field.type === 'Angle' || field.type === 'currency' || field.type === 'exchangeRate')
+                                                    {
+                                                        if (field.min !== undefined && field.max !== undefined) {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-show="' + attrs.formName + '.' + field.model + '.$error.min || ' + attrs.formName + '.' + field.model + '.$error.max"> Invalid value. Entered value should be between ' + field.min + ' and ' + field.max + ' </span>');
+                                                            newElement = newElement.append(divElement);
+                                                        } else
+                                                        if (field.min !== undefined) {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-show="' + attrs.formName + '.' + field.model + '.$error.min "> Invalid value. Entered value should be >=' + field.min + ' </span>');
+                                                            newElement = newElement.append(divElement);
+                                                        }
+                                                        else if (field.max !== undefined) {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-show="' + attrs.formName + '.' + field.model + '.$error.max "> Invalid value. Entered value should be <= ' + field.max + ' </span>');
+                                                            newElement = newElement.append(divElement);
+                                                        } else
+                                                        {
+
+                                                        }
+                                                        if (field.digitsBeforeDecimal !== undefined && field.digitsAfterDecimal !== undefined)
+                                                        {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.pattern">' + field.label + ' is invalid.Digits before decimal should be' + field.digitsBeforeDecimal + ' and after decimal should be ' + field.digitsAfterDecimal + '</span>');
+                                                            newElement = newElement.append(divElement);
+                                                        }
+                                                        else
+                                                        if (field.digitsBeforeDecimal !== undefined)
+                                                        {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.pattern">' + field.label + ' is invalid.No decimal allowed.Only ' + field.digitsBeforeDecimal + ' digits allowed.</span>');
+                                                            newElement = newElement.append(divElement);
+                                                        } else if (field.digitsAfterDecimal !== undefined)
+                                                        {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.pattern">' + field.label + ' is invalid.Digits after decimal should be' + field.digitsAfterDecimal + '</span>');
+                                                            newElement = newElement.append(divElement);
+                                                        } else
+                                                        {
+                                                            divElement = divElement.prepend('<span class="text-danger"  ng-if="' + attrs.formName + '.' + field.model + '.$error.pattern">' + field.label + ' is invalid.');
+                                                            newElement = newElement.append(divElement);
+                                                        }
+
+                                                    }
+
+                                                    if (field.type !== 'checkbox') {
+                                                        if (attrs.viewOnly)
+                                                        {
+                                                            newElement = newElement.wrap('<div  id="dv_view_' + field.modelWithoutSeperators + '" style="padding-left:0px;padding-right:0px " ></div>').parent();
+                                                        }
+//                                                        else if (field.type == 'date') {
+//                                                            newElement = newElement.wrap('<div  id="dv_' + field.modelWithoutSeperators
+//                                                                    + '" style="padding-left:0px;padding-right:0px;position: absolute;width:' + supported[field.type].width + '" ></div>').parent();
+//                                                        }
+                                                        else {
+                                                            newElement = newElement.wrap('<div  id="dv_' + field.modelWithoutSeperators
+                                                                    + '" style="padding-left:0px;" ></div>').parent();
+                                                        }
+                                                        if (field.isDependant)
+                                                        {
+                                                            newElement.addClass('ng-hide');
+                                                        }
+                                                        else
+                                                        {
+                                                            if (newElement.hasClass('ng-hide'))
+                                                            {
+                                                                newElement.removeClass('ng-hide');
+                                                            }
+
+                                                        }
+                                                    }
+
+                                                    if (angular.isDefined(field.required) && field.required === true) {
+                                                        if (field.type === 'checkbox') {
+                                                            if (field.formatValue === "before") {
+                                                                var element = angular.element('<div class="col-md-8 control-label " style="text-align:left"></div>');
+                                                                var labelElement = angular.element('<label for="' + field.model + '"></label>');
+                                                                var wrapElement;
+                                                                if (angular.isDefined(field.hint) && field.hint.length > 0) {
+                                                                    var hintElement = angular.element('<span class="glyphicon glyphicon-question-sign"  tooltip=" ' + field.hint + ' " tooltip-trigger="mouseenter" tooltip-placement="right"></span>');
+//                                                                 
+                                                                    wrapElement = hintElement.wrap('<div></div>').parent();
+                                                                    labelElement.css("display", "inline");
+                                                                }
+                                                                if (attrs.viewOnly === false) {
+                                                                    var elementAsterik = angular.element('<span style="color:red"></span');
+                                                                    elementAsterik = elementAsterik.append('&nbsp;*');
+                                                                    labelElement = labelElement.append(elementAsterik);
+                                                                }
+                                                                labelElement = labelElement.append('&nbsp;{{' + attrs.internationalizationLabel + '+\'' + field.label + '\'| translate }}');
+                                                                labelElement = labelElement.append(labelTooltipElement);
+                                                                if (angular.isDefined(wrapElement)) {
+                                                                    labelElement = wrapElement.append(labelElement);
+                                                                }
+                                                                element = element.append(labelElement);
+                                                                newElement = newElement.append(element);
+                                                            } else if (field.formatValue === "after") {
+                                                                var element = angular.element('<div class="col-md-4 control-label "></div>');
+                                                                var labelElement = angular.element('<label for="' + field.model + '"></label>');
+                                                                var wrapElement;
+                                                                if (angular.isDefined(field.hint) && field.hint.length > 0) {
+                                                                    var hintElement = angular.element('<span class="glyphicon glyphicon-question-sign"  tooltip=" ' + field.hint + ' " tooltip-trigger="mouseenter" tooltip-placement="right"></span>');
+//                                                                 
+                                                                    wrapElement = hintElement.wrap('<div></div>').parent();
+                                                                    labelElement.css("display", "inline");
+                                                                }
+                                                                if (attrs.viewOnly === false) {
+                                                                    var elementAsterik = angular.element('<span style="color:red"></span');
+                                                                    elementAsterik = elementAsterik.append('&nbsp;*');
+                                                                    labelElement = labelElement.append(elementAsterik);
+                                                                }
+                                                                labelElement = labelElement.append('&nbsp;{{' + attrs.internationalizationLabel + '+\'' + field.label + '\'| translate }}');
+                                                                labelElement = labelElement.append(labelTooltipElement);
+                                                                if (angular.isDefined(wrapElement)) {
+                                                                    labelElement = wrapElement.append(labelElement);
+                                                                }
+                                                                element = element.append(labelElement);
+                                                                newElement = newElement.prepend(element);
+                                                            }
+                                                            var clearfixElement = angular.element(' <div class="clearfix"></div>');
+                                                            newElement = newElement.append(clearfixElement);
+                                                            var divElement = angular.element(' <div ng-show="(' + attrs.formName + '.' + field.model + '.$dirty || ' + submitFlagName + ') && ' + attrs.formName + '.' + field.model + '.$invalid" class="error,help-block col-xs-12 " style="position: relative;left: 38%;" ></div>');
+                                                            divElement = divElement.prepend('<span class="help-block" ng-show="' + attrs.formName + '.' + field.model + '.$error.required && ' + submitFlagName + '">' + field.label + '  should not be empty</span>');
+                                                            newElement = newElement.append(divElement);
+                                                        } else {
+                                                            var labelElement = angular.element('<label for="' + field.model + '" class="col-md-4 control-label" style="text-align:left"></label>')
+                                                            var wrapElement;
+                                                            if (angular.isDefined(field.hint) && field.hint.length > 0) {
+                                                                var hintElement = angular.element('<span class="glyphicon glyphicon-question-sign"  tooltip=" ' + field.hint + ' " tooltip-trigger="mouseenter" tooltip-placement="right"></span>');
+                                                                if (labelElement.hasClass('col-md-4')) {
+                                                                    wrapElement = hintElement.wrap('<div class="col-md-4 text-right"></div>').parent();
+                                                                    labelElement.removeClass('col-md-4');
+                                                                }
+                                                                if (labelElement.hasClass('col-md-12')) {
+                                                                    wrapElement = hintElement.wrap('<div class="col-md-12"></div>').parent();
+                                                                    labelElement.removeClass('col-md-12');
+                                                                }
+                                                                labelElement.css("display", "inline");
+                                                            }
+                                                        }
+                                                    }
+                                                    else {
+                                                        if (field.type === 'checkbox') {
+                                                            if (field.formatValue === "before") {
+                                                                newElement = newElement.append(element);
+                                                            } else if (field.formatValue === "after") {
+                                                                newElement = newElement.prepend(element);
+                                                            }
+                                                        }
+                                                    }
+                                                    if (field.type === 'checkbox') {
+                                                        if (attrs.viewOnly) {
+                                                            newElement = newElement.wrap('<div  id="dv_view_' + field.modelWithoutSeperators + '" class="col-lg-6 col-md-6 col-xs-12" style="padding-left:0px;padding-right:0px "></div>').parent();
+                                                        } else {
+                                                            newElement = newElement.wrap('<div  id="dv_' + field.modelWithoutSeperators + '" class="col-lg-6 col-md-6 col-xs-12" style="padding-left:0px;padding-right:0px "></div>').parent();
+                                                        }
+                                                        if (field.isDependant)
+                                                        {
+                                                            newElement.addClass('ng-hide');
+                                                        }
+                                                        else
+                                                        {
+                                                            if (newElement.hasClass('ng-hide'))
+                                                            {
+                                                                newElement.removeClass('ng-hide');
+                                                            }
+
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (template.length == (id + 1)) {
+//                                                ////console.log(newElement.find("input").bind());
+                                            }
+                                            mainDiv = mainDiv.append(newElement);
+                                            this.append(mainDiv);
+                                            mainDiv = null;
+                                            newElement = null;
+                                        }
+                                    }
+                                }
+                            };
+                            angular.forEach(template, buildFields, element);
+                            //  Determine what tag name to use (ng-form if nested; form if outermost)
+                            while (!angular.equals(iterElem.parent(), $document) && iterElem.parent().length) {
+                                if (['form', 'ngForm'].indexOf(attrs.$normalize(angular.lowercase(iterElem.parent()[0].nodeName))) > -1) {
+                                    foundOne = true;
+                                    break;
+                                }
+                                iterElem = iterElem.parent();
+                            }
+                            if (foundOne) {
+                                newElement = angular.element($document[0].createElement('tr'));
+                                newElement.attr("ng-form", attrs.formName);
+                                attrs.isDefaultGridController = true;
+                            }
+                            else {
+                                newElement = angular.element("<form></form>");
+                            }
+
+                            //  Psuedo-transclusion
+                            angular.forEach(attrs.$attr, function (attName, attIndex) {
+                                newElement.attr(attName, attrs[attIndex]);
+                            });
+                            newElement.attr('model', attrs.ngModel);
+//                            newElement.removeAttr('ng-model');
+                            angular.forEach(element[0].classList, function (clsName) {
+                                newElement[0].classList.add(clsName);
+                            });
+                            newElement.addClass('dynamic-form-grid');
+                            newElement.append(element.contents());
+                            newElement.append(
+                                    hiddenSaveBtnElement);
+
+                            //  onReset logic
+                            newElement.data('$_cleanModel', angular.copy(model));
+                            newElement.bind('reset', function () {
+                                $timeout(function () {
+                                    $scope.$broadcast('reset', arguments);
+                                }, 0);
+                            });
+                            $scope.$on('reset', function () {
+                                $scope.$apply(function () {
+                                    $scope[attrs.ngModel] = {};
+                                });
+                                $scope.$apply(function () {
+                                    $scope[attrs.ngModel] = angular.copy(newElement.data('$_cleanModel'));
+                                });
+                            });
+                            //  Compile and update DOM
+                            $compile(newElement)($scope);
+                            element.replaceWith(newElement);
+                        }
+                        );
+                    }
+                    setTimeout(function () {
+                        dependantView();
+                    }, 500);
+                };
+                render();
+                var dependantView = function () {
+                    angular.forEach(dependentIdsToBeViewed, function (viewIds)
+                    {
+                        var fieldToBeVisible = angular.element(document.querySelector(viewIds));
+                        if (fieldToBeVisible.hasClass('ng-hide'))
+                        {
+                            fieldToBeVisible.removeClass('ng-hide');
+                        }
+                    });
+                    if (colorElementsForUISelect !== null && colorElementsForUISelect !== undefined)
+                    {
+                        angular.forEach(colorElementsForUISelect, function (colorElements)
+                        {
+                            var colorArray = [];
+                            colorArray = colorElements.split("~@~");
+                            var fieldName = "#s2id_" + colorArray[0] + " ul";
+                            var colorCode = colorArray[1];
+                            $(fieldName).css('background-color', colorCode);
+                        })
+
+                    }
+                    ;
+                };
+                function isFloat(n) {
+                    ////console.log("n" + n);
+                    ////console.log("1..." + Number(n) + "2..." + n % 1);
+                    try {
+                        if (!isNaN(n) && n % 1 !== 0) {
+                            ////console.log("setting true")
+                            return true;
+                        }
+                        else {
+                            ////console.log("else me")
+                            return false;
+                        }
+                    } catch (exc)
+                    {
+                        return false;
+                    }
+                }
+                ;
+                // Rounding numbers to n decimal places
+                function round(value, places) {
+                    //console.log("val" + value + "places" + places)
+                    var multiplier = Math.pow(10, places);
+
+                    return (Math.round(value * multiplier) / multiplier);
+                }
+
+                //Get new constraint value with holidays considered.
+                $scope.updateDateWithHoliday = function (date, operator, operationValue) {
+                    if (date !== null && date !== undefined) {
+                        //////console.log("date" + date + "--op" + operator + "===val--" + operationValue)
+                        var instanceDate = new Date(date);
+                        //////console.log("instance date before..." + instanceDate)
+                        if (operator === '+') {
+                            //////console.log("in +" + date.getDate() + "----" + operationValue)
+                            instanceDate.setDate(date.getDate() + parseInt(operationValue));
+                            //////console.log("instanceeeeeeee" + instanceDate)
+                            //////console.log('date----' + date + '****' + instanceDate);
+                            //////console.log("holiday list,,," + $scope.holidayList)
+//                        if ($scope.holidayList !== undefined && $scope.holidayList !== null) {
+                            var k = new Date(date);
+                            while (k <= instanceDate) {
+
+                                //Check if k is a holiday
+                                var isAHoliday = false;
+                                var month = k.getMonth() + 1; //months from 1-12
+                                var day = k.getDate();
+                                var year = k.getFullYear();
+                                if ($scope.holidayList !== null && $scope.holidayList !== undefined) {
+                                    for (var j = 0; j < $scope.holidayList.length; j++) {
+                                        var month1 = $scope.holidayList[j].getMonth() + 1; //months from 1-12
+                                        var day1 = $scope.holidayList[j].getDate();
+                                        var year1 = $scope.holidayList[j].getFullYear();
+                                        if (month === month1 && day === day1 && year === year1) {
+                                            isAHoliday = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                //////console.log("is Holiday..." + isAHoliday + "--dyyyy" + k.getDay())
+                                if (isAHoliday || k.getDay() === 0) {
+                                    operationValue++;
+                                    instanceDate.setDate(instanceDate.getDate() + 1);
+                                }
+
+                                k.setDate(k.getDate() + 1);
+                            }
+//                        }
+                            //////console.log('operationValue999---' + operationValue);
+                        }
+                        if (operator === '-') {
+                            instanceDate.setDate(date.getDate() - operationValue);
+//                        //////console.log('date----'+date+'****'+instanceDate);
+//                        if ($scope.holidayList !== undefined && $scope.holidayList !== null) {
+                            var k = new Date(date);
+                            while (k >= instanceDate) {
+
+                                //Check if k is a holiday
+                                var isAHoliday = false;
+                                var month = k.getMonth() + 1; //months from 1-12
+                                var day = k.getDate();
+                                var year = k.getFullYear();
+                                if ($scope.holidayList !== null && $scope.holidayList !== undefined) {
+                                    for (var j = 0; j < $scope.holidayList.length; j++) {
+                                        var month1 = $scope.holidayList[j].getMonth() + 1; //months from 1-12
+                                        var day1 = $scope.holidayList[j].getDate();
+                                        var year1 = $scope.holidayList[j].getFullYear();
+                                        if (month === month1 && day === day1 && year === year1) {
+                                            isAHoliday = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (isAHoliday || k.getDay() === 0) {
+                                    operationValue++;
+                                    instanceDate.setDate(instanceDate.getDate() - 1);
+                                }
+
+                                k.setDate(k.getDate() - 1);
+                            }
+//                        }
+                            //////console.log('operationValue---' + operationValue);
+                        }
+                        return operationValue;
+                    }
+                };
+            };
+            return {
+                restrict: 'A',
+//                transclude: false,
+                require: ['^form', 'ngModel'],
+                link: link
+
+            };
+        }
+    ]);
+    //  Not a fan of how Angular's ngList is implemented, so here's a better one (IMO).  It will ONLY
+    //  apply to <dynamic-form-grid> child elements, and replaces the ngList that ships with Angular.
+    globalProvider.compileProvider.directive('ngList', [function () {
+            return {
+                require: '?ngModel',
+                link: function (scope, element, attr, ctrl) {
+                    var match = /\/(.*)\//.exec(element.attr(attr.$attr.ngList)),
+                            separator = match && new RegExp(match[1]) || element.attr(attr.$attr.ngList) || ',';
+                    if (element[0].form !== null && !angular.element(element[0].form).hasClass('dynamic-form-grid')) {
+                        return;
+                    }
+
+                    ctrl.$parsers.splice(0, 1);
+                    ctrl.$formatters.splice(0, 1);
+                    ctrl.$parsers.push(function (viewValue) {
+                        var list = [];
+                        if (angular.isString(viewValue)) {
+                            //  Don't have Angular's trim() exposed, so let's simulate it:
+                            if (String.prototype.trim) {
+                                angular.forEach(viewValue.split(separator), function (value) {
+                                    if (value)
+                                        list.push(value.trim());
+                                });
+                            }
+                            else {
+                                angular.forEach(viewValue.split(separator), function (value) {
+                                    if (value)
+                                        list.push(value.replace(/^\s*/, '').replace(/\s*$/, ''));
+                                });
+                            }
+                        }
+
+                        return list;
+                    });
+                    ctrl.$formatters.push(function (val) {
+                        var joinBy = angular.isString(separator) && separator || ', ';
+                        if (angular.isArray(val)) {
+                            return val.join(joinBy);
+                        }
+
+                        return undefined;
+                    });
+                }
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('FileUploadGridController', ["$rootScope", "$scope",
+        "fileuploadservice", "fileuploadservicemaster", "$attrs","$parse", function ($rootScope, $scope,
+                fileuploadservice, fileuploadservicemaster, attrs,$parse) {
+            $scope.defineLabel = function (isDiamond)
+            {
+                $scope.isDiamond = isDiamond;
+            };
+            $scope.UploadedFiles = [];
+            $scope.addFileToArray = function (fileName) {
+                $rootScope.uploadingFiles.fileName.push(fileName);
+            };
+            $scope.removeFileFromArray = function (fileName) {
+                var index = $rootScope.uploadingFiles.fileName.indexOf(fileName);
+                $rootScope.uploadingFiles.fileName.splice(index, 1);
+            };
+            $scope.fileAdded = function (file, flow, filetype, maxsize, singleFile, parent, modelName) {
+                if (!filetype || !!filetype[file.getExtension()]) {
+                    if (!maxsize || maxsize > file.size) {
+                        if (parent && modelName) {
+                            if ($scope.$eval(parent + "." + modelName)) {
+                                var fileList = $scope.$eval(parent + "." + modelName);
+                                for (var i = 0; i < fileList.length; i++) {
+                                    var fileSavedName = fileList[i];
+                                    if (fileSavedName.indexOf(file.name) > -1)
+                                    {
+                                        alert("file name(" + file.name + ") already exist")
+                                        $scope.InvalidFileFlag = true;
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        $scope.InvalidFileFlag = false;
+                        $scope.addFileToArray(file.name);
+                        if (singleFile) {
+
+                            $scope.flag = true;
+                        }
+                        return true;
+                    }
+                    else {
+                        alert(file.name + " has invalid size.. max upload size is " + (maxsize / (1024 * 1024)) + " MB");
+                        $scope.InvalidFileFlag = true;
+                        return false;
+                    }
+                } else {
+                    $scope.allowedFiles = [];
+                    if (!!filetype) {
+                        for (var key in filetype)
+                        {
+                            $scope.allowedFiles.push(key);
+                        }
+
+                        alert(file.name + " has invalid extension " + file.getExtension() + "\n\extension allowed are : " + $scope.allowedFiles.toString() + " .");
+                    }
+                    $scope.InvalidFileFlag = true;
+                    return false;
+                }
+            };
+            $scope.fileError = function (file, message)
+            {
+                $scope.removeFileFromArray(file.name);
+            };
+            $scope.fileSuccess = function (file, flow, modelName, parent, singleFile) {
+                if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                {
+                    fileSuccessDynamic(fileuploadservice, file, flow, modelName, parent, singleFile);
+                } else
+                {
+                    fileSuccessDynamic(fileuploadservicemaster, file, flow, modelName, parent, singleFile);
+                }
+                
+            };
+            var fileSuccessDynamic = function (fileuploadservice, file, flow, modelName, parent, singleFile) {
+                var info = [file.name, modelName];
+                fileuploadservice.uploadFiles(info, function (result) {
+                    console.log("result:::"+JSON.stringify(result) +"---------"+file.name)
+                    if (result.res) {
+                        if (singleFile) {
+                            $scope.UploadedFiles = [result.res];
+                            var finalModelVal = $parse(parent + "." + modelName);
+                            finalModelVal.assign($scope, [result.res]);
+//                            $scope[parent][modelName] = [result.res];
+                        }
+                        else {
+                            console.log("else::::::::"+$scope.$eval(parent + "." + modelName))
+                            if (!$scope.UploadedFiles) {
+                                $scope.UploadedFiles = [];
+                            }
+                            if (!$scope.$eval(parent + "." + modelName)) {
+                                var finalModelVal = $parse(parent + "." + modelName);
+                                finalModelVal.assign($scope, []);
+//                                $scope[parent][modelName] = [];
+                            }
+                            $scope.UploadedFiles.push(result.res);
+                            var modelVal=[];
+                            modelVal=   $scope.$eval(parent + "." + modelName);
+                            modelVal.push(result.res);
+                            console.log("modelVall...."+modelVal);
+                            var finalModelVal = $parse(parent + "." + modelName);
+                                finalModelVal.assign($scope, modelVal);
+                            
+                        }
+                        $scope.validUploadFlag = true;
+                    }
+                    if (result.bytecode)
+                    {
+
+                        $scope.bytecode = result.bytecode;
+                    }
+                    else {
+                        $scope.validUploadFlag = false;
+                    }
+                    $scope.removeFileFromArray(file.name);
+                    file.cancel();
+                    if (singleFile) {
+
+                        $scope.flag = false;
+                    }
+                });
+            };
+            $scope.fileProgress = function () {
+            };
+            $scope.removeLink = function (fileName, modelName, parent, singleFile) {
+                var fileList = $scope.$eval(parent + "." + modelName);
+                var index = fileList.indexOf(fileName);
+                fileList.splice(index, 1);
+                if (fileList.length === 0) {
+                    var finalModelVal = $parse(parent + "." + modelName);
+                    finalModelVal.assign($scope, undefined);
+//                    $scope[parent][modelName] = undefined;
+                }
+                else {
+                    var finalModelVal = $parse(parent + "." + modelName);
+                    finalModelVal.assign($scope, fileList);
+//                    $scope[parent][modelName] = fileList;
+                }
+                var info = [fileName, modelName];
+                if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                {
+                    fileuploadservice.cancelFile(info);
+                } else
+                {
+                    fileuploadservicemaster.cancelFile(info);
+                }
+                if (singleFile) {
+                    $scope.flag = false;
+                }
+            };
+            $scope.remove = function (file, modelName, parent, singleFile) {
+                file.cancel();
+                var newFileList = $scope[parent][modelName];
+                if (newFileList !== undefined) {
+                    for (var i = 0; i < newFileList.length; i++) {
+                        var fileSavedName = newFileList[i];
+                        if (fileSavedName.indexOf(file.name) > -1)
+                        {
+                            $scope[parent][modelName].splice(i, 1);
+                        }
+                    }
+                }
+                if ($scope.UploadedFiles) {
+                    var fileslist = $scope.UploadedFiles;
+                    var info = [];
+                    var flag = false;
+                    if (fileslist !== undefined) {
+                        for (var i = 0; i < fileslist.length; i++) {
+                            var fileSavedName = fileslist[i];
+                            if (fileSavedName.indexOf(file.name) > -1)
+                            {
+                                $scope.UploadedFiles.splice(i, 1);
+                                info = [fileSavedName, modelName];
+                                flag = true;
+                            }
+                        }
+                        if (flag === false) {
+                            info = [file.name, modelName];
+                        }
+                    }
+                }
+
+                if ($scope.$eval(parent + "." + modelName)) {
+                    if ($scope.$eval(parent + "." + modelName).length === 0) {
+                        var finalModelVal = $parse(parent + "." + modelName);
+                    finalModelVal.assign($scope, undefined);
+//                        $scope[parent][modelName] = undefined;
+                    }
+                }
+                $scope.removeFileFromArray(file.name);
+                if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                {
+                    fileuploadservice.cancelFile(info);
+                } else
+                {
+                    fileuploadservicemaster.cancelFile(info);
+                }
+                if (singleFile) {
+                    $scope.flag = false;
+                }
+                if ($scope.UploadedFiles.length === 0)
+                {
+                    $scope[parent][modelName] = undefined;
+                }
+            };
+            $scope.cancel = function (flow, modelName, parent) {
+                flow.cancel();
+                if ($scope.$eval(parent + "." + modelName)) {
+                    for (var i = 0; i < $scope.UploadedFiles.length; i++) {
+                        var fileSavedName = $scope.UploadedFiles[i];
+                        var index = $scope.$eval(parent + "." + modelName).indexOf(fileSavedName);
+                        $scope.$eval(parent + "." + modelName).splice(index, 1);
+                    }
+                    ;
+                }
+
+                var temp;
+                var fileslist = $scope.UploadedFiles;
+                if (fileslist.length > 0) {
+                    temp = fileslist.concat(modelName);
+                }
+                else {
+                    temp = [modelName];
+                }
+                $scope.UploadedFiles = [];
+                $rootScope.uploadingFiles.fileName = [];
+                if ($scope.isDiamond == true || $scope.isDiamond == 'true')
+                {
+                    fileuploadservice.cancelAll(temp);
+                } else
+                {
+                    fileuploadservice.cancelAll(temp);
+                }
+            };
+            $scope.pause = function (file) {
+                file.pause();
+            };
+            $scope.resume = function (file) {
+                file.resume();
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('DefaultGridController', ["$rootScope", "$scope",
+        "CenterCustomFieldService", "$attrs", "CustomHolidayService", "CenterCustomHolidayService", function ($rootScope, $scope,
+                CenterCustomFieldService, attrs, CustomHolidayService, CenterCustomHolidayService) {
+            $scope.isEditBtn = true;
+            $scope.defineLabel = function (fieldModel, featureName, isDiamond, editFlag, isDate, skipHolidays)
+            {
+                $scope.model = fieldModel;
+                $scope.featureName = featureName;
+                $scope.isDiamond = isDiamond;
+                $scope.isEditMode = editFlag;
+                if (isDate === "true" && (skipHolidays === true || skipHolidays === "true")) {
+                    var holidayService;
+                    if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                        holidayService = CenterCustomHolidayService;
+                    } else {
+                        holidayService = CustomHolidayService;
+                    }
+                    //Retrieve holiday list in order to disable date fields.
+                    holidayService.retrieveAllHoliday(function (response) {
+                        $scope.holidayList = [];
+                        if (response.data !== null && response.data !== undefined) {
+                            angular.forEach(response.data, function (date) {
+                                $scope.holidayList.push(new Date(date));
+                            });
+                        }
+                    }, function (res) {
+                    });
+                }
+
+            };
+            $scope.checkUniqueness = function (value, element) {
+                element.$setValidity('unique', true);
+                if (($scope.isDiamond === true || $scope.isDiamond === 'true') && value !== undefined) {
+                    var payload = {};
+                    payload.fieldModel = $scope.model;
+                    payload.featureName = $scope.featureName;
+                    payload.fieldValue = value;
+                    payload.isEditMode = ($scope.isEditMode === true || $scope.isEditMode === 'true') ? true : false;
+                    CenterCustomFieldService.checkUniqueness(payload, function (response) {
+                        if (response.data === false) {
+                            element.$setValidity('unique', false);
+                        }
+                    }, function (response) {
+                    });
+                }
+            };
+
+        }
+    ]);
+    globalProvider.controllerProvider.register('ImageUploadGridController', ["$rootScope", "$scope", "$parse",
+        "fileuploadservice", "fileuploadservicemaster", "$attrs", function ($rootScope, $scope, $parse,
+                fileuploadservice, fileuploadservicemaster, attrs) {
+            $scope.defineLabel = function (isDiamond)
+            {
+                $scope.isDiamond = isDiamond;
+            };
+            $scope.UploadedFiles = [];
+            $scope.addFileToArray = function (fileName) {
+                $rootScope.uploadingFiles.fileName.push(fileName);
+            };
+            $scope.removeFileFromArray = function (fileName) {
+                var index = $rootScope.uploadingFiles.fileName.indexOf(fileName);
+                $rootScope.uploadingFiles.fileName.splice(index, 1);
+            };
+            $scope.fileAdded = function (file, flow, filetype, maxsize, singleFile) {
+                if (!filetype || !!filetype[file.getExtension()]) {
+                    if (!maxsize || maxsize > file.size) {
+                        $scope.InvalidFileFlag = false;
+                        $scope.addFileToArray(file.name);
+                        return true;
+                    }
+                    else {
+                        alert(file.name + " has invalid size.. max upload size is " + (maxsize / (1024 * 1024)) + " MB");
+                        $scope.InvalidFileFlag = true;
+                        return false;
+                    }
+                } else {
+                    alert(file.name + "has invalid extension " + file.getExtension());
+                    $scope.InvalidFileFlag = true;
+                    return false;
+                }
+            };
+            $scope.fileError = function (file, message)
+            {
+                $scope.removeFileFromArray(file.name);
+            }
+            ;
+            $scope.fileSuccess = function (file, flow, modelName, parent, singleFile) {
+                if ($scope.isDiamond == true || $scope.isDiamond == 'true')
+                {
+                    fileSuccessDynamic(fileuploadservice, file, flow, modelName, parent, singleFile);
+                } else
+                {
+                    fileSuccessDynamic(fileuploadservicemaster, file, flow, modelName, parent, singleFile);
+                }
+            };
+            var fileSuccessDynamic = function (fileuploadserviceArgs, file, flow, modelName, parent, singleFile) {
+                var info = [file.name, modelName];
+                fileuploadserviceArgs.uploadFiles(info, function (result) {
+                    if (result.res) {
+                        $scope.UploadedFiles = [result.res];
+                        $scope.validUploadFlag = true;
+                    }
+                    else {
+                        $scope.validUploadFlag = false;
+                    }
+//                    //console.log('parent :: '+ $scope[parent][modelName]);
+//                    //console.log('parent :: '+ $scope[parent][modelName]);
+                    var finalModelVal = $parse(parent + "." + modelName);
+                    finalModelVal.assign($scope, $scope.UploadedFiles);
+//                    $scope.eval(parent + "." + modelName) = $scope.UploadedFiles;
+                    $scope.removeFileFromArray(file.name);
+                    file.cancel();
+                });
+            };
+            $scope.fileProgress = function () {
+            };
+            $scope.remove = function (modelName, parent) {
+                var file = $scope[parent][modelName];
+                if ($scope.isDiamond == true || $scope.isDiamond == 'true')
+                {
+                    fileuploadservice.removeImageFile(file.toString());
+                } else
+                {
+                    fileuploadservicemaster.removeImageFile(file.toString());
+                }
+                $scope[parent][modelName] = undefined;
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('MultiSelectGridController', ["$rootScope", "$scope", "$parse",
+        "DynamicMasterService", "DynamicCenterMasterService", function ($rootScope, $scope, $parse,
+                DynamicMasterService, DynamicCenterMasterService) {
+
+            $scope.defineLabel = function (label, model, attribute, defaultValue, isDiamond, fieldId,displayShortcutCode)
+            {
+                $scope.defaultValue = defaultValue;
+                $scope.model = model;
+                $scope.attribute = attribute;
+                $scope.fieldLabel = label;
+                $scope.isDiamond = isDiamond;
+                $scope.fieldId = fieldId;
+                $scope.displayShortcutCode = displayShortcutCode;
+            };
+            $scope.autoComplete = {
+                multiple: true,
+                closeOnSelect: false,
+                placeholder: 'Select',
+                initSelection: function (element, callback) {
+//                    $rootScope.maskLoading();
+                    setTimeout(function () {
+
+                        $scope.defaultList = [];
+                        $scope.initList = [];
+                        $scope.names = [];
+                        var attrs = $scope.attribute;
+                        var model = $scope.model;
+                        if ($scope.$eval(attrs + "." + model) !== null && $scope.$eval(attrs + "." + model) !== undefined && $scope.$eval(attrs + "." + model).length > 0) {
+                            $scope.dataModel = $scope.$eval(attrs + "." + model).replace(/&/g, ',');
+                        }
+                        if ($scope.dataModel !== undefined)
+                        {
+                            var success = function (response) {
+
+                                if (response.data !== null && response.data !== undefined) {
+
+                                    angular.forEach(response.data, function (response)
+                                    {
+                                        var displayElement;
+                                        if ($scope.displayShortcutCode === true || $scope.displayShortcutCode === 'true')
+                                        {
+                                            displayElement = parseInt(response.shortcutCode) + "-" + response.label;
+                                        } else
+                                        {
+                                            displayElement = response.label;
+                                        }
+                                        $scope.names.push({
+                                            id: parseInt(response.value),
+                                            text: displayElement
+                                        });
+                                    });
+                                }
+                                if ($scope.dataModel !== undefined && $scope.dataModel !== 'undefined' && $scope.dataModel.length > 0) {
+                                    var tempdata = angular.copy($scope.dataModel);
+                                    ;
+                                    var temp = $scope.dataModel.split(',');
+                                    if (temp !== undefined) {
+                                        for (var i = 0; i < $scope.names.length; i++)
+                                        {
+                                            for (var a in temp) {
+                                                if (temp[a].trim().toString() === $scope.names[i].id.toString())
+                                                {
+                                                    $scope.initList.push($scope.names[i]);
+                                                }
+                                            }
+                                        }
+                                        var initValue = [];
+                                        angular.forEach($scope.initList, function (recipient) {
+                                            initValue.push({id: recipient.id,
+                                                text: recipient.text,
+                                            });
+                                        });
+                                        callback(initValue);
+                                        var finalModelVal = $parse(attrs + "." + model);
+                                        finalModelVal.assign($scope, tempdata)
+                                    }
+                                }
+
+
+//                                $rootScope.unMaskLoading();
+                            };
+                            var failure = function () {
+//                                $rootScope.unMaskLoading();
+                            };
+                            if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                // Call center methods
+                                DynamicCenterMasterService.retrieveAllValuesForMasters({primaryKey: $scope.fieldId}, success, failure);
+                            } else
+                            {
+                                // Call master methods
+                                DynamicMasterService.retrieveAllValuesForMasters({primaryKey: $scope.fieldId}, success, failure);
+                            }
+                        }
+//                        $rootScope.unMaskLoading();
+                    },
+                            500);
+                },
+                formatResult: function (item) {
+
+                    return item.text;
+                },
+                formatSelection: function (item) {
+
+                    return item.text;
+                },
+                query: function (query) {
+                    $scope.names = [];
+                    var success = function (response) {
+
+
+                        if (response.data !== null && response.data !== undefined) {
+
+                            angular.forEach(response.data, function (response)
+                            {
+                                var displayElement;
+                                        if ($scope.displayShortcutCode === true || $scope.displayShortcutCode === 'true')
+                                        {
+                                            displayElement = parseInt(response.shortcutCode) + "-" + response.label;
+                                        } else
+                                        {
+                                            displayElement = response.label;
+                                        }
+                                        $scope.names.push({
+                                            id: parseInt(response.value),
+                                            text: displayElement
+                                        });
+                            });
+                        }
+                        query.callback({
+                            results: $scope.names
+                        });
+                    };
+                    var failure = function () {
+                    };
+                    var searchterm = query.term.trim();
+                    var searchDetail = [$scope.fieldId, searchterm];
+                    if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                        // Call center methods
+                        DynamicCenterMasterService.retrieveAllValuesForMastersFrMultiSelect(searchDetail, success, failure);
+                    } else
+                    {
+                        // Call master methods
+
+                        DynamicMasterService.retrieveAllValuesForMastersFrMultiSelect(searchDetail, success, failure);
+                    }
+
+                }
+
+            }
+
+        }
+    ]);
+    globalProvider.controllerProvider.register('UserMultiSelectGridController', ["$rootScope", "$scope", "$parse", "UserManagementService", "CenterCustomFieldService", function ($rootScope, $scope, $parse,
+                UserManagementService, CenterCustomFieldService) {
+
+            $scope.isEmp = false;
+            $scope.isDep = false;
+            $scope.isDeg = false;
+            $scope.isFran = false;
+            $scope.defineLabel = function (isEmployee, isDepartment, isDesignation, isFranchise, model, isMulti, attr, isDiamond, showParamFrEmp, deptList, desgList)
+            {
+                //                        $scope.numberSeleccted = 1;
+                $scope.model = model;
+                $scope.attribute = attr;
+                var dep = null;
+                var emp = null;
+                var desg = null;
+                var fran = null;
+                $scope.isDiamond = isDiamond;
+                if (isEmployee === true || isEmployee === 'true') {
+                    $scope.isEmp = true;
+                    emp = "<tr>\n\<td >'@E' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Employees</td>\n\</tr>";
+                }
+                if (isDepartment === true || isDepartment === 'true') {
+                    $scope.isDep = true;
+                    dep = "<tr>\n\<td >'@D' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Departments</td>\n\</tr>";
+                }
+                if (isDesignation === true || isDesignation === 'true') {
+                    $scope.isDeg = true;
+                    desg = "<tr>\n\<td >'@R' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Designations</td>\n\</tr>";
+                }
+                if (isFranchise === true || isFranchise === 'true') {
+                    $scope.isFran = true;
+                    fran = "<tr>\n\<td >'@F' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Franchises</td>\n\</tr>";
+                }
+                if (isMulti !== 'undefined') {
+                    $scope.isMulti = isMulti;
+                }
+                var finalString = '';
+                if (emp !== null) {
+                    finalString = finalString + emp;
+                }
+                if (dep !== null) {
+                    finalString = finalString + dep;
+                }
+                if (desg !== null) {
+                    finalString = finalString + desg;
+                }
+                if (fran !== null) {
+                    finalString = finalString + fran;
+                }
+                if (showParamFrEmp !== null && showParamFrEmp !== undefined)
+                {
+                    if (showParamFrEmp === 'Dept')
+                    {
+                        $scope.showDeptFrEmp = true;
+                        $scope.deptList = angular.copy(deptList);
+                    }
+                    else
+                    if (showParamFrEmp === 'Desg')
+                    {
+                        $scope.showDesgFrEmp = true;
+                        $scope.desgList = angular.copy(desgList);
+
+                    }
+                }
+                $scope.customPopover = "<NOBR>\n\<font color='red;'>Use the shortcuts to search </font></NOBR><br/>\n\<table cellpadding='0' cellspacing='0'>";
+                if (finalString !== null) {
+                    $scope.customPopover = $scope.customPopover + finalString;
+                }
+                $scope.customPopover = $scope.customPopover + "</table>";
+            };
+            $scope.autoCompleteUser = {
+                multiple: true,
+                closeOnSelect: false,
+                //                        maximumSelectionSize: $scope.numberSeleccted,
+                placeholder: 'Select',
+                initSelection: function (element, callback) {
+                    setTimeout(function () {
+                        var attrs = $scope.attribute;
+                        var model = $scope.model;
+                        $scope.dataModel = $scope.$eval(attrs + "." + model);
+                        if ($scope.dataModel !== undefined) {
+                            var tempdata = $scope.dataModel;
+                            var array = $scope.dataModel.split(',');
+                            var newArray = [];
+                            if (array !== undefined) {
+                                angular.forEach(array, function (arr)
+                                {
+                                    arr = arr.replace("\"", "").trim();
+                                    newArray.push(arr);
+                                });
+                                if ($scope.isDiamond === true && $scope.isDiamond === 'true')
+                                {
+                                    // Call center method
+                                    CenterCustomFieldService.defaultSelection(newArray, function (res) {
+                                        var data = [];
+                                        $scope.result = JSON.parse(angular.toJson(res));
+                                        for (key in  $scope.result)
+                                        {
+                                            data.push({id: key, text: res[key]});
+                                        }
+                                        callback(data);
+                                        var finalModelVal = $parse(attrs + "." + model);
+                                        finalModelVal.assign($scope, tempdata);
+                                    }, function () {
+                                    });
+                                } else {
+                                    // Call master method
+                                    UserManagementService.defaultSelection(newArray, function (res) {
+                                        var data = [];
+                                        $scope.result = JSON.parse(angular.toJson(res));
+                                        for (key in  $scope.result)
+                                        {
+                                            data.push({id: key, text: res[key]});
+                                        }
+                                        callback(data);
+                                        var finalModelVal = $parse(attrs + "." + model);
+                                        finalModelVal.assign($scope, tempdata);
+                                    }, function () {
+                                    });
+                                }
+                            }
+                        }
+
+                    }, 500);
+                    //                           
+                },
+                formatResult: function (item) {
+                    return item.text;
+                },
+                formatSelection: function (item) {
+                    return item.text;
+                },
+                query: function (query) {
+                    var selected = query.term;
+                    $scope.names = [];
+                    var success = function (data) {
+                        if (data.length !== 0) {
+                            $scope.names = [];
+                            angular.forEach(data, function (item) {
+
+                                $scope.names.push({
+                                    id: item.value + ":" + item.description,
+                                    text: item.label
+                                });
+                            });
+                        }
+                        query.callback({
+                            results: $scope.names
+                        });
+                    };
+                    var failure = function () {
+                    };
+                    if ($scope.isEmp === true) {
+                        var searchEmp = false;
+                        var search;
+                        if ($scope.isDep === false && $scope.isDeg === false && $scope.isFran === false)
+                        {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2);
+                            }
+                            else {
+                                // If only employee ,then search directly
+                                searchEmp = true;
+                                search = query.term;
+                            }
+                        } else {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchEmp === true) {
+                            if ($scope.showDeptFrEmp === true)
+                            {
+                                var map = new Object();
+                                map["search"] = search.trim();
+                                map["deptIds"] = $scope.deptList;
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+
+
+                                    CenterCustomFieldService.retrieveusersByDept(map, success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusersByDept(map, success, failure);
+                                }
+                            }
+                            else if ($scope.showDesgFrEmp === true) {
+                                var map = new Object();
+                                map["search"] = search.trim();
+                                map["desgIds"] = $scope.desgList;
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+                                    CenterCustomFieldService.retrieveusersByDesg(map, success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusersByDesg(map, success, failure);
+                                }
+                            }
+                            else {
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+                                    CenterCustomFieldService.retrieveusers(search.trim(), success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusers(search.trim(), success, failure);
+                                }
+                            }
+                        }
+                    }
+                    if ($scope.isDep === true) {
+                        var search;
+                        var searchDep = false;
+                        if ($scope.isEmp === false && $scope.isDeg === false && $scope.isFran === false)
+                        {
+                            if (selected.substring(0, 2) === '@D' || selected.substring(0, 2) === '@d') {
+                                searchDep = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchDep = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@D' || selected.substring(0, 2) === '@d') {
+                                searchDep = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchDep === true) {
+                            if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                            {
+                                // Call center method
+                                CenterCustomFieldService.retrieveDepartmentList(search.trim(), success, failure);
+                            } else
+                            {
+                                // Call master method
+                                UserManagementService.retrieveDepartmentList(search.trim(), success, failure);
+                            }
+                        }
+                    }
+                    if ($scope.isDeg === true) {
+                        var search;
+                        var searchRole = false;
+                        if ($scope.isEmp === false && $scope.isDep === false && $scope.isFran === false) {
+                            if (selected.substring(0, 2) == '@R' || selected.substring(0, 2) == '@r') {
+                                searchRole = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchRole = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) == '@R' || selected.substring(0, 2) == '@r') {
+                                searchRole = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchRole === true) {
+
+                            if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                            {
+                                // Call center method
+                                CenterCustomFieldService.retrieveroles(search.trim(), success, failure);
+                            } else
+                            {
+                                // Call master method
+                                UserManagementService.retrieveroles(search.trim(), success, failure);
+                            }
+                        }
+                    }
+                    if ($scope.isFran === true) {
+
+                        var search;
+                        var searchFranchise = false;
+                        if ($scope.isEmp === false && $scope.isDep === false && $scope.isDeg === false) {
+                            if (selected.substring(0, 2) === '@F' || selected.substring(0, 2) === '@f') {
+                                searchFranchise = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchFranchise = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@F' || selected.substring(0, 2) === '@f') {
+                                searchFranchise = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchFranchise === true) {
+
+
+
+                            if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                // Center call  
+
+                                CenterCustomFieldService.retrieveFranchises(search.trim(), success, failure);
+                            } else {
+                                // MAster call
+                                UserManagementService.retrieveFranchises(search.trim(), success, failure);
+                            }
+                        }
+                    }
+
+                }
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('UserSingleSelectGridController', ["$rootScope", "$scope", "$parse", "UserManagementService", "CenterCustomFieldService", function ($rootScope, $scope, $parse,
+                UserManagementService, CenterCustomFieldService) {
+
+            $scope.isEmp = false;
+            $scope.isDep = false;
+            $scope.isDeg = false;
+            $scope.isFran = false;
+            $scope.defineLabel = function (isEmployee, isDepartment, isDesignation, isFranchise, model, isMulti, attr, designationIdForAllot, designationIdForInStock, isDynamic, isDiamond, carrierBoyDes, showParamFrEmp, deptList, desgList)
+            {
+                //                        $scope.numberSeleccted = 1;
+                $scope.model = model;
+                $scope.attribute = attr;
+                $scope.desgnationIdForAllot = designationIdForAllot;
+                $scope.designationIdForIssue = designationIdForInStock;
+                $scope.carrierBoyDes = carrierBoyDes;
+                $scope.isDynamic = isDynamic;
+                $scope.isDiamond = isDiamond;
+                var dep = null;
+                var emp = null;
+                var desg = null;
+                var fran = null;
+                if (isEmployee === true || isEmployee === 'true') {
+                    $scope.isEmp = true;
+                    emp = "<tr>\n\<td >'@E' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Employees</td>\n\</tr>";
+                }
+                if (isDepartment === true || isDepartment === 'true') {
+                    $scope.isDep = true;
+                    dep = "<tr>\n\<td >'@D' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Departments</td>\n\</tr>";
+                }
+                if (isDesignation === true || isDesignation === 'true') {
+                    $scope.isDeg = true;
+                    desg = "<tr>\n\<td >'@R' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Designations</td>\n\</tr>";
+                }
+                if (isFranchise === true || isFranchise === 'true') {
+                    $scope.isFran = true;
+                    fran = "<tr>\n\<td >'@F' </td>\n\<td> &nbsp;  &nbsp;</td>\n\<td align='left'>Franchises</td>\n\</tr>";
+                }
+                if (isMulti !== 'undefined') {
+                    $scope.isMulti = isMulti;
+                }
+                var finalString = '';
+                if (emp !== null) {
+                    finalString = finalString + emp;
+                }
+                if (dep !== null) {
+                    finalString = finalString + dep;
+                }
+                if (desg !== null) {
+                    finalString = finalString + desg;
+                }
+                if (fran !== null) {
+                    finalString = finalString + fran;
+                }
+                if (showParamFrEmp !== null && showParamFrEmp !== undefined)
+                {
+                    if (showParamFrEmp === 'Dept')
+                    {
+                        $scope.showDeptFrEmp = true;
+                        $scope.deptList = angular.copy(deptList);
+                    }
+                    else
+                    if (showParamFrEmp === 'Desg')
+                    {
+                        $scope.showDesgFrEmp = true;
+                        $scope.desgList = angular.copy(desgList);
+
+                    }
+                }
+                $scope.customPopover = "<NOBR>\n\<font color='red;'>Use the shortcuts to search </font></NOBR><br/>\n\<table cellpadding='0' cellspacing='0'>";
+                if (finalString !== null) {
+                    $scope.customPopover = $scope.customPopover + finalString;
+                }
+                $scope.customPopover = $scope.customPopover + "</table>";
+            };
+            $scope.autoCompleteUser = {
+                multiple: true,
+                closeOnSelect: false,
+                maximumSelectionSize: 1,
+                placeholder: 'Select',
+                initSelection: function (element, callback) {
+                    setTimeout(function () {
+                        var attrs = $scope.attribute;
+                        var model = $scope.model;
+                        $scope.dataModel = $scope.$eval(attrs + "." + model);
+                        if ($scope.dataModel !== undefined) {
+                            var tempdata = $scope.dataModel;
+                            var array = $scope.dataModel.split(',');
+                            if (array !== undefined) {
+                                if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                    CenterCustomFieldService.defaultSelection(array, function (res) {
+                                        ////console.log("result :" + res)
+                                        var data = [];
+                                        $scope.result = JSON.parse(angular.toJson(res));
+                                        for (key in  $scope.result)
+                                        {
+                                            data.push({id: key, text: res[key]});
+                                        }
+                                        callback(data);
+                                        var finalModelVal = $parse(attrs + "." + model);
+                                        finalModelVal.assign($scope, tempdata);
+                                    }, function () {
+                                    });
+                                } else {
+                                    UserManagementService.defaultSelection(array, function (res) {
+                                        var data = [];
+                                        $scope.result = JSON.parse(angular.toJson(res));
+                                        for (key in  $scope.result)
+                                        {
+                                            data.push({id: key, text: res[key]});
+                                        }
+                                        callback(data);
+                                        var finalModelVal = $parse(attrs + "." + model);
+                                        finalModelVal.assign($scope, tempdata);
+                                    }, function () {
+                                    });
+                                }
+                            }
+                        }
+
+                    }, 500);
+                    //                           
+                },
+                formatResult: function (item) {
+                    return item.text;
+                },
+                formatSelection: function (item) {
+                    return item.text;
+                },
+                query: function (query) {
+                    var selected = query.term;
+                    $scope.names = [];
+                    var success = function (data) {
+                        if (data.length !== 0) {
+                            $scope.names = [];
+                            angular.forEach(data, function (item) {
+
+                                $scope.names.push({
+                                    id: item.value + ":" + item.description,
+                                    text: item.label
+                                });
+                            });
+                        }
+                        query.callback({
+                            results: $scope.names
+                        });
+                    };
+                    var failure = function () {
+                    };
+                    if ($scope.model === 'carrier_boy$UMS$String' && ($scope.carrierBoyDes !== undefined && $scope.carrierBoyDes !== null)) {
+                        $scope.designationId = angular.copy($scope.carrierBoyDes);
+                    }
+                    if (($scope.model === "allot_to_lot$UMS$String" || $scope.model === "allot_to_packet$UMS$String") && ($scope.desgnationIdForAllot !== null && $scope.desgnationIdForAllot !== undefined))
+                    {
+                        $scope.designationId = angular.copy($scope.desgnationIdForAllot);
+                    }
+                    if ((($scope.model === "in_stock_of_lot$UMS$String" || $scope.model === "in_stock_of_packet$UMS$String" || $scope.model === "issued_to$UMS$String") && ($scope.designationIdForIssue !== null && $scope.designationIdForIssue !== undefined)))
+                    {
+                        $scope.designationId = angular.copy($scope.designationIdForIssue);
+                    }
+
+                    if (($scope.designationId === undefined || $scope.designationId === 'undefined' || $scope.designationId === null || $scope.designationId === '') && ($scope.isEmp || (selected.substring(0, 2) == '@E' || selected.substring(0, 2) == '@e'))) {
+                        var searchEmp = false;
+                        var search;
+                        if ($scope.isDep === false && $scope.isDeg === false && $scope.isFran === false)
+                        {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchEmp = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2);
+                            }
+
+                        }
+                        if (searchEmp === true) {
+
+                            if ($scope.showDeptFrEmp === true)
+                            {
+                                var map = new Object();
+                                map["search"] = search.trim();
+                                map["deptIds"] = $scope.deptList;
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+
+
+                                    CenterCustomFieldService.retrieveusersByDept(map, success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusersByDept(map, success, failure);
+                                }
+                            }
+                            else if ($scope.showDesgFrEmp === true) {
+                                var map = new Object();
+                                map["search"] = search.trim();
+                                map["desgIds"] = $scope.desgList;
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+                                    CenterCustomFieldService.retrieveusersByDesg(map, success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusersByDesg(map, success, failure);
+                                }
+                            }
+                            else {
+                                if ($scope.isDiamond === 'true' && $scope.isDiamond === true)
+                                {
+                                    // Call center method
+                                    CenterCustomFieldService.retrieveusers(search.trim(), success, failure);
+                                } else {
+                                    // Call master method
+                                    UserManagementService.retrieveusers(search.trim(), success, failure);
+                                }
+                            }
+                        }
+                    }
+                    if ($scope.designationId !== null && $scope.designationId !== undefined && $scope.designationId !== '') {
+                        var search;
+                        var searchEmp = false;
+                        if ($scope.isDep === false && $scope.isDeg === false && $scope.isFran === false)
+                        {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2)
+                            }
+                            else {
+                                searchEmp = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@E' || selected.substring(0, 2) === '@e') {
+                                searchEmp = true;
+                                search = query.term.slice(2)
+                            }
+
+                        }
+                        if (searchEmp === true) {
+                            if ($scope.isDynamic !== null && $scope.isDynamic !== undefined) {
+                                var search = query.term.slice(2);
+                                var queryParam = [];
+                                queryParam[0] = search.trim().toString();
+                                queryParam[1] = $scope.designationId.toString();
+                                queryParam[2] = $scope.isDynamic.toString();
+                                CenterCustomFieldService.retrieveusersbydesignation(queryParam, success, failure);
+                            }
+                        }
+                    }
+
+                    if ($scope.isDep === true) {
+                        var search;
+                        var searchDep = false;
+                        if ($scope.isEmp === false && $scope.isDeg === false && $scope.isFran === false)
+                        {
+
+                            if (selected.substring(0, 2) === '@D' || selected.substring(0, 2) === '@d') {
+                                searchDep = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchDep = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@D' || selected.substring(0, 2) === '@d') {
+                                searchDep = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchDep === true) {
+
+
+                            if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                // Center call   
+                                CenterCustomFieldService.retrieveDepartmentList(search.trim(), success, failure);
+                            }
+                            else
+                            {
+                                // MAster call
+                                UserManagementService.retrieveDepartmentList(search.trim(), success, failure);
+                            }
+                        }
+
+                    }
+                    if ($scope.isDeg === true) {
+
+                        var search;
+                        var searchRole = false;
+                        if ($scope.isEmp === false && $scope.isDep === false && $scope.isFran === false) {
+
+                            if (selected.substring(0, 2) === '@R' || selected.substring(0, 2) === '@r') {
+                                searchRole = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchRole = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@R' || selected.substring(0, 2) === '@r') {
+                                searchRole = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchRole === true) {
+
+
+
+                            if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                // Center call  
+
+
+                                CenterCustomFieldService.retrieveroles(search.trim(), success, failure);
+                            } else {
+                                // MAster call
+                                UserManagementService.retrieveroles(search.trim(), success, failure);
+                            }
+                        }
+                    }
+                    if ($scope.isFran === true) {
+
+                        var search;
+                        var searchFranchise = false;
+                        if ($scope.isEmp === false && $scope.isDep === false && $scope.isDeg === false) {
+                            if (selected.substring(0, 2) === '@F' || selected.substring(0, 2) === '@f') {
+                                searchFranchise = true;
+                                search = query.term.slice(2);
+                            } else {
+                                searchFranchise = true;
+                                search = query.term;
+                            }
+                        } else
+                        {
+                            if (selected.substring(0, 2) === '@F' || selected.substring(0, 2) === '@f') {
+                                searchFranchise = true;
+                                search = query.term.slice(2);
+                            }
+                        }
+                        if (searchFranchise === true) {
+
+
+
+                            if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                                // Center call  
+
+                                CenterCustomFieldService.retrieveFranchises(search.trim(), success, failure);
+                            } else {
+                                // MAster call
+                                UserManagementService.retrieveFranchises(search.trim(), success, failure);
+                            }
+                        }
+                    }
+                }
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('SingleSelectGridController', ["$rootScope", "$scope",
+        "DynamicMasterService", "CaratRangeService", "AssetCustomService", "CenterCustomFieldService", "DynamicCenterMasterService", "$timeout", function ($rootScope, $scope,
+                DynamicMasterService, CaratRangeService, AssetCustomService, CenterCustomFieldService, DynamicCenterMasterService, $timeout) {
+            $scope.defineLabelForSingleSelect = function (label, model, attribute, defaultValue, isDiamond, fieldId,displayShortcutCode)
+            {
+                $scope.valss = false;
+                $scope.defaultValue = defaultValue;
+                $scope.model = model;
+                $scope.attribute = attribute;
+                $scope.dropdown = [];
+                $scope.fieldLabel = label;
+                $scope.isDiamond = isDiamond;
+                $scope.fieldId = fieldId;
+                if (model === 'carate_range_of_lot$DRP$Long' || model === 'carate_range_of_packet$DRP$Long') {
+                    var success = function (data) {
+                        if (data.length !== 0) {
+                            var res = JSON.parse(angular.toJson(data));
+                            for (var key in res) {
+                                $scope.dropdown.push({
+                                    id: parseInt(key),
+                                    text: res[key].toString()
+                                });
+                            }
+                        }
+                    };
+                    var failure = function () {
+                    };
+                    if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                    {
+                        // Call Center method
+                        CenterCustomFieldService.makeValuesForCarateRange(success, failure);
+                    } else {
+                        // Call Master method
+                        CaratRangeService.makeValuesForCarateRange(success, failure);
+                    }
+                } else if (model === 'machine_to_process_in$DRP$Long') {
+                    var success = function (data) {
+                        if (data.length !== 0) {
+                            var res = JSON.parse(angular.toJson(data));
+                            for (var key in res) {
+                                $scope.dropdown.push({
+                                    id: key,
+                                    text: res[key].toString()
+                                });
+                            }
+                        }
+                    };
+                    var failure = function () {
+                    };
+                    if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                        // Call center method
+                        CenterCustomFieldService.makeValuesForMachineAssets(success, failure);
+                    } else {
+                        // Call master method
+                        AssetCustomService.makeValuesForMachineAssets(success, failure);
+                    }
+                } else {
+                    var success = function (response) {
+                        if (response.data !== null) {
+
+                            angular.forEach(response.data, function (response)
+                            {
+                                var displayElement;
+                                if (displayShortcutCode === true || displayShortcutCode === 'true')
+                                {
+                                    displayElement = parseInt(response.shortcutCode) + "-" + response.label;
+                                } else
+                                {
+                                    displayElement = response.label;
+                                }
+                                $scope.dropdown.push({
+                                    id: parseInt(response.value),
+                                    text: displayElement
+                                });
+                            });
+
+                        }
+
+                    };
+                    var failure = function () {
+                    };
+                    if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                    {
+                        DynamicCenterMasterService.retrieveAllValuesForMasters({primaryKey: $scope.fieldId}, success, failure);
+//                        // Call center methods
+//                        
+                    } else {
+                        // Call master methods
+//                     
+                        DynamicMasterService.retrieveAllValuesForMasters({primaryKey: $scope.fieldId}, success, failure);
+                    }
+                }
+
+            };
+            $scope.updateDropdownList = function (newDataList) {
+                if (newDataList !== undefined && angular.isArray(newDataList)) {
+                    $scope.dropdown = angular.copy(newDataList);
+                }
+            };
+            $scope.changeData = function (model)
+            {
+
+                $scope.valss = false;
+            }
+
+
+        }
+    ]);
+
+    globalProvider.controllerProvider.register('SubEntityGridController', ["$rootScope", "$scope",
+        "SubEntityService", "CenterCustomFieldService", function ($rootScope, $scope,
+                SubEntityService, CenterCustomFieldService) {
+            $scope.defineLabelForSubEntity = function (fieldId, model, attribute, isDiamond)
+            {
+                $scope.model = model;
+                $scope.attribute = attribute;
+                $scope.dropdownForSubEntity = [];
+                $scope.fieldId = fieldId;
+                $scope.isDiamond = isDiamond;
+                var success = function (data) {
+                    if (data.length !== 0) {
+                        angular.forEach(data, function (item) {
+
+                            $scope.dropdownForSubEntity.push({
+                                id: item.value,
+                                text: item.label
+                            });
+                        });
+                    }
+
+                };
+                var failure = function () {
+                };
+                if ($scope.isDiamond === true || $scope.isDiamond === 'true')
+                {
+                    // Center method
+                    CenterCustomFieldService.createDropDownListForSubEntity($scope.fieldId, success, failure);
+                } else {
+                    // Master method
+                    SubEntityService.createDropDownListForSubEntity($scope.fieldId, success, failure);
+                }
+
+
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('CurrencyGridController', ["$rootScope", "$scope",
+        "CurrencyService", "CenterCustomFieldService", function ($rootScope, $scope, $parse,
+                CurrencyService, CenterCustomFieldService) {
+            $scope.fillDropDownForCurrencyCode = function (fieldId, model, attribute, isDiamond)
+            {
+                $scope.model = model;
+                $scope.attribute = attribute;
+                $scope.dropdownForCurrencyCode = [];
+                $scope.isDiamond = isDiamond;
+                var success = function (data) {
+                    if (data.length !== 0) {
+                        angular.forEach(data, function (item) {
+
+                            $scope.dropdownForCurrencyCode.push({
+                                id: item.value,
+                                text: item.label
+                            });
+                        });
+                    }
+                };
+                var failure = function () {
+                };
+                if ($scope.isDiamond === true || $scope.isDiamond === 'true') {
+                    // Center call
+                    CenterCustomFieldService.retrievecurrencyCodeForDynamicForm(success, failure);
+                } else {
+                    // Master call
+                    CurrencyService.retrievecurrencyCodeForDynamicForm(success, failure);
+                }
+
+            };
+        }
+    ]);
+    globalProvider.controllerProvider.register('ReferenceRateGridController', ["$rootScope", "$scope", "$parse",
+        "CurrencyService", "CenterCustomFieldService", function ($rootScope, $scope, $parse,
+                CurrencyService, CenterCustomFieldService) {
+            $scope.fillReferenceRateForCurrency = function (currency, model, attribute, isDiamond)
+            {
+                $scope.model = model;
+                $scope.attribute = attribute;
+                $scope.dropdownForCurrencyCode = [];
+                $scope.isDiamond = isDiamond;
+                ////console.log("currency " + currency);
+                //MM-RR Two methods needs to be write to retrieve reference rate for the currency
+                var success = function (data) {
+                    var finalModelVal = $parse(attribute + "." + model);
+                    finalModelVal.assign($scope, data[currency]);
+//                    $scope[attribute][model] = data[currency];
+                };
+                var failure = function () {
+                };
+                // Center call
+                CenterCustomFieldService.retrieveReferenceRateForCurrencyCode(currency, success, failure);
+
+            };
+        }
+    ]);
+    globalProvider.provide.factory('DynamicMasterService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var Master = resource(rootScope.apipath + 'master/:action', {}, {
+                retrieveListOfMaster: {
+                    method: 'GET',
+                    isArray: true,
+                    params: {
+                        action: 'retrieve'
+                    }
+                },
+                retrieveCustomOfMaster: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'retrieveMasterValues'
+                    }
+                },
+                retrieveDetailsOfMaster: {
+                    method: 'POST',
+                    params: {
+                        action: 'retrieve'
+                    }
+                },
+                retrieveAllValuesForMasters: {
+                    method: 'POST',
+                    params: {
+                        action: 'retrieveAllValuesForMasters'
+                    }
+
+                },
+                retrieveAllValuesForMastersFrMultiSelect: {
+                    method: 'POST',
+                    params: {
+                        action: 'retrieveAllValuesForMastersFrMultiSelect'
+                    }
+
+                }
+
+            });
+            return Master;
+        }]);
+    globalProvider.provide.factory('DynamicCenterMasterService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var Master = resource(rootScope.centerapipath + 'master/:action', {},
+                    {
+                        retrieveListOfMaster: {
+                            method: 'GET',
+                            isArray: true,
+                            params: {
+                                action: 'retrieve'
+                            }
+                        },
+                        retrieveCustomOfMaster: {
+                            method: 'POST',
+                            isArray: false,
+                            params: {
+                                action: 'retrieveMasterValues'
+                            }
+                        },
+                        retrieveDetailsOfMaster: {
+                            method: 'POST',
+                            params: {
+                                action: 'retrieve'
+                            }
+                        },
+                        retrieveAllValuesForMasters: {
+                            method: 'POST',
+                            params: {
+                                action: 'retrieveAllValuesForMasters'
+                            }
+                        },
+                        retrieveAllValuesForMastersFrMultiSelect: {
+                            method: 'POST',
+                            params: {
+                                action: 'retrieveAllValuesForMastersFrMultiSelect'
+                            }
+                        },
+                        retrieveAllValuesForAllMasters: {
+                            method: 'POST',
+                            params: {
+                                action: 'retrieveAllValuesForAllMasters'
+                            }
+
+                        }
+
+
+                    });
+            return Master;
+        }]);
+    globalProvider.provide.factory('SubEntityService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var customfieldManagment = resource(rootScope.apipath + 'customfield/:action', {}, {
+                createDropDownListForSubEntity: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: "createDropDownListForSubEntity"
+                    }
+                },
+            });
+            return customfieldManagment;
+        }]);
+    globalProvider.provide.factory('CurrencyService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var customfieldManagment = resource(rootScope.apipath + 'customfield/:action', {}, {
+                retrievecurrencyCodeForDynamicForm: {
+                    method: 'GET',
+                    isArray: true,
+                    params: {
+                        action: 'retrievecurrencyCodeForDynamicForm'
+                    }
+                },
+            });
+            return customfieldManagment;
+        }]);
+    globalProvider.provide.factory('fileuploadservice', ['$resource', '$rootScope', function (resource, rootScope) {
+            var user = resource(
+                    rootScope.centerapipath + 'fileUpload/:action', //url being hit
+                    {
+                        action: '@actionName'
+                    }, // url perameters
+
+            {
+                uploadFiles: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'onsubmit'
+                    }
+                },
+                cancelFile: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'oncancel'
+                    }
+                },
+                removeImageFile: {
+                    method: 'POST',
+                    params: {
+                        action: 'removeImageFile'
+                    }
+                },
+                cancelAll: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'oncancelall'
+                    }
+                }
+            });
+            return user;
+        }]);
+    globalProvider.provide.factory('fileuploadservicemaster', ['$resource', '$rootScope', function (resource, rootScope) {
+            var user = resource(
+                    rootScope.apipath + 'fileUpload/:action', //url being hit
+                    {
+                        action: '@actionName'
+                    }, // url perameters
+
+            {
+                uploadFiles: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'onsubmit'
+                    }
+                },
+                cancelFile: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'oncancel'
+                    }
+                },
+                removeImageFile: {
+                    method: 'POST',
+                    params: {
+                        action: 'removeImageFile'
+                    }
+                },
+                cancelAll: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'oncancelall'
+                    }
+                }
+            });
+            return user;
+        }]);
+    globalProvider.provide.factory('UserManagementService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var Master = resource(rootScope.apipath + 'customfield/:action', {}, {
+                retrieveusers: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusers'
+                    }
+                },
+                retrieveusersByDept: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersByDept'
+                    }
+                },
+                retrieveusersByDesg: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersByDesg'
+                    }
+                },
+                retrieveDepartmentList: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveDepartmentList'
+                    }
+                },
+                defaultSelection: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'defaultSelection'
+                    }
+                },
+                retrieveroles: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveroles'
+                    }
+                },
+                retrieveusersbydesignation: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersbydesignation'
+                    }
+                },
+                retrieveFranchises: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrievefranchises'
+                    }
+                }
+            });
+            return Master;
+        }]);
+    globalProvider.provide.factory('CaratRangeService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var carateRangeManagment = resource(rootScope.apipath + 'customfield/:action', {}, {
+                makeValuesForCarateRange: {
+                    method: 'GET',
+                    params: {
+                        action: 'makeValuesforcaraterange'
+                    }
+                }
+
+            });
+            return carateRangeManagment;
+        }]);
+    globalProvider.provide.factory('AssetCustomService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var assetManagment = resource(rootScope.apipath + 'customfield/:action', {}, {
+                makeValuesForMachineAssets: {
+                    method: 'GET',
+                    params: {
+                        action: 'makevaluesformachineassets'
+                    }
+                }
+            });
+            return assetManagment;
+        }]);
+    globalProvider.provide.factory('CenterCustomFieldService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var carateRangeManagment = resource(rootScope.centerapipath + 'customfield/:action', {}, {
+                makeValuesForCarateRange: {
+                    method: 'GET',
+                    params: {
+                        action: 'makeValuesforcaraterange'
+                    }
+                },
+                makeValuesForMachineAssets: {
+                    method: 'GET',
+                    params: {
+                        action: 'makevaluesformachineassets'
+                    }
+                },
+                retrieveusers: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusers'
+                    }
+                },
+                retrieveusersByDept: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersByDept'
+                    }
+                },
+                retrieveusersByDesg: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersByDesg'
+                    }
+                },
+                retrieveDepartmentList: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveDepartmentList'
+                    }
+                },
+                defaultSelection: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'defaultSelection'
+                    }
+                },
+                retrieveroles: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveroles'
+                    }
+                },
+                retrieveusersbydesignation: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrieveusersbydesignation'
+                    }
+                },
+                createDropDownListForSubEntity: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: "createDropDownListForSubEntity"
+                    }
+                },
+                retrievecurrencyCodeForDynamicForm: {
+                    method: 'GET',
+                    isArray: true,
+                    params: {
+                        action: 'retrievecurrencyCodeForDynamicForm'
+                    }
+                },
+                retrieveFranchises: {
+                    method: 'POST',
+                    isArray: true,
+                    params: {
+                        action: 'retrievefranchises'
+                    }
+                },
+                checkUniqueness: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'checkuniqueness'
+                    }
+                },
+                retrieveReferenceRateForCurrencyCode: {
+                    method: 'POST',
+                    isArray: false,
+                    params: {
+                        action: 'retrieveReferenceRateForCurrencyCode'
+                    }
+                }
+            });
+            return carateRangeManagment;
+        }]);
+    globalProvider.provide.factory('CustomHolidayService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var Holiday = resource(rootScope.apipath + 'holiday/:action',
+                    {
+                        // action: '@actionName'
+                    },
+                    {
+                        retrieveAllHoliday: {
+                            method: 'POST',
+                            isArray: false,
+                            params: {
+                                action: 'retrieveholidaydates'
+                            }
+                        }
+                    });
+            return Holiday;
+        }]);
+    globalProvider.provide.factory('CenterCustomHolidayService', ['$resource', '$rootScope', function (resource, rootScope) {
+            var Holiday = resource(rootScope.centerapipath + 'holiday/:action',
+                    {
+                        // action: '@actionName'
+                    },
+                    {
+                        retrieveAllHoliday: {
+                            method: 'POST',
+                            isArray: false,
+                            params: {
+                                action: 'retrieveholidaydates'
+                            }
+                        }
+                    });
+            return Holiday;
+        }]);
+});

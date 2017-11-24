@@ -1,0 +1,755 @@
+<div class="row">
+    <div class="col-xs-12"> 
+
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'|translate}} </li>
+                    <li>{{entity + 'Manage'|translate}} </li>
+                    <li class="active">{{entity + 'Activity Flow'|translate}}</li>               
+                </ol>
+            </div>
+        </div>
+        <hr class="margin-md" />
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <!-- -->
+            <div class="row">
+                <!--<div class="row">-->
+                <div class="col-md-4 col-xs-12 col-sm-12">
+                    <div class="    col-xs-12 col-md-12">
+                        <img src="images/activity.png" class="hkg-movable" id="dragActivity" alt="activity" ng-show="isVersionPending">&nbsp;
+                        <img src="images/service.png"  class="hkg-movable" id="dragService" alt="service" ng-show="isVersionPending">&nbsp;                    
+                    </div>
+                    <div class="clearfix"></div>
+                </div>                        
+                <div class="row col-md-8 col-xs-12 col-sm-12">
+                    <form class="form-horizontal" role="form"  name="issueAssetForm" novalidate>
+                        <div class="col-md-5 col-xs-12">
+                            <label for="select_franchise" class="col-md-4 col-xs-4 control-label" ng-if="session.isHKAdmin">{{entity + 'Franchise'|translate}}</label>
+                            <div class="col-md-8 col-xs-6"  ng-if="session.isHKAdmin">
+                                <select class="form-control" id="select_franchise" ng-model="activityflow.franchise" ng-options="franchise as franchise.label for franchise in franchiseList" ng-change="onFranchiseChange(activityflow.franchise)">
+                                    <option value="">{{entity + 'Select'|translate}}</option>
+                                </select>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="col-md-5 col-xs-12">
+                            <label for="select_version" class="col-md-3 col-xs-4 control-label">{{entity + 'Version'|translate}}</label>
+                            <div class="col-md-6 col-xs-6">
+                                <select class="form-control" id="select_version" ng-model="activityflow.version" ng-change="onVersionChange(activityflow.version);" ng-options="ver as ver.label for ver in versionList">                                            
+                                    <option value="">{{entity + 'Select'|translate}}</option>
+                                </select>                                                                                                                       
+                            </div>                          
+                            <div class="col-md-3 col-xs-2 help-block" style="padding-left: 0px;">
+                                <a ng-click="showAddActivityVersionPopup()" ng-show="isVersionPending || isVersionActive"><span class="glyphicon glyphicon-plus-sign text-primary" title="{{entity + 'Add Version'| translate}}"></span></a> &nbsp;
+                                <a target="_blank" href="#/printsvg" ng-show="activityflow.version !== null && activityflow.version !== ''" style="color: black;"><span class="glyphicon glyphicon-print" title="{{entity + 'Print Preview'| translate}}"></span></a>
+                            </div> 
+                            <div class="clearfix"></div>
+                        </div> 
+                        <div class="col-md-2 col-xs-12">
+                            <button ng-show="isVersionPending" class="btn btn-hkg pull-right" ng-click="publishVersion()">{{entity + "Publish Now!"| translate}}</button>
+                        </div> 
+                    </form>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <br/>
+            <!--<hr class="margin-md" />-->
+            <div id="printDiv">            
+                <div id="activityFlowFrame" title="{{entity + 'You can drag and drop components here'|translate}}" class="col-md-12 scroll" mouse-capture style="border: 1px solid #eee;">
+                    <flow-chart chart="chartViewModel" id="containerDiv">                
+                    </flow-chart>                 
+                </div>   
+            </div>
+        </div>                
+    </div>
+    <!--    <div class="wordRap col-xs-12 new-panel">
+            <textarea cols="30"
+                      rows="40"
+                      chart-json-edit
+                      view-model="chartViewModel"
+                      >
+            </textarea>
+            Final ActivityFlow : <br/>{{finalActivityFlow}}
+        </div>-->
+</div>
+
+<div class="modal fade" role="dialog" id="addNewActivityVersionPopup" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="closeAddActivityVersionPopup()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "New Version" | translate }}</span>
+                </h4>
+            </div>
+            <form  class="form-horizontal" name="addNewVersionForm" role='form' novalidate >
+                <div class="modal-body" >
+                    <div class="form-group">
+                        <label for="copyNewVersion"  class="col-md-3 control-label">
+                            <span>{{ entity + ' Make Copy Of' | translate}}</span>
+                        </label>
+                        <div>
+                            <div class="dropdown" >
+                                <div class="col-md-7">
+                                    <select class="form-control" id="select_version23" ng-model="activityflow.versionId" ng-options="ver as ver.label for ver in versionList">
+                                        <option value="">{{entity + 'select version to copy, if any'|translate}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-12 control-label pull-left">
+                            <span>{{entity + 'You are going to add new version for the activity flow, do you want to continue?'|translate}}</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-6 pull-right">
+                        <a href="" ng-click="closeAddActivityVersionPopup()">{{ entity + "Cancel" | translate }}</a>&nbsp;
+                        <button class="btn btn-hkg" ng-click="createNewVersion()">
+                            {{ entity + "Continue" | translate }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="activityPopUp" data-backdrop="static">
+    <form name="addActivityForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideActivityPanel(addActivityForm);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Add Activity'|translate}}</b>
+                    </h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group required">                        
+                        <label for="activityName" class="col-md-3 control-label">{{entity + 'Activity name'|translate}}</label>
+                        <div class="col-md-7" ng-class="{'has-error': addActivityForm.activityName.$invalid && (addActivityForm.activityName.$dirty || subbmited)}">
+                            <div>
+                                <input ng-pattern="/^[^.]+$/" type="text" id="activityName" name="activityName" class="form-control input-md" ng-model="activityGroup.flowGroupName" required  maxlength="50" ng-blur="doesActivityNameExists(activityGroup.flowGroupName, addActivityForm)" ng-change="addActivityForm.activityName.$setValidity('exists', true);">     
+                                <div class="error,help-block" ng-show="(addActivityForm.activityName.$dirty || subbmited) && addActivityForm.activityName.$invalid">
+                                    <span class="help-block" ng-show="addActivityForm.activityName.$error.required">{{entity + 'Activity name not entered'| translate }}</span>
+                                    <span class="help-block" ng-show="addActivityForm.activityName.$error.exists && !addActivityForm.activityName.$error.required">{{ entity + 'Activity name already exists' | translate}}</span>
+                                    <span class="help-block" ng-show="addActivityForm.activityName.$error.pattern">{{ entity + 'Activity name is invalid ' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div> 
+                    <div class="form-group">
+                        <label for="copyActivity"  class="col-md-3 control-label">
+                            <span>{{ entity + ' Make copy of' | translate}}</span>
+                        </label>
+                        <div>
+                            <div class="dropdown" >
+                                <div class="col-md-7">
+                                    <select class="form-control" id="copyActivity" ng-model="activityGroup.copyActivityFlowGroup" ng-options="activity.groupId as activity.flowGroupName for activity in activitylist" >
+                                        <option value="">{{entity + 'select activity to copy, if any'|translate}}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideActivityPanel(addActivityForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="addActivity(addActivityForm);">
+                                        {{entity + 'Add Activity'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="servicePopUp" data-backdrop="static">
+    <form name="serviceForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog " style="width: 900px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideService(serviceForm);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Add Service'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">                   
+                    <div class="form-group required">
+                        <label for="serviceCombo" class="col-md-4 control-label">{{entity + 'Service'|translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': serviceForm.serviceCombo.$invalid && (serviceForm.designationCombo.$dirty || submitted)}">
+                            <select class="form-control" name="serviceCombo" ng-required="true" required id="serviceCombo" ng-options="service as service.serviceName for service in serviceList | orderBy:'serviceName' " ng-model="associatedService">
+                                <option value="">Select</option>
+                            </select> 
+                            <div class="error,help-block" ng-show="(serviceForm.serviceCombo.$dirty) && serviceForm.serviceCombo.$invalid">
+                                <span class="help-block" ng-show="serviceForm.serviceCombo.$error.required">{{entity + 'Service not selected'| translate }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="form-group required" ng-show="!!associatedService && associatedService.serviceCode === 'WS'">
+                        <label for="noPlans" class="col-md-4 control-label">{{entity + 'No. of Plans to be Submitted '|translate}}</label>
+                        <div class="col-md-2" ng-class="{'has-error': serviceForm.noPlans.$invalid && (serviceForm.noPlans.$dirty || submitted)}">
+                            <input type="text" class="form-control" name="noPlans" id="noPlans" maxlength='2' numbers-only=true ng-model="activityflow.noOfPlans" ng-required="!!associatedService && associatedService.serviceCode==='WS'"/>
+                            <div class="error,help-block" ng-show="(serviceForm.noPlans.$dirty || submitted) && serviceForm.noPlans.$invalid">
+                                <span class="help-block" ng-show="serviceForm.noPlans.$error.required">{{entity + 'No. of plans not entered'| translate }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="form-group required" ng-if="associatedService && modifierList[associatedService.serviceCode]">
+                        <label for="modifier" class="col-md-4 control-label">{{entity + "Modifier"| translate}}</label>
+                        <div class="col-md-8">
+                            <div ng-repeat="(key, value) in modifierList[associatedService.serviceCode]">
+                                <span class="col-md-3" style="padding-left: 0px">
+                                    <label><input class="pull-left" id="modifier" type="radio" required name="modifier" ng-model="activityflow.modifier" value="{{key}}"/>&nbsp;{{value}}</label>
+                                </span>
+                            </div>
+                            <div class="error,help-block" ng-show="serviceForm.modifier.$invalid && submitted" ng-class="{'has-error': serviceForm.modifier.$invalid && submitted}">
+                                <span class="help-block" ng-show="serviceForm.modifier.$error.required">{{entity + 'Modifier not selected'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="associatedService && nonModifierList[associatedService.serviceCode]">
+                        <label ng-show="!(associatedService && modifierList[associatedService.serviceCode])" class="col-md-4 text-right">{{entity + "Modifier"| translate}}</label>
+                        <div class="col-md-4" ng-if="associatedService && modifierList[associatedService.serviceCode]">&nbsp;</div>
+                        <div class="col-md-8">
+                            <div ng-repeat="(key, value) in nonModifierList[associatedService.serviceCode]">
+                                <span class="col-md-3" style="padding-left: 0px">
+                                    <label><input type="checkbox" checklist-change="loadPlans()" name="modifier" ag-checklistmodal="activityflow.nonModifierCodes" ag-checklistvalue="key">&nbsp;{{value}}</label>
+                                </span>
+                            </div>
+                            <div ng-show="activityflow.nonModifierCodes.indexOf('SP') > -1" >
+                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" >
+                                    <tbody>
+                                        <tr ng-repeat="plan in activityFlow.plans" ng-form="planForm">
+                                            <td class="col-md-5" ng-class="{'has-error': (plan.taskRecipients.length === 0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)}">
+                                                <div class="input-group">
+                                                    <input type="text" name="invitees" class="col-md-12 form-control hkg-nopadding" ui-select2="autoCompleteInvitees" ng-model="plan.taskRecipients" ng-required="activityflow.nonModifierCodes.indexOf('SP') > -1"/>
+                                                    <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                                                </div>
+                                                <div class="error,help-block" ng-show="(plan.taskRecipients.length === 0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)" ng-class="{'has-error': (plan.taskRecipients.length === 0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)}">
+                                                    <span class="help-block" ng-show="planForm.invitees.$error.required || plan.taskRecipients.length === 0">{{entity + 'Enter users'| translate }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-md-5" ng-class="{'has-error': planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)}">
+                                                <input type="text" ui-select2="allowedType"  class="form-control hkg-nopadding" name="allowedTypes" ng-model="plan.status" ng-required="activityflow.nonModifierCodes.indexOf('SP') > -1"/>
+                                                <div class="error,help-block" ng-show="planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)" ng-class="{'has-error': planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)}">
+                                                    <span class="help-block" ng-show="planForm.allowedTypes.$error.required">{{entity + 'Select status'| translate }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="col-md-2">
+                                                <a ng-click="addNewPlan(this.planForm, $index)"><span class="glyphicon glyphicon-plus-sign"></span></a>
+                                                <a  ng-click="deletePlan($index)"><span class="glyphicon glyphicon-remove"></span></a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required">
+                        <label for="designationCombo" class="col-md-4 control-label">{{entity + 'Designation'|translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': serviceForm.designationCombo.$invalid && (serviceForm.designationCombo.$dirty || submitted)}">
+                            <select class="form-control" name="designationCombo" ng-required="true" required id="designationCombo" ng-options="designation.value as designation.label for designation in designationList" ng-model="designation">
+                                <option value="">{{entity + 'Select'|translate}}</option>
+                            </select> 
+                            <div class="error,help-block" ng-show="(serviceForm.designationCombo.$dirty || submitted) && serviceForm.designationCombo.$invalid">
+                                <span class="help-block" ng-show="serviceForm.designationCombo.$error.required">{{entity + 'Designation not selected'| translate }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="finalServiceAdd" class="col-md-4 text-right">{{entity + 'Mark as Threshold Service'|translate}}</label>
+                        <div class="col-md-7">
+                            <input id="finalServiceAdd" ng-model="finalServiceModel" name="finalServiceAdd" type="checkbox"/>
+                        </div>
+                    </div>
+
+                    <!----- {{associatedService.description}}-->
+                </div> 
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideService(serviceForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="addService(serviceForm);">
+                                        {{entity + 'Add Service'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="rulesPopUp" data-backdrop="static">
+    <form method="POST" class="form-horizontal"  name="addRuleForm"  novalidate  >
+        <div class="modal-dialog" style="width: 1100px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideRule(addRuleForm, true);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Add Rule'|translate}}</b>
+                    </h4>
+                </div>
+
+                <div class="modal-body">                    
+                    <div class="form-group">
+                        <label for="ruleCombo" class="col-md-offset-3 col-md-1 control-label">{{entity + 'Rule'|translate}}</label>
+                        <div class="col-md-4" >
+                            <select class="form-control"  name="ruleCombo" id="ruleCombo"  ng-options="rule as rule.ruleName for rule in allRules" ng-model="selectedRule" ng-mouseup="onRuleChange(addRuleForm)">
+                                <option value="" >{{entity + 'Select Rule To Edit'|translate}}</option>
+                            </select>
+                        </div>
+                        <span class="help-block" title="{{entity + 'Add Rule'| translate}}">
+                            <a class=" glyphicon glyphicon-plus-sign text-primary" ng-click="reset(addRuleForm)" ></a>
+                        </span> 
+                    </div>
+                    <div class="well"  style=" overflow-y:auto; height:350px;" ng-if="!!selectedRule || addFlag">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a href="" ng-click="resetCancel(addRuleForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+                                    <button class="btn btn-hkg" ng-click="save(addRuleForm)">{{ entity + "Save" | translate }}</button>
+                                </div>
+                            </div>
+                        </div>   
+                        <div class='form-group required'>
+                            <label for="rulesName"  class="col-md-3 control-label" ng-bind=" entity + 'Rule name' | translate">
+
+                            </label>
+
+                            <div class="col-md-6" ng-class="{'has-error': addRuleForm.rulesName.$invalid && (addRuleForm.rulesName.$dirty || ruleSubmitted)}"> 
+                                <input  type='text'    ng-model="ruleObject.ruleName" id="rulesName" name="rulesName" class="form-control"  ng-required="true" maxlength="100"/>
+                                <div class="error,help-block"  ng-show="(addRuleForm.rulesName.$dirty || ruleSubmitted) && addRuleForm.rulesName.$invalid">
+                                    <span class="help-block" ng-show="addRuleForm.rulesName.$error.required" ng-bind=" entity + 'Rule name not entered' | translate"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group required" > 
+                            <label for="apply" class="col-md-3 control-label" ng-bind="entity + 'Apply' | translate"></label>
+                            <div class="col-md-2" ng-class="{'has-error': addRuleForm.apply.$invalid && ruleSubmitted}">    
+                                <select id="apply"  name="apply" class="form-control"  ng-options="option for option in applyList" required ng-model="ruleObject.apply">
+                                    <option value="" ng-bind="entity + 'Select' | translate"> </option>
+                                </select>
+                                <div class="error,help-block" ng-show="(addRuleForm.apply.$dirty || ruleSubmitted) && addRuleForm.apply.$invalid">
+                                    <span class="help-block" ng-show="addRuleForm.apply.$error.required" ng-bind="entity + 'Select apply' | translate"></span>                    
+                                </div>
+                            </div>
+
+                            <label class="col-md-2 control-label">{{entity + 'Status'| translate }}</label>
+
+                            <div class="col-md-2 col-lg-2 col-sm-4" ng-class="{'has-error': (addRuleForm.isActive.$dirty || ruleSubmitted) && addRuleForm.isActive.$invalid}">
+                                <select ng-model="ruleObject.isActive" name="isActive" class="form-control"  ng-options="s.id as s.name for s in status"> </select>
+
+                            </div>
+                        </div>
+
+                        <table  class="table" >
+
+                            <tr  ng-form="rowForm" ng-repeat="rules in ruleList">
+
+                                <!--                            <td class="col-md-2" ng-class="{'has-error': rowForm.priority.$invalid&&rules.rowsubmitted}"> 
+                                
+                                                                <select id="priority" required  name="priority" class="form-control"  ng-options="p for p in priorityList" ng-model="rules.priority">
+                                                                    <option value="">{{entity+'Select priority'| translate }}</option>
+                                                                </select>
+                                                                <div class="error,help-block" ng-show="(rowForm.priority.$invalid&&rules.rowsubmitted)">
+                                                                    <span class="help-block" ng-show="rowForm.priority.$error.required">{{ entity+"Select priority" | translate }}</span>                    
+                                                                </div>
+                                                            </td>-->
+                                <td class="col-md-2"  ng-class="{'has-error': rowForm.entityName.$invalid && rules.rowsubmitted}">    
+                                    <select id="entityName" ng-disabled="(ruleObject.apply === null || ruleObject.apply === undefined)" required name="entityName" class="form-control" ng-change="onEntityChange($index)"  ng-options="k as v for (k, v) in entityList" ng-model="rules.entity">
+                                        <option value="">{{entity + 'Select entity'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="(rowForm.entityName.$invalid && rules.rowsubmitted)">
+                                        <span class="help-block" ng-show="rowForm.entityName.$error.required">{{ entity + "Select entity" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td class="col-md-2" ng-class="{'has-error': rowForm.fieldName.$invalid && rules.rowsubmitted}">
+                                    <select ng-disabled="((ruleObject.apply === null || ruleObject.apply === undefined))" id="fieldName" required name="fieldName" class="form-control" ng-change="onFieldChange($index)" ng-options="field.oldLabelName for field in rules.fieldList" ng-model="rules.field">
+                                        <option value="">{{entity + 'Select field'| translate }}</option>
+                                    </select>
+
+                                    <div class="error,help-block" ng-show="(rowForm.fieldName.$invalid && rules.rowsubmitted)">
+                                        <span class="help-block" ng-show="rowForm.fieldName.$error.required">{{ entity + "Select field" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td class="col-md-1 text-center">
+                                    {{ entity + "is" | translate }}
+                                </td>
+
+                                <td class="col-md-2"   ng-class="{'has-error':rowForm.operator.$invalid && rules.rowsubmitted}">    
+                                    <select  ng-disabled="(ruleObject.apply === null || ruleObject.apply === undefined)" ng-mouseup="onOperatorChange($index)" required id="operator" ng-mousedown="onOperatorClick($index)" name="operator" class="form-control"   ng-options="operator.label for operator in rules.operatorList" ng-model="rules.operator">
+                                        <option value="">{{entity + 'Select operator'| translate }}</option>
+                                    </select>
+                                    <div class="error,help-block" ng-show="rowForm.operator.$invalid && rules.rowsubmitted">
+                                        <span class="help-block" ng-show="rowForm.operator.$error.required">{{ entity + "Select operator" | translate }}</span>                    
+                                    </div>
+
+                                </td>
+
+                                <td id="test" class="col-md-3" >
+                                    <div ng-class="{'has-error':rowForm.multiselect.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'MultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="multiselect" id="multiselect" ui-select2="rules.multiselectSingleComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.usermultiselect.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userMultiselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+                                        </div>
+                                        <div ng-if="rules.field.type === 'UserMultiSelect' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="usermultiselect" id="usermultiselect" ui-select2="rules.userSingleselectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.multiselect.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.multiselect.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.dropdown.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'Dropdown' && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="dropdown" id="dropdown" ui-select2="rules.dropdownSingleSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.dropdown.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.dropdown.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+
+                                    <div ng-class="{'has-error':rowForm.pointer.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'Pointer' && (rules.field.pointertype == 'MultiSelect' || rules.field.pointertype == 'Dropdown') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="pointer" id="pointer" ui-select2="rules.pointerSingleSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.pointer.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.pointer.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-class="{'has-error':rowForm.subentity.$invalid && rules.rowsubmitted}">
+                                        <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label === 'has any value from'" >
+                                            <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntityMultiSelectComponent" class="col-xs-12 hkg-nopadding"  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div ng-if="rules.field.type === 'SubEntity' && (rules.field.subentityDropListType !== 'Date') && rules.showtemplate && rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.operator.label !== 'has any value from'" >
+                                            <input type="text" name="subentity" id="subentity" ui-select2="rules.subEntitySingleSelectComponent" class="col-xs-12 hkg-nopadding "  ng-model="rules.values"  ng-required="true"/> 
+
+                                        </div>
+                                        <div class="error,help-block" ng-show="rowForm.subentity.$invalid && rules.rowsubmitted">
+                                            <span class="help-block" ng-show="rowForm.subentity.$invalid">{{ entity + "Enter value" | translate }}</span>                    
+                                        </div>
+                                    </div>
+                                    <div ng-if="rules.showtemplate === true">
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type !== 'MultiSelect' && rules.field.type !== 'Pointer' && rules.field.type !== 'SubEntity' && rules.field.type !== 'UserMultiSelect' && rules.field.type !== 'Dropdown'">
+
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.type}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'Pointer' && rules.field.pointertype !== 'MultiSelect' && rules.field.pointertype !== 'Dropdown'">
+
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.pointertype}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+                                        <div ng-if="rules.operator.label !== 'has no value' && rules.operator.label !== 'has any value' && rules.field.type === 'SubEntity' && rules.field.subentityDropListType === 'Date'">
+                                            <rule-field rf-operator="{{rules.operator.label}}" rf-option-list="options" rf-options="rules.options" rf-hint="{{rules.hint}}" rf-count="{{rules.operator.shortcutCode}}" rf-type="{{rules.field.subEntityType}}" rf-submitflag="rules.rowsubmitted" rf-validationFlag="rules.isTemplateValid" rf-valarray="rules.values"> </rule-field>
+                                        </div>
+
+
+
+                                    </div>
+                                </td>
+
+                                <td class="col-md-1">
+                                    <a href=""  ng-click="addRule(rowForm, $index);"><span class="glyphicon glyphicon-plus-sign text-primary"></span></a>
+                                    <a href="" ng-click="remove($index);"><span class="glyphicon glyphicon-remove text-primary"></span></a>
+                                </td>
+                            </tr>  
+                        </table>
+
+                        <div class='form-group '>
+                            <label for="remarks"  class="col-md-3 control-label">
+                                {{ entity + 'Remarks' | translate}}
+                            </label>
+                            <div class="col-md-6"> 
+                                <textarea rows="5"  ng-model="ruleObject.remarks" id="remarks" name="remarks" class="form-control"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right">
+                                    <a href="" ng-click="resetCancel(addRuleForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+
+                                    <button class="btn btn-hkg" ng-click="save(addRuleForm)">{{ entity + "Save" | translate }}</button>
+
+                                </div>
+                            </div>
+                        </div>     
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="col-xs-12 pull-right text-right">
+
+                                <a href="" ng-click="hideRule(addRuleForm, true);">{{entity + 'Cancel'| translate}}</a>&nbsp;&nbsp;&nbsp;
+
+                                <button class="btn btn-hkg" ng-click="addRuleAndRuleSet(addRuleForm)">
+                                    {{entity + 'Save & Submit'|translate}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="deletePopUp" data-backdrop="static">
+    <form name="deleteForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideDelete();">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Delete'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">                    
+                    <div class="form-group">
+                        <label class="col-md-12">{{entity + 'If you delete any component, It will also delete components associated with it. Are you sure you want to delete ?'|translate}}</label>                        
+                    </div> 
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideDelete();">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="deleteComponent();">
+                                        {{entity + 'Delete'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="activityEditPopUp" data-backdrop="static">
+    <form name="addActivityEditForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideEditActivityPanel(addActivityEditForm);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Edit Activity'|translate}}</b>
+                    </h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group required">                        
+                        <label for="activityName" class="col-md-3 control-label">{{entity + 'Activity name'|translate}}</label>
+                        <div class="col-md-7" ng-class="{'has-error': addActivityEditForm.activityName.$invalid && (addActivityEditForm.activityName.$dirty || subbmited)}">
+                            <div>
+                                <input type="text" id="activityName" name="activityName" class="form-control input-md" ng-model="$root.flowGroupName" required  maxlength="100" ng-blur="doesActivityNameExists(flowGroupName, addActivityEditForm)" ng-change="flowGroupName.activityName.$setValidity('exists', true);">     
+                                <div class="error,help-block" ng-show="(addActivityEditForm.activityName.$dirty || subbmited) && addActivityEditForm.activityName.$invalid">
+                                    <span class="help-block" ng-show="addActivityEditForm.activityName.$error.required">{{entity + 'Activity name not entered'| translate }}</span>
+                                    <span class="help-block" ng-show="addActivityEditForm.activityName.$error.exists && !addActivityEditForm.activityName.$error.required">{{ entity + 'Activity name already exists' | translate}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>                     
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideEditActivityPanel(addActivityEditForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="editActivity(addActivityEditForm);">
+                                        {{entity + 'Edit Activity'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="serviceEditPopUp" data-backdrop="static">
+    <form name="serviceEditForm" class="form-horizontal" novalidate>
+        <div class="modal-dialog" style="width:900px">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a class="close" ng-click="hideEditService(serviceEditForm);">&times;</a>
+                    <h4 class="modal-title">
+                        <b>{{entity + 'Edit Service'|translate}}</b>
+                    </h4>
+
+                </div>
+
+                <div class="modal-body">      
+                    <div class="form-group">
+                        <label for="serviceCombo" class="col-md-4 text-right">{{entity + 'Service'|translate}}</label>
+                        <div class="col-md-4">
+                            <label for="serviceCombo">{{$root.serviceName}}</label>
+                        </div>
+                    </div>            
+                    <div class="form-group required" ng-show="$root.serviceCode === 'WS'">
+                        <label for="noPlans" class="col-md-4 control-label">{{entity + 'No. of Plans to be Submitted '|translate}}</label>
+                        <div class="col-md-2" ng-class="{'has-error': serviceEditForm.noPlans1.$invalid && (serviceEditForm.noPlans1.$dirty || submitted)}">
+                            <input type="text" class="form-control" name="noPlans1" id="noPlans1" maxlength='2' numbers-only=true ng-model="$root.noOfPlans" ng-required="$root.serviceCode === 'WS'"/>
+                            <div class="error,help-block" ng-show="(serviceEditForm.noPlans1.$dirty || submitted) && serviceEditForm.noPlans1.$invalid">
+                                <span class="help-block" ng-show="serviceEditForm.noPlans1.$error.required">{{entity + 'No. of plans not entered'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>            
+                    <div class="form-group required" ng-if="modifierList[$root.serviceCode]">
+                        <label class="col-md-4 control-label text-right">{{entity + "Modifier"| translate}}</label>
+                        <div class="col-md-8">
+                            <div ng-repeat="(key, value) in modifierList[$root.serviceCode]">
+                                <span class="col-md-3" style="padding-left: 0px">
+                                    <label><input type="radio" name="modifier" required ng-model="$root.modifierCode" value="{{key}}"/>{{value}}</label>
+                                </span>
+                            </div>
+                            <div class="error,help-block" ng-show="serviceEditForm.modifier.$invalid && submitted" ng-class="{'has-error': serviceEditForm.modifier.$invalid && submitted}">
+                                <span class="help-block" ng-show="serviceEditForm.modifier.$error.required">{{entity + 'Modifier not selected'| translate }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="nonModifierList[$root.serviceCode]">
+                        <label ng-if="!modifierList[$root.serviceCode]" class="col-md-4 text-right">{{entity + "Modifier"| translate}}</label>
+                        <div ng-if="modifierList[$root.serviceCode]" class="col-md-4">&nbsp;</div>
+                        <div class="col-md-8">
+                            <div ng-repeat="(key, value) in nonModifierList[$root.serviceCode]">
+                                <span class="col-md-3" style="padding-left: 0px">
+                                    <label><input type="checkbox" checklist-change="loadPlansForEdit()" name="modifier" ag-checklistmodal="$root.nonModifierCodes" ag-checklistvalue="key"> {{value}}</label>
+                                </span>
+                            </div>
+                            <div ng-show="$root.nonModifierCodes.indexOf('SP') > -1" >
+                                <table class="table table-striped table-responsive" cellspacing="0" width="100%" >
+                                    <tbody>
+                                        <tr ng-repeat="plan in $root.plans" ng-form="planForm">
+                                            <td ng-class="{'has-error': (plan.taskRecipients.length===0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)}">
+                                                <input type="text" name="invitees" id="invitees" ui-select2="plan.multiselectConfig" class="col-md-12 form-control hkg-nopadding"  ng-model="plan.taskRecipients" required ng-required="true"/>
+                                                <div class="error,help-block" ng-show="(plan.taskRecipients.length===0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)" ng-class="{'has-error': (plan.taskRecipients.length===0 || planForm.invitees.$invalid) && (planForm.invitees.$dirty || plan.rowsubmitted)}">
+                                                    <span class="help-block" ng-show="planForm.invitees.$error.required  || plan.taskRecipients.length===0">{{entity + 'Enter users'| translate }}</span>
+                                                </div>
+                                            </td>
+                                            <td ng-class="{'has-error': planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)}">
+                                                <input type="text" ui-select2="plan.statusMultiselectconfig"  class="form-control hkg-nopadding" name="allowedTypes" ng-model="plan.status" required ng-required="true"/>
+                                                <div class="error,help-block" ng-show="planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)" ng-class="{'has-error': planForm.allowedTypes.$invalid && (planForm.allowedTypes.$dirty || plan.rowsubmitted)}">
+                                                    <span class="help-block" ng-show="planForm.allowedTypes.$error.required">{{entity + 'Enter status'| translate }}</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a ng-click="addInEditNewPlan(this.planForm, $index)"><span class="glyphicon glyphicon-plus-sign"></span></a>
+                                                <a ng-if="$index !== 0" ng-click="deleteInEditPlan($index)"><span class="glyphicon glyphicon-remove"></span></a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group required" ng-if="activityflow.version.description === 'P'">
+                        <label for="designationCombo" class="col-md-4 control-label">{{entity + 'Designation'|translate}}</label>
+                        <div class="col-md-4" ng-class="{'has-error': serviceEditForm.designationCombo.$invalid}">
+                            <select class="form-control" name="designationCombo" ng-required="true" required id="designationCombo" ng-options="designation.value as designation.label for designation in designationList" ng-model="$root.designationId">
+                                <option value="">Select</option>
+                            </select> 
+                            <div class="error,help-block" ng-show="(serviceEditForm.designationCombo.$dirty) && serviceEditForm.designationCombo.$invalid">
+                                <span class="help-block" ng-show="serviceEditForm.designationCombo.$error.required">{{entity + 'Designation not selected'| translate }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="form-group" ng-if="activityflow.version.description === 'A'">
+                        <label for="designationCombo" class="col-md-4 text-right">{{entity + 'Designation'|translate}}</label>
+                        <div class="col-md-4">
+                            <label class="" id="designationName">{{$root.desgName}}
+                            </label>                            
+                        </div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="finalService" class="col-md-4 text-right">{{entity + 'Mark as Threshold Service'|translate}}</label>
+                        <div class="col-md-7">
+                            <input id="finalService" name="finalService" type="checkbox" ng-checked="$root.id === finalServiceId" ng-click="setFinalService()"/>
+                        </div>
+                    </div>
+
+                    <!----- {{associatedService.description}}-->
+                </div> 
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <div class="col-xs-12 pull-right text-right"> <a href="" ng-click="hideEditService(serviceEditForm);">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                                    <button class="btn btn-hkg" ng-click="editService(serviceEditForm);">
+                                        {{entity + 'Edit Service'|translate}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>       
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>

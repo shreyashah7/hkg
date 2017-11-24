@@ -1,0 +1,106 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'|translate}} </li>
+                    <li>{{entity + 'Manage'|translate}} </li>
+                    <li >{{entity + 'Assets'|translate}}</li>
+                    <li class="active">
+                        <span ng-if="displayFlag === 'issue'">{{entity + 'Issue asset'|translate}}</span>
+                        <span ng-if="displayFlag === 'view'">{{entity + 'Edit asset category'|translate}}</span>
+                        <span ng-if="displayFlag === 'create' && !editFlag ">{{entity + 'Add asset'|translate}}</span>
+                        <span ng-if="displayFlag === 'create' && editFlag " >{{entity + 'Edit asset'|translate}}</span>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-if="canAccess('assetsAddEdit') && (editFlag || displayFlag !== 'create')"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href="" ng-click="makeEditFlagFalse();">{{entity + 'ADD ASSET'|translate}}</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+        <hr class="margin-md" />
+        <!--breadcrumb-->
+
+        <div class="col-xs-9 new-panel">
+            <!--<div class="row">-->
+            <div class="col-xs-12 col-lg-12 well well-sm">
+
+                <div class="input-group ">
+
+                    <div id="scrollable-dropdown-menu">
+                        <input class="typeahead" type="text"  placeholder="Search asset,asset categories" 
+                               ag-search="{{apipath}}asset/searchByAssetName" 
+                               result-format="modelName,parentCategory" 
+                               on-select="setAssetForEdit" 
+                               on-enter="getSearchedAsset"
+                               search-list-array='searchedAssetList'
+                               id="scrollable-dropdown-menu"/>
+                    </div>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default btn-hkg" ng-click="getSearchedAsset(searchedAssetList)" tooltip-html-unsafe="{{searchpopover}}" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                    </span>
+
+                    <!-- input-group --> 
+                </div>
+            </div>
+            <!--col-xs-12 endds here--> 
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div ng-include src="'views/secure/issueasset.html'" ng-if="displayFlag === 'issue' && canAccess('assetsIssue')"></div>
+            <div ng-include src="'views/secure/viewasset.html'" ng-if="displayFlag === 'view' && canAccess('assetsAddEdit')"></div>
+            <div ng-include src="'views/secure/createasset.html'" ng-if="displayFlag === 'create' && canAccess('assetsAddEdit')"></div>
+            <div ng-include src="'views/secure/searchedasset.html'" ng-if="displayFlag === 'search' && canAccess('assetsAddEdit')"></div>
+            <!--</div>-->
+        </div>      
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + 'EXISTING CATEGORIES'|translate}}</strong></span>
+                <hr class="margin-md"/>
+                <div ng-show="categoryList.length > 0">
+                    <div ng-click='selectCategory()' 
+                         data-angular-treeview="true"
+                         data-tree-id="selectedCategory"
+                         ag-treemodel="categoryList" display-count="true" entity-name="ASTCTG_NM.">
+                    </div>
+                </div>
+                <div ng-if="categoryList.length === 0">
+                   {{entity + 'No categories are available.'|translate}} 
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+<!--<a class="pull-right" ng-click="initCreateAsset();">{{entity + 'Add asset'|translate}}</a>
+<h3>{{entity + 'Manage Assets'|translate}} </h3>
+<fieldset class="hkg-fieldset">
+</fieldset>
+
+<div class="row">&nbsp;</div>
+<div class="row">&nbsp;</div>
+
+<div class="col-md-12">
+    <div class="col-md-8 well well-sm">
+        <input class="form-horizontal col-md-11" i18n placeholder="Search asset,asset categories..." ng-model="searchWord" type="search" />
+        &nbsp;&nbsp;<i class="glyphicon glyphicon-search icon-large pull-right"></i>
+    </div>
+</div>
+<div class="col-md-10" ng-include src="'views/secure/issueasset.html'" ng-if="displayFlag === 'issue'"></div>
+<div class="col-md-10" ng-include src="'views/secure/viewasset.html'" ng-if="displayFlag === 'view'"></div>
+<div class="col-md-10" ng-include src="'views/secure/createasset.html'" ng-if="displayFlag === 'create'"></div>
+<div class="col-md-2">
+    <label class="control-label">Existing Categories</label>
+    <div class="row"><hr/></div>
+    <div ng-show="categoryList.length > 0">
+        <div ng-click='selectCategory()' 
+             data-angular-treeview="true"
+             data-tree-id="selectedCategory"
+             ag-treemodel="categoryList">
+        </div>
+    </div>
+    <div ng-if="categoryList.length === 0">
+        No categories are available.
+    </div>
+</div>-->

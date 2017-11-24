@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<div>
+    <form ng-submit="saveSysConfig()" name="sysConfig" role='form'>
+        <table class="table table-striped table-condensed" ag-data-table="allSysConfigs">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type='text' required class='form-control' id='key' placeholder="Key" ng-model="key"/></td>
+                    <td><input type="value" required class="form-control" id="value" placeholder="Value" ng-model="value"></td>
+                    <td><button class="btn btn-default">Create SysConfig</button></td>
+                </tr>
+                <tr ng-repeat="sysConfig in allSysConfigs track by sysConfig.systemKey" dt-rows>
+                    <td>{{sysConfig.systemKey}}</td>
+                    <td>{{sysConfig.keyValue}}</td>
+                    <td>{{sysConfig.isActive}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+</div>

@@ -1,0 +1,171 @@
+<div class="row">
+    <div class="col-xs-12">
+
+        <form class="form-horizontal" role="form"  name="issueAssetForm" novalidate>
+            <div class="form-group required" ng-init="registerLocationChangeEvent(issueAssetForm);">
+                <label for="dropdownMenu1" class="col-xs-4 col-lg-3 control-label">Asset Category</label>
+                <div class="col-xs-8 col-lg-7" ng-class="{
+                    'has-error'
+                    : isAssetInvalid === true && issueSubmitted}">
+                    <div class="dropdown">
+
+                        <button class="form-control dropdown-toggle" id="dropdownMenu1" name="dropdownMenu1" data-toggle="dropdown">
+                            <span class="pull-left" ng-bind="issueasset.parentName"></span><span class="caret pull-right no-margin"></span>
+                        </button>
+                        <ul class="dropdown-menu col-xs-12" role="menu" aria-labelledby="dropdownMenu1">
+                            <div ng-click='assetClick(selectedCategoryDropdown)'
+                                 data-angular-treeview="true"
+                                 data-tree-id="selectedCategoryDropdown"
+                                 ag-treemodel="categoryListDropdown" entity-name="ASTCTG_NM.">
+                            </div>
+                        </ul>
+
+                        <div class="error,help-block" ng-show="isAssetInvalid && issueSubmitted">
+                            <span class="help-block">{{ entity + 'Select Parent category' | translate}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+            <div class="form-group">
+                <label for="availabelAsset" class="col-xs-4 col-lg-3 text-right">{{entity + 'Available Assets'| translate}}</label>    
+
+                <div class="col-xs-8 col-lg-7">               
+                    <div ng-if="assetList.length === 0">
+                        <label>{{entity + 'No Assets Available'| translate}}</label>
+                    </div> 
+                    <div ng-if="assetList.length > 0" id="mult" multi-select output-model="$parent.selectedAssets" input-model="combinedAssetList" button-label="assetName" item-label="assetName" 
+                         tick-property="ticked" orientation="vertical" helper-elements="filter" group-property="multiSelectGroup" max-height="200px" on-button on-item-click="setAsset($parent.selectedAssets);">
+                    </div>
+
+                </div>
+            </div>
+            <!--</div>-->
+            <!--</div>-->
+            <div class="form-group required">
+                <div class="col-xs-4 col-lg-3 control-label">
+                    <label for="recipients">
+                        {{entity + 'Issue To'| translate }}
+                    </label>
+                </div>
+                <div class="col-xs-8 col-lg-7">
+                    <div ng-class="{
+                        'has-error'
+                        : issueAssetForm.recipients.$invalid && (issueAssetForm.recipients.$dirty || issueSubmitted)}">  
+                        <div class="input-group">
+                            <input type="text" class="col-xs-12 hkg-nopadding" name="recipients" id="recipients" ng-required="true" required ui-select2="autoCompleteIssueTo" ng-model="issueasset.issueTo"/>
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-info-sign" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span></span>
+                        </div>
+                        <div class="error,help-block" ng-show="(issueAssetForm.recipients.$dirty || issueSubmitted) && issueAssetForm.recipients.$invalid">
+                            <span class="help-block" ng-show="issueAssetForm.recipients.$error.required || issueSubmitted">{{i18EntityMessaging + 'Select issue to'| translate }}</span>
+                        </div>
+                    </div>
+                </div>  
+                <!--                <div class="col-md-7">
+                                    <div ng-class="{'has-error': issueAssetForm.recipients.$invalid}">  
+                                        <div class="hkg-input-img-container">
+                                            <input type="text" class="hkg-nopadding form-control" id="recipients" name="recipients" required ui-select2="autoCompleteIssueTo" ng-model="issueasset.issueTo"/>
+                                        </div>
+                                        <div class="error,help-block" ng-show="(issueAssetForm.recipients.$dirty || submitted) && issueAssetForm.recipients.$invalid">
+                                            <span class="help-block" ng-show="issueAssetForm.recipients.$error.required">{{entity + 'Select issue to'| translate }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="hkg-input-img glyphicon glyphicon-info-sign" style="margin-right: -7%;margin-top : -2%" tooltip-html-unsafe="{{popover}}"  tooltip-trigger="mouseenter" tooltip-placement="right"></span>
+                                </div>-->
+
+            </div>
+
+
+            <div class="form-group required">
+                <div class="col-xs-4 col-lg-3 control-label">
+                    <label for="issuedOn">
+                        {{entity + 'Issued On'| translate }}
+                    </label>
+                </div>
+                <!--<label for="issuedOn" class="col-xs-4 col-lg-3 control-label">Issued on</label>-->
+                <div class="col-xs-8 col-lg-7" > 
+                    <div ng-class="{
+                                'has-error'
+                                : issueAssetForm.issuedOn.$invalid && (issueAssetForm.issuedOn.$dirty || issueSubmitted)}"> 
+                        <div class="input-group">
+                            <input type="text"  id="issuedOn" name="issuedOn" class="form-control" datepicker-popup="{{format}}" placeholder="{{format}}" ng-model="issueasset.issuedOn" is-open="opened_issue" max="issueMaxDate"  datepicker-options="dateOptions" ng-required="true" close-text="Close" ng-blur="checkDateInProperFormat(issueasset.issuedOn)"/>
+                            <span class="input-group-btn">
+                                <button class="form-control" ng-click="open($event, 'opened');opened_issue=true;">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </button>
+                            </span>     
+                        </div>
+
+                        <div class="error,help-block" ng-show="(issueAssetForm.issuedOn.$dirty || issueSubmitted) && issueAssetForm.issuedOn.$invalid">
+                            <span class="help-block" ng-show="issueAssetForm.issuedOn.$error.required && !(issueAssetForm.issuedOn.$error.date || issueAssetForm.issuedOn.$error.min || issueAssetForm.issuedOn.$error.max)">
+                                {{ entity + "Issue date is not valid" | translate }}</span>
+                            <span class="help-block" ng-show="issueAssetForm.issuedOn.$error.date">{{ entity + "Invalid date format" | translate }}</span>
+                            <span class="help-block" ng-show="issueAssetForm.issuedOn.$error.min">{{ entity + "Violates minimum constraint" | translate }}</span>
+                            <span class="help-block" ng-show="issueAssetForm.issuedOn.$error.max">{{ entity + "Violates maximum constraint" | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+            <div class="form-group required">    
+                <label ng-if="assetUnitList.length > 0" class="col-xs-4 col-lg-3 control-label">Issued units</label>  
+                <div ng-if="assetUnitList.length > 0">
+                    <div class="col-xs-8 col-lg-7">
+                        <div ng-form="serialNumberForm" ng-repeat="asset in assetUnitList"  ng-class="{'has-error': serialNumberForm.units.$invalid}">
+                            <div class="col-md-6"> {{asset.modelName}}</div>
+                            <div class="col-md-6">
+                                <input id="units" required name="units" class="form-control" type="text" numbers-only="numbers-only" ng-model="asset.units" min="0" ng-change="checkValidity(asset.remaingUnits, this, $index);"/>
+                            </div>   
+
+                            <div class="col-md-12">
+                                <span class="help-block" ng-show="serialNumberForm.$error.required">{{entity + 'Units to issue not entered'| translate }}</span>
+                                <span class="help-block" ng-show="serialNumberForm.$error.wrongInput">{{entity + 'Issued units can not be more than remaining units '| translate }}({{asset.remaingUnits}})</span>                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="remarks" class="col-xs-4 col-lg-3 control-label">{{ entity + "Remarks" | translate }}</label>
+                <div class="col-xs-8 col-lg-7">
+                    <textarea id="remarks" rows="5" ng-trim="false" maxlength="500" class="form-control" ng-model="issueasset.remarks"></textarea>           
+                </div>
+            </div> 
+            <div class="form-group">
+                <div class="col-xs-4 col-lg-3">&nbsp;</div>
+                <div class="col-xs-8 col-lg-7">
+                    <div class="pull-right" id="messagecounter">{{500 - issueasset.remarks.length}}&nbsp;  {{entity + 'characters left'| translate }}</div> 
+                </div>
+            </div>
+            <dynamic-form input-css ="col-xs-8 col-lg-7" label-css="col-xs-4 col-lg-3 control-label" 
+                          db-map="dbTypeForIssue" internationalization-label="{{entity}}" name="issueAssetForm" 
+                          template="issueAssetTemplate" ng-model="issueAssetData" ng-if="issueAssetTemplate"
+                          submit-flag-name="issueSubmitted" edit-flag="false" is-diamond="false" no-of-field-per-row = "1">
+            </dynamic-form>
+            <br/>
+            <div class="form-group">
+                <div class="col-xs-12 col-lg-12 text-right">
+                    <hr/>
+                    <a href="" ng-click="assetCancel(issueAssetForm);">Cancel</a>&nbsp;
+                    <button class="btn btn-hkg" ng-click="issueAssetMethod(issueAssetForm);">{{ entity + "Issue assets" | translate }}</button>
+                </div>
+            </div> 
+        </form>
+    </div>
+</div>
+<!--<div ng-include="'views/secure/rightmenu.html'"></div>-->
+<!--<div class="col-md-3">
+    <label class="control-label">Existing Categories</label>
+    <div class="row"><hr/></div>
+    <div ng-show="categoryList.length > 0">
+        <div ng-click='selectCategory()' 
+             data-angular-treeview="true"
+             data-tree-id="selectedCategory"
+             ag-treemodel="categoryList">
+        </div>
+    </div>
+    <div ng-if="categoryList.length == 0">
+        No categories are available.
+    </div>
+</div>-->
+<!--<div id="tpl-content" ng-include src="'templates/rightmenu.html'">
+</div>-->
+

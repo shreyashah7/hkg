@@ -1,0 +1,146 @@
+<form method="POST" class="form-horizontal" name="totalStockForm" novalidate>
+    <div class="row" ng-init="initializeData();
+            initChangeStatusForm(totalStockForm)">
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Stock'|translate}}</li>
+                    <li class="active">{{entity + 'Total Stock'| translate}}</li>
+                </ol>
+            </div>
+        </div>
+        <div class="col-xs-12 new-panel">
+            <div class="clearfix"></div>
+            <div id="messages" ng-include src="'templates/messages.html'"></div>
+            <div class='form-group row'>
+                <label for="select_version"  class="col-md-2 control-label">
+                    {{ entity + 'Version' | translate}}
+                </label>
+                <div class="col-md-3"> 
+                    <select class="form-control" id="select_version" ng-model="totalStock.version" ng-change="onVersionChange()" ng-options="ver.value as ver.label for ver in versionList">                                            
+                        <option value="">{{entity + 'Select'|translate}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <div class="row">
+                    <div class="col-md-10"><h4> {{ entity + 'Total Stock Details' | translate}}</h4></div>  
+                    <div class="col-md-2" style="padding-top: 15px" ng-if="totalStockDtls.length > 0">
+                        <button class="btn-link" ng-click="generateStockDetailsReport('.pdf')"><span><img title="Pdf Download" src="images/pdf-icon.jpg" alt="pdf" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                        <button class="btn-link" ng-click="generateStockDetailsReport('.xls')"><span><img title="Excel Download" src="images/excel-icon.jpg" alt="excel" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                    </div>  
+                </div>
+                <br/>
+                <div class="table-responsive" ng-if="totalStockDtls.length > 0">
+                    <div>
+                        <table class="table table-striped table-responsive" ag-data-table="totalStockDtls">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        {{ entity + 'Sr No' | translate}}
+                                    </th>
+                                    <th>
+                                        {{ entity + 'Activity' | translate}}
+                                    </th>
+                                    <th>
+                                        {{ entity + 'Service' | translate}}
+                                    </th>
+                                    <th>
+                                        {{entity + 'Total Stock'| translate}}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="totalStock in totalStockDtls" dt-rows>
+                                    <td class="text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                    <td><span ng-bind="totalStock.activityName"></span></td>
+                                    <td><span ng-bind="totalStock.serviceName"></span></td>
+                                    <td class="text-right pointer"><span title="Stock Details" class="btn-link" ng-bind="totalStock.lotOrPacketCount" ng-click="openStockDetails(totalStock)"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row" ng-if="totalStockDtls === undefined || totalStockDtls.length === 0">
+                    <div class="col-lg-12 col-md-12 col-xs-12">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    <span ng-bind="entity + 'No Stock Available' | translate"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div> 
+            </div>
+            <div class="col-xs-12">
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-6 pull-right text-right">
+                        <a href="#/trackstock" >{{entity + 'Back'| translate}}</a>&nbsp;
+                    </div>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <br/>
+        </div>
+    </div>
+</form>
+
+<!--Lot or Packet Details Popup-->
+<div class="modal fade" role="dialog" id="totalStockDetailsPopup" tabindex="-1" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a class="close" ng-click="hideDetailsPopup()">&times;</a>
+                <h4 class="modal-title">
+                    <span>{{ entity + "Total Stock" | translate }}</span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12" style="padding-top: 15px" ng-if="totalDtls.length > 0">
+                    <button class="btn-link pull-right" ng-click="generateTotalStockDetailReport('.pdf')"><span><img title="Pdf Download" src="images/pdf-icon.jpg" alt="pdf" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                    <button class="btn-link pull-right" ng-click="generateTotalStockDetailReport('.xls')"><span><img title="Excel Download" src="images/excel-icon.jpg" alt="excel" style="height: 22px;width: 22px"/></span></button> &nbsp;&nbsp;
+                </div> 
+                <div class="table-responsive" ng-if="totalDtls.length > 0">
+                    <div>
+                        <table class="table" ag-data-table="totalDtls">
+                            <thead>
+                                <tr>
+                                    <th>{{ entity + 'Sr No'|translate}}</th>
+                                    <th>{{ entity + 'Lot/Packet No' | translate}}</th>
+                                    <th>{{ entity + 'Alloted To/In Stock Of' | translate}}</th>
+                                    <th>{{ entity + 'Assigned On' | translate}}</th>
+                                    <th>{{ entity + 'Status' | translate}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="dtls in totalDtls" dt-rows >
+                                    <td class="text-right"><span ng-bind="{{$index + 1}}"></span></td>
+                                    <td>{{dtls.label}}</td>
+                                    <td>{{dtls.description}}</td>
+                                    <td><span ng-bind="formatDate(dtls.dateObj)"></span></td>
+                                    <td>{{dtls.status}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row" ng-if="totalDtls === undefined || totalDtls.length === 0">
+                    <div class="col-lg-12 col-md-12 col-xs-12">
+                        <table class="table table-bordered" >
+                            <tr>
+                                <td class="col-md-12">
+                                    <span ng-bind="entity + 'No Stock Available' | translate"></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"></div>
+        </div>
+    </div>
+</div>

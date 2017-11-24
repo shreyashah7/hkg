@@ -1,0 +1,33 @@
+<div class="form-group">
+    <div class="col-xs-12">
+        <div ng-show="!searchRecords || searchRecords.length == 0">
+            {{ entity + "No matching results found" | translate }}
+        </div>
+        <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Franchise'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchRecords && (searchRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords">
+                    <thead>
+                        <tr>
+                            <th style=" white-space: nowrap; width:50%">{{entity + 'Franchise Name'|translate}}</th>
+                            <th style=" white-space: nowrap;">{{entity + 'Activated On'|translate}}</th>
+                            <th style=" white-space: nowrap;">{{entity + 'Managed By'|translate}}</th>
+                            <th style=" white-space: nowrap;">{{entity + 'Action On'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="franchise in searchRecords" dt-rows>
+                            <td><span class="wordRap"> {{franchise.franchiseName}}</span></td>
+                            <td>
+                                <span ng-show="!franchise.activatedOn">{{entity + 'NA'|translate}}</span>
+                                <span ng-show="franchise.activatedOn">{{franchise.activatedOn|date:dateFormat}}</span>
+                            <td><span class="wordRap" ng-bind="franchise.adminUserName"></span></td>
+                            <td align="center" style="padding-right: 40px;"><a class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-if="isAccessCreateOrUpdate" ng-click="selectFranchise(franchise);
+                                    displayFlag = 'view'"></a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

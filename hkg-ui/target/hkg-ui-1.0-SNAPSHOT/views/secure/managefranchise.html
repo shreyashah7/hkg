@@ -1,0 +1,79 @@
+<div class="row">
+    <div class="col-xs-12"> 
+        <!--breadcrumb-->
+        <div class="col-xs-12 breadcrumb-bg" >
+            <div class="col-xs-12  col-lg-8" >
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate}}</li>
+                    <li>{{entity + 'Manage'| translate}}</li>
+                    <li >{{entity + 'FRANCHISE'|translate}} </li>
+                    <li class="active" ng-show="displayFlag === 'view' && isCreate">{{entity + 'ADD FRANCHISE'|translate}}</li>
+                    <li class="active" ng-show="displayFlag === 'view' && !isCreate">{{entity + 'EDIT FRANCHISE'|translate}}</li>  
+                    <li class="active" ng-show="displayFlag === 'search'">{{entity + 'VIEW FRANCHISE'|translate}}</li>       
+                </ol>
+            </div>
+            <div class="col-xs-12 col-lg-4 text-right context-menu" ng-show="!isCreate || displayFlag === 'search'"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a style="cursor: pointer" class="pull-right" ng-click="openPage('C');">{{entity + 'ADD FRANCHISE'|translate}}</a>
+            </div>
+        </div>
+        <!--breadcrumb-->
+
+        <div class="col-xs-9 new-panel">
+            <div class="row">
+                <div class="col-xs-12">
+                    <form class="form-horizontal" role="form">
+                        <div class="col-xs-12 col-lg-12 well well-sm">
+                            <div class="input-group ">
+                                <div id="scrollable-dropdown-menu">
+                                    <input class="typeahead" type="text"  placeholder="Search franchise" 
+                                           ag-search="{{apipath}}franchise/searchByFranchiseName" 
+                                           result-format="franchiseName" 
+                                           on-select="setFranchiseForEdit" 
+                                           on-enter="getSearchedFranchise"
+                                           search-list-array='searchedfranchiseList'
+                                           ng-model="searchtext"
+                                           id="scrollable-dropdown-menu"/>
+                                </div>
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-hkg" ng-click="getSearchedFranchise(searchedfranchiseList)" type="button"><span class="glyphicon glyphicon-search"></span></button>
+                                </span>
+                            </div>
+                            <span ng-show="isInValidSearch">{{entity + 'No matching results'| translate }}</span>                            
+                        </div>  
+                        <div class="clearfix"></div>
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </form>
+                </div>
+                <div class="col-xs-12" ng-include src="'views/secure/createfranchise.html'" ng-if="displayFlag === 'view' && isAccessCreateOrUpdate"></div>
+                <div ng-include src="'views/secure/searchedfranchise.html'" ng-if="displayFlag === 'search'"></div>
+            </div>
+        </div>
+        <div class="col-xs-3 tree-bg ">
+            <div class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>EXISTING FRANCHISES</strong></span>
+                <hr class="margin-md"/>
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                        <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                    </div>
+                </div>
+                <!--Tree component starts-->
+                <div class="col-xs-12 hkg-nopadding">
+                    <br/>          
+                    <div ng-show="existingFranchiseList.length > 0">
+                        <div ng-click='selectFranchise(selectedFranchiseTree.currentNode)' 
+                             data-angular-treeview="true"
+                             data-tree-id="selectedFranchiseTree"
+                             ag-treemodel="existingFranchiseList" search-id="searchFranchiseId" entity-name="FRNCSE_NM."
+                             data-search-query='treeSearchQuery'>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="existingFranchiseList.length === 0">
+                    {{entity + 'No Franchise available'| translate}}
+                </div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>

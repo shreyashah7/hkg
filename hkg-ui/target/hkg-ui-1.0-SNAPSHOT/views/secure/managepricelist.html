@@ -1,0 +1,124 @@
+<div class="row" ng-init="initData()">
+    <div class="col-xs-12" flow-init="uploadFile" flow-file-added="priceListFileAdded($file, $flow)" flow-file-success="priceListFileUploaded($file,$flow,addEventForm,$message)" flow-files-submitted="$flow.upload()"> 
+        <div class="col-xs-12 breadcrumb-bg">
+            <div class="col-xs-12 col-lg-8">
+                <ol class="breadcrumb">
+                    <li>{{entity + 'You are here'| translate }}</li>
+                    <li>{{entity + 'Manage'| translate }}</li>
+                    <li class="active">{{entity + 'Price List'| translate }}</li>
+                </ol>
+            </div>
+            <div ng-show="uploadPricelist === false" class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-plus-sign text-primary"></span>&nbsp;
+                <a href=""  ng-click="addClick($flow);">{{entity + 'Add New Price List'| translate }}</a>
+            </div>
+            <div ng-show="uploadPricelist === true" class="col-xs-12 col-lg-4 text-right context-menu"> 
+                <span class="glyphicon glyphicon-download text-primary"></span>&nbsp;
+                <a ng-href="{{appendAuthToken(apipath + 'pricelist/downloadtemplate')}}" ng-click="" >{{entity + "Download template"| translate }}</a>
+            </div>
+        </div>
+        <div class="col-xs-9 new-panel">
+            <form role="form" class="form-horizontal" novalidate name="pricelistForm">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="messages" ng-include src="'templates/messages.html'"></div>
+                    </div>
+                </div>
+                <div ng-show="uploadPricelist == true" class="col-xs-12" >                    
+                    <div class="form-group">
+                        <div class="col-xs-4 col-md-3 control-label">
+                            <label class="pull-right">
+                                {{entity + 'Upload Price List'| translate }}
+                            </label>
+                        </div>
+                        <div class="col-xs-4 col-md-3">
+                            <button class="btn btn-hkg" flow-btn>{{entity + 'Choose File'|translate}}</button>            
+                        </div>
+
+                    </div>
+                    <div class="col-xs-12">
+                        <div ng-repeat="file in $flow.files">
+                            <div class="progress active progress-bar-info progress-striped" ng-class="{'active': file.isUploading()}">
+                                <div class="progress progress-bar" role="progressbar" ng-style="{'width' : (file.sizeUploaded() / file.size * 100) + '%'}">{{file.sizeUploaded()}} / {{file.size}} kB | {{file.sizeUploaded() / file.size * 100 | number:0}}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" >
+                        <div class="col-xs-12">
+                            <div class="row">
+                                <hr/>
+                                <div class="col-xs-12 pull-right text-right"> 
+                                    <button class="btn btn-link" ng-click="cancelPriceList($flow)">{{entity + "Cancel"| translate}}</button>&nbsp;
+                                    <!--<button type="button" class="btn btn-hkg" ng-disabled="!successUpload" ng-click="savePriceList($flow)">{{entity + "Save"| translate}}</button>-->
+                                    <button type="button" class="btn btn-hkg" ng-disabled="(!!!$flow.files[0] || ($flow.files[0].sizeUploaded() / file.size * 100) < 100) && !successUpload" ng-click="savePriceList($flow)">{{entity + "Save"| translate}}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12" ng-show="uploadPricelist == false">
+                    <h4>
+                        {{entity + 'Price List '|translate}}
+                    </h4>
+                    <div id="relationshipCollapse">
+                        <table ng-if="!!listData && listData.length > 0" cellspacing="0" width="100%" class="table table-responsive table-striped" ag-data-table="listData">
+                            <thead>
+                                <tr>
+                                    <th class="col-md-6 text-center">
+                                        <span>{{entity + "Uploaded On"| translate}}</span>
+                                    </th>
+                                    <th class="col-md-6 text-center">
+                                        <span>{{entity + "Action"| translate}}</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tr ng-repeat="pricelist in listData| orderBy: 'uploadedOn':true" dt-rows>
+                                <td class="col-md-6 text-center">
+                                    <label>{{pricelist.uploadedOn| date : 'MMMM dd,yyyy hh:mm:ss a' }}</label>
+                                </td>
+                                <td class="col-md-6 text-center">
+                                    <span>
+                                        <span class="glyphicon glyphicon-download text-primary"></span>
+                                        <a ng-href="{{appendAuthToken(apipath + 'event/getimage?file_name=' + pricelist.fileName)}}" download="PriceListData.xlsx">Download</a>
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <hr/>
+                    <div>
+                        <button class="btn btn-hkg pull-right" ng-click="addClick($flow)"><span class="glyphicon glyphicon-arrow-left"></span>&nbsp;Back</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-xs-3 tree-bg ">
+            <div  class="col-xs-12  fit-content"><span class="glyphicon glyphicon-circle-arrow-down text-hkg "></span>&nbsp;&nbsp;<span class="text-hkg"><strong>{{entity + "Existing Price List"| translate}}</strong></span>
+                <hr class="margin-md"/>
+                <div class="col-xs-12">
+                    <div class="input-group">
+                        <input class="form-control" ng-model='treeSearchQuery' type="text" placeholder="Search"/>
+                        <div class="input-group-addon" ><span class="glyphicon glyphicon-search"></span></div>
+                    </div>
+                </div>
+                <!--Tree component starts-->
+                <div class="col-xs-12 hkg-nopadding">
+                    <br/>
+                    <div ng-show="allPriceList.length > 0">
+                        <div ng-click='selectPriceList(selectedPriceList)' 
+                             data-angular-treeview="true"
+                             data-tree-id="selectedPriceList"
+                             ag-treemodel="allPriceList" display-count="true" entity-name="PRICELIST."
+                             data-search-query='treeSearchQuery'>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="allPriceList.length === 0">
+                    {{entity + 'No price list are available.'|translate}} 
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,112 @@
+<div>
+    <div class="col-xs-12 breadcrumb-bg" >
+        <div class="col-xs-12 col-lg-8">
+            <ol class="breadcrumb">
+                <li>{{entity + 'You are here'| translate}}</li>
+                <li>{{entity + 'Stock'|translate}}</li>
+                <li class="active">{{entity + 'Rough Makeable'| translate}}</li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 new-panel">
+        <div class="clearfix"></div>
+        <div id="messages" ng-include src="'templates/messages.html'"></div>
+        <div class="clearfix"></div>
+        <div class="panel-heading">
+            <h4>{{entity + 'Available  Packets'| translate}}</h4>
+        </div>
+        <div class="col-md-12" ng-if="gridOptionspacket.data.length > 0">
+            <div id="gridPacketsInStockOfTable" ui-grid="gridOptionspacket" ui-grid-selection ui-grid-auto-resize></div>
+        </div>
+        <div class="col-md-12" ng-if="fieldsNotConfiguredFlag.packet != null">
+            <table class="table table-bordered">
+                <tr ng-if="fieldsNotConfiguredFlag.packet != null">
+                    <td class="col-md-12">
+                        {{entity + fieldsNotConfiguredFlag.packet| translate}}
+                    </td>
+                </tr>
+
+            </table>
+        </div>
+        <div class="col-md-12" ng-if="fieldsNotConfiguredFlag.packet != null && fieldsNotConfiguredFlag.numOfPkt != null">
+            <table class="table table-bordered">
+
+                <tr ng-if="fieldsNotConfiguredFlag.packet == null && gridOptionspacket.data.length <= 0">
+                    <td class="col-md-12">
+                        {{entity + fieldsNotConfiguredFlag.numOfPkt| translate}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="clearfix"></div>
+        <form name="roughMakeableForm" class="form-horizontal" novalidate ng-if="staticRoughMakeableModel.selectedPacket != null">
+            <div class="panel-heading form-group">
+                <h4>{{entity + 'Rough Makeable'| translate}}</h4>
+            </div>
+            <div class="col-md-12">
+                <div class="col-md-6" style="padding-left: 0px;padding-right: 0px;">
+                    <label class="col-md-4 control-label">Packet Id </label>
+                    <div class="col-md-8">
+                        <input type="text" disabled ng-model="staticRoughMakeableModel.selectedPacket['packetID$AG$String']" class="form-control col-md-8">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">&nbsp;</div>
+            <div class="col-md-12" >
+                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="roughMakeableDbType"
+                               internationalization-label="{{i18DynamicForm}}" form-name="formAddRoughMakeable"
+                               template="templateAddRoughMakeAble" ng-model="categoryCustomRoughMakeable"
+                               ng-if="templateAddRoughMakeAble"
+                               edit-flag="false" is-diamond="true" screen-rules="screenRules" >
+                </dynamic-form>
+                <div class="col-md-12" ng-if="fieldsNotConfiguredFlag.RoughMakeable != null">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + fieldsNotConfiguredFlag.RoughMakeable| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <dynamic-form  input-css ="col-md-3" label-css="col-md-2 control-label" db-map="roughMakeableDbTypeRoughCalc"
+                               internationalization-label="{{i18DynamicForm}}" form-name="formAddRoughMakeableRoughCalc"
+                               template="templateAddRoughMakeAbleRoughCalc" ng-model="categoryCustomRoughMakeableRoughCalc"
+                               ng-if="templateAddRoughMakeAbleRoughCalc"
+                               edit-flag="false" is-diamond="true" screen-rules="screenRules" >
+                </dynamic-form>
+                <div class="col-md-12" ng-if="fieldsNotConfiguredFlag.RoughCalcy != null && fieldsNotConfiguredFlag.RoughMakeable == null">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td class="col-md-12">
+                                {{entity + fieldsNotConfiguredFlag.RoughCalcy| translate}}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <table class="table table-bordered" ng-if="mandatoryRoughCalcFieldNotconfigured != null &&
+                            fieldsNotConfiguredFlag.RoughMakeable == null &&
+                            fieldsNotConfiguredFlag.RoughCalcy == null">
+                <tr>
+                    <td class="col-md-12">
+                        {{entity + mandatoryRoughCalcFieldNotconfigured| translate}}
+                    </td>
+                </tr>
+            </table>
+            <div class="col-xs-12 panel-heading" ng-if="(mandatoryRoughCalcFieldNotconfigured == null &&
+                        fieldsNotConfiguredFlag.RoughCalcy == null) ||
+                            (fieldsNotConfiguredFlag.RoughMakeable == null )
+                 ">
+                <div class="row">
+                    <hr/>
+                    <div class="col-xs-12 pull-right text-right">
+                        <a ng-click="resetAddRoughMakeableForm()">{{entity + 'Cancel'| translate}}</a>&nbsp;
+                        <button ng-if="roughMakeableToUpdateId == null" class="btn btn-hkg" ng-click="createOrUpdateRoughMakeable(roughMakeableForm)" >{{entity + 'Add Rough Makeable'| translate}}</button>
+                        <button ng-if="roughMakeableToUpdateId != null" class="btn btn-hkg" ng-click="createOrUpdateRoughMakeable(roughMakeableForm)" >{{entity + 'Update Rough Makeable'| translate}}</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>

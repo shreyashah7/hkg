@@ -1,0 +1,56 @@
+<div class="form-group">
+    <div class="col-xs-12">
+         <div  ng-show="!searchRecords || searchRecords.length == 0">
+                    <table class="table table-bordered" >
+                        <tr>
+                            <td class="col-md-12">
+                              {{ entity + "No matching results found" | translate }}
+                            </td>
+                        </tr>
+                    </table>
+                </div> 
+        
+        
+        <h4 ng-if="searchRecords && searchRecords.length > 0">{{entity + 'Searched Fields'|translate}}</h4>
+        <div class="table-responsive">
+            <div ng-show="searchRecords && (searchRecords.length) > 0">
+                <table class="table table-striped table-responsive" cellspacing="0" width="100%" ag-data-table="searchRecords" dt-options="dataTableOptions">
+                    <thead>
+                        <tr>
+                            <th>{{entity + 'Field Name'|translate}}</th>
+
+                            <th>{{entity + 'Field Type'|translate}}</th>
+                            <th>{{entity + 'Feature'|translate}}</th>
+                            <th>{{entity + 'Section'|translate}}</th>
+                            <th  width="20%" ng-if="isTreeView">{{entity + 'Tab Index'|translate}}</th>
+                            <th>{{entity + 'Action'|translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    
+                        
+                        <tr ng-repeat="field in searchRecords track by $index " dt-rows>
+                            <td class="wordRap">{{field.label}}</td>
+                            <td>{{field.type}}</td>
+                            <td> {{field.feature}}</td>
+                            <td >{{field.section}}</td>
+                            <td ng-if="isTreeView"><input type="number" style="width: 40px;" min="1" ng-model="field.sequenceNum" ></td>
+                            <td>
+                                <a><span class="glyphicon glyphicon-edit" title="{{entity + 'Edit'|translate}}" ng-click="retrieveCustomFieldById(field.id);
+                                    ;"></span></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="row" ng-show="isTreeView">
+                    <div class="col-xs-12 pull-right text-right">
+                        <button class="btn btn-hkg" ng-click="saveSequenceNum(searchRecords)">
+                            {{entity + 'Save'|translate}}
+                        </button>
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

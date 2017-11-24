@@ -1,0 +1,67 @@
+<div>
+    <span title="Upload using web-cam" class="glyphicon glyphicon-camera col-md-offset-1 text-info" style="font-size: 19px;display: inline;cursor: pointer;" ng-click="initWebCam()"></span>
+    <script type="text/ng-template" id="videoComponent.html">
+            <div class="modal-content">
+                <div class="modal-header text-left">
+                    <a class="close" ng-click="hidePopup()">&times;</a>
+                    <h4 class="modal-title" id="myModalLabel">{{ entity + 'Capture Image' | translate}}</h4>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="row">
+                            <div class="camera">
+                                <div class="col-xs-1"></div>
+                                <div class="col-xs-10">
+                                    <video id="{{videoElementId}}" class="camera" style="width: 100%;" autoplay="" ></video>
+                                </div>
+                                <div class="col-xs-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="margin-top: 0px;">
+                    <div class="col-xs-12 pull-right text-right">
+                        <a ng-click="hidePopup();">{{entity + 'Cancel'| translate}}</a>
+                        &nbsp;
+                        <a class="btn btn-hkg" ng-click="takeSnapshot()">Take Snapshot</a>
+                    </div>
+                </div>
+            </div>
+        </script>
+    <script type="text/ng-template" id="videoComponentError.html">
+            <div class="modal-content">
+                <div class="modal-header text-left">
+                    <a class="close" ng-click="hideErrorPopup()">&times;</a>
+                    <h4 class="modal-title text-danger" id="myModalLabel">{{ entity + 'Error Occoured' | translate}}</h4>
+                </div>
+                <div class="modal-body text-left">
+                    <div>
+                        <div class="row">
+                            <div class="camera">
+                                <div class="col-xs-1"></div>
+                                <div class="col-xs-10">
+                                    <div ng-if="deviceNotFound">
+                                        No suitable web camera device found.
+                                    </div>
+                                    <div ng-if="permissionDenied">
+                                        You don't have access to web camera. Check browser settings.
+                                    </div>
+                                    <div ng-if="otherError">
+                                        Some error occurred. Contact Administrator.
+                                    </div>
+                                </div>
+                                <div class="col-xs-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="">
+                        <div class="col-xs-12 pull-right text-right">
+                            <a class="btn btn-hkg" ng-click="hideErrorPopup();">{{entity + 'Ok'| translate}}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+</div>
